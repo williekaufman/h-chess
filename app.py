@@ -22,7 +22,7 @@ def index():
 
 @app.route("/example", methods=['GET'])
 def example():
-    return {'success': True, 'message': 'Hi!'} 
+    return {'success': True, 'message': f'Your game id is {new_game_id()}'} 
 
 @app.route("/rset", methods=['POST'])
 def set_redis():
