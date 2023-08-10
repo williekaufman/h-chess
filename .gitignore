@@ -1,5 +1,5 @@
 __pycache__/
-settings.py
+local_settings.py
 request.py
 script.py
 keys.py

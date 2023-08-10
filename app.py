@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 from flask import Flask, jsonify, request, make_response, render_template
 from flask_cors import CORS, cross_origin
 from redis_utils import rget, rset, redis
