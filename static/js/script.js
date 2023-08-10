@@ -3,6 +3,11 @@
 URL = 'http://localhost:5001/'
 
 previousToast = null;
+get_btn = document.getElementById('get-button');
+set_btn = document.getElementById('set-button'); 
+
+key = document.getElementById('key');
+value = document.getElementById('value');
 
 function showToast(message, seconds = 3) {
     const toast = document.createElement('div');
@@ -42,7 +47,6 @@ function makeRequestOptions(body, method = 'POST') {
 }
 
 function fetchWrapper(url, body, method = 'POST') {
-    console.log(url);
     if (method == 'GET') {
         if (body) {
             url = `${url}?`;
@@ -59,4 +63,39 @@ fetchWrapper(URL + 'example', {}, 'GET')
     .then((data) => {
         document.getElementById('example').textContent = data['message'];
     }
-)
+    )
+
+set_btn.addEventListener('click', () => {
+    set(key, value);
+});
+
+get_btn.addEventListener('click', () => {
+    get(key.value);
+});
+
+async function set(key, value) {
+    fetchWrapper(URL + 'rset', { 'value': value.value, 'key': key.value })
+}
+
+async function get(key) {
+    fetchWrapper(URL + 'rget', { key }, 'GET')
+        .then((response) => response.json())
+        .then((data) => {
+            console.log(data);
+            value.value = data.value;
+        });
+}
+
+function handleKeyDown(event) {
+    if (event.key == 'Enter') {
+        if (document.activeElement == key) {
+            get(key.value);
+        }
+        if (document.activeElement == value) {
+            set(key, value);
+        }
+    }
+}
+
+document.addEventListener('keydown', handleKeyDown);
+
