@@ -1,0 +1,8 @@
+__pycache__/
+settings.py
+request.py
+script.py
+keys.py
+*.deb
+config.js
+.idea/
