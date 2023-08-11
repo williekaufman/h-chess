@@ -54,6 +54,7 @@ class Board():
     def move(self, start, stop): 
         piece = self.get(start[0], start[1])
         capture = self.get(stop[0], stop[1])
+        # TODO: implement this
         check = False
         promotion = piece in [Piece.PAWN_W, Piece.PAWN_B] and stop[0] in [0, 7]
         self.set(start[0], start[1], ' ')
