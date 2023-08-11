@@ -5,7 +5,7 @@ from flask_cors import CORS, cross_origin
 from redis_utils import rget, rset, redis
 from settings import LOCAL
 from secrets import compare_digest, token_hex
-from chess import Board
+from chess import Board, History
 
 from enum import Enum
 
@@ -36,7 +36,18 @@ def set_board():
     rank = request.json.get('rank')
     file = request.json.get('file')
     board = Board.of_game_id(game_id)
+    board = chess.Board(rget('board', game_id=game_id))
     board.set(rank, file, piece)
+    rset('board', board.to_string(), game_id=game_id)
+    return {'success': True }
+
+@app.route("/move", methods=['POST'])
+def move():
+    game_id = request.json.get('game_id')
+    start = request.json.get('start')
+    stop = request.json.get('stop')
+    board = Board.of_game_id(game_id)
+    board.move(start, stop)
     rset('board', board.to_string(), game_id=game_id)
     return {'success': True }
 
