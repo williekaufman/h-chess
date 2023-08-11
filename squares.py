@@ -68,3 +68,13 @@ class Square(Enum):
 
     def to_coordinates(self):
         return (ord(self.name[0]) - 65, int(self.name[1]) - 1)
+
+    def of_coordinates(file, rank):
+        try:
+            return Square(chr(file + 65) + str(rank + 1))
+        except:
+            return None
+
+    def shift(self, file_shift, rank_shift):
+        file, rank = self.to_coordinates()
+        return Square.of_coordinates(file + file_shift, rank + rank_shift)

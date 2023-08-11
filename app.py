@@ -41,7 +41,7 @@ def move():
     stop = Square(request.json.get('stop'))
     board = Board.of_game_id(game_id)
     history = History.of_game_id(game_id)
-    if (move := board.move(start, stop)):
+    if (move := board.move(start, stop, history)):
         history.add(move)
         rset('history', history.to_string(), game_id=game_id)
         rset('board', board.to_string(), game_id=game_id)
