@@ -99,3 +99,36 @@ function handleKeyDown(event) {
 
 document.addEventListener('keydown', handleKeyDown);
 
+var board,
+    game = new Chess();
+
+/* Initialize the board with a configuration object */
+function initBoard() {
+    var config = {
+        draggable: true,
+        position: 'start',
+        onDrop: handleMove
+    };
+    
+    board = Chessboard('board', config);
+}
+
+function handleMove(source, target) {
+    // See if the move is legal
+    var move = game.move({
+        from: source,
+        to: target,
+        promotion: 'q' // NOTE: Always promote to a queen for simplicity
+    });
+
+    // If the move isn't legal, snap back the piece to its source square
+    if (move === null) return 'snapback';
+
+    // Else update the game state and continue
+    // For example: Check for game over conditions
+    if (game.game_over()) {
+        alert('Game over');
+    }
+}
+
+initBoard();
