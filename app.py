@@ -5,8 +5,7 @@ from flask_cors import CORS, cross_origin
 from redis_utils import rget, rset, redis
 from settings import LOCAL
 from secrets import compare_digest, token_hex
-import random
-import json
+from chess import Board
 
 from enum import Enum
 
@@ -19,6 +18,27 @@ def new_game_id():
 @app.route("/", methods=['GET'])
 def index():
     return render_template('index.html')
+
+@app.route("/new_game", methods=['GET'])
+def new_game():
+    game_id = new_game_id()
+    rset('board', Board.starting_board.to_string(), game_id=game_id)
+    return {'success': True, 'game_id': game_id}
+
+@app.route("/board", methods=['GET'])
+def get_board(game_id):
+    return Board(rget('board', game_id=game_id))
+
+@app.route("/set", methods=['POST'])
+def set_board():
+    game_id = request.json.get('game_id')
+    piece = request.json.get('piece')
+    rank = request.json.get('rank')
+    file = request.json.get('file')
+    board = Board.of_game_id(game_id)
+    board.set(rank, file, piece)
+    rset('board', board.to_string(), game_id=game_id)
+    return {'success': True }
 
 @app.route("/example", methods=['GET'])
 def example():
@@ -39,4 +59,4 @@ def get_redis():
     return {'success': True, 'value': rget(key, game_id=game_id)}
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5001 if LOCAL else 5002)
+    app.run(host='0.0.0.0', port=5001 if LOCAL else 5002) 
