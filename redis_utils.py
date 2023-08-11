@@ -8,7 +8,7 @@ def rget(key: str, *, game_id: Optional[str]) -> Optional[str]:
     if game_id is None:
         raw_result = redis.get(key)
     else:
-        raw_result = redis.get(f'{game_id}:{key}')
+        raw_result = redis.get(f'{key}:{game_id}')
     return raw_result.decode('utf-8') if raw_result is not None else None
 
 def rset(key: str, value: Any, *, game_id: Optional[str], ex: Optional[int] = 86400) -> None:
@@ -16,4 +16,4 @@ def rset(key: str, value: Any, *, game_id: Optional[str], ex: Optional[int] = 86
     if game_id is None:
         redis.set(key, value, ex=ex)    
     else:
-        redis.set(f'{game_id}:{key}', value, ex=ex)
+        redis.set(f'{key}:{game_id}', value, ex=ex)
