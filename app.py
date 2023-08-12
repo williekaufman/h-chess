@@ -57,7 +57,9 @@ def legal_moves():
     game_id = request.args.get('gameId')
     start = Square(request.args.get('start').upper())
     board = Board.of_game_id(game_id)
-    return { 'success': True, 'moves': board.legal_moves(start, rget('turn', game_id=game_id)) }
+    history = History.of_game_id(game_id)
+    whose_turn = rget('turn', game_id=game_id)
+    return { 'success': True, 'moves': board.legal_moves(start, history, whose_turn) }
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001 if LOCAL else 5002) 

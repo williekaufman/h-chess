@@ -67,32 +67,32 @@ class Move():
         return f'{self.piece}{self.start.value}{self.stop.value}{bool_to_char(self.capture)}{bool_to_char(self.check)}{self.promotion}'
 
     def of_string(s):
-        return Move(s[0], s[1:3], s[3:5], s[5], s[6], s[7])
+        return Move(ColoredPiece.of_string(s[0]), s[1:3], s[3:5], s[5], s[6], s[7])
 
 # All this actual logic is untested. It'll be easier to test once we get a UI set up so I'm just gonna wait on that.
 
-
-def parse_history(history):
-    castlingRights = {'K': True, 'Q': True, 'k': True, 'q': True}
-    enPassant = []
+def castlingRights(history):
+    ret = {'K': True, 'Q': True, 'k': True, 'q': True}
     d = {'a1': 'Q', 'h1': 'K', 'a8': 'q', 'h8': 'k'}
+    for move in history:
+        if move.start.value in d:
+            ret[d[move.start.value]] = False
+        elif move.piece.piece == Piece.KING:
+            if move.piece.color == Color.WHITE:
+                ret['K'] = False
+                ret['Q'] = False
+            else:
+                ret['k'] = False
+                ret['q'] = False
+    return ret
+
+def enPassant(history):
     if history:
-        for move in history:
-            if move.piece.piece == Piece.Rook:
-                if move.start.value in d:
-                    castlingRights[d[move.start.value]] = False
-            elif move.piece.piece == Piece.King:
-                if move.piece.color == Color.WHITE:
-                    castlingRights['K'] = False
-                    castlingRights['Q'] = False
-                else:
-                    castlingRights['k'] = False
-                    castlingRights['q'] = False
         most_recent_move = history[-1]
         if most_recent_move.piece.piece == Piece.PAWN and abs(most_recent_move.start.to_coordinates()[0] - most_recent_move.stop.to_coordinates()[0]) == 2:
-            dir = 1 if most_recent_move.piece.color == Color.WHITE else -1
-            enPassant.append(most_recent_move.stop.shift(dir, 0))
-    return {'castlingRights': castlingRights, 'enPassant': enPassant}
+            dir = -1 if most_recent_move.piece.color == Color.WHITE else 1
+            return [most_recent_move.stop.shift(dir, 0)]
+    return []
 
 # Ranks and files go from 0 to 7, not 1 to 8. Don't get tricked.
 
@@ -100,10 +100,11 @@ def filter_candidates(candidates, board, color):
     return [c for c in candidates if c and (not board.get(c) or board.get(c).color != color)]
 
 # Pawn logic totally ignores promotion
-def pawn_captures(board, square, color):
+def pawn_captures(board, square, color, history):
+    enPassantSquares = enPassant(history)
     dir = 1 if color == Color.WHITE else -1
     candidates = [square.shift(dir, -1), square.shift(dir, 1)]
-    return [c for c in candidates if c and board.get(c) and board.get(c).color != color]
+    return [c for c in candidates if c and (board.get(c) and board.get(c).color != color) or c in enPassantSquares]
 
 def pawn_moves(board, square, color):
     rank, file = square.to_coordinates()
@@ -159,8 +160,6 @@ def rook_moves(board, square, color):
     return filter_candidates(candidates, board, color)
 
 def queen_moves(board, square, color):
-    print(bishop_moves(board, square, color))
-    print(rook_moves(board, square, color))
     return bishop_moves(board, square, color) + rook_moves(board, square, color)
 
 # This ignores castling
@@ -210,7 +209,7 @@ class Board():
         self.set(stop, piece)
         return move
 
-    def legal_moves(self, start, whose_turn):
+    def legal_moves(self, start, history, whose_turn):
         piece = self.get(start)
         moves = []
         if not piece:
@@ -220,7 +219,7 @@ class Board():
             return moves
         if piece.piece == Piece.PAWN:
             moves += pawn_moves(self, start, color)
-            moves += pawn_captures(self, start, color)
+            moves += pawn_captures(self, start, color, history.history)
         elif piece.piece == Piece.ROOK:
             moves += rook_moves(self, start, color)
         elif piece.piece == Piece.KNIGHT:
