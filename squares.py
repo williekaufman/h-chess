@@ -67,7 +67,7 @@ class Square(Enum):
     H8 = 'H8'
 
     def to_coordinates(self):
-        return (ord(self.name[0]) - 65, int(self.name[1]) - 1)
+        return (int(self.name[1]) - 1, ord(self.name[0]) - 65)
 
     def of_coordinates(file, rank):
         try:
@@ -75,6 +75,6 @@ class Square(Enum):
         except:
             return None
 
-    def shift(self, file_shift, rank_shift):
-        file, rank = self.to_coordinates()
+    def shift(self, rank_shift, file_shift):
+        rank, file = self.to_coordinates()
         return Square.of_coordinates(file + file_shift, rank + rank_shift)

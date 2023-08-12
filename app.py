@@ -25,6 +25,7 @@ def new_game():
     game_id = new_game_id()
     rset('board', starting_board.to_string(), game_id=game_id)
     rset('history', History().to_string(), game_id=game_id)
+    rset('turn', 'W', game_id=game_id)
     return {'success': True, 'gameId': game_id}
 
 @app.route("/board", methods=['GET'])
@@ -37,36 +38,26 @@ def get_board():
 @app.route("/move", methods=['POST'])
 def move():
     game_id = request.json.get('gameId')
-    start = Square(request.json.get('start'))
-    stop = Square(request.json.get('stop'))
+    start = Square(request.json.get('start').upper())
+    stop = Square(request.json.get('stop').upper())
     board = Board.of_game_id(game_id)
     history = History.of_game_id(game_id)
     if (move := board.move(start, stop, history)):
         history.add(move)
         rset('history', history.to_string(), game_id=game_id)
         rset('board', board.to_string(), game_id=game_id)
+        rset('turn', 'W' if rget('turn', game_id=game_id) == 'B' else 'B', game_id=game_id)
         return {'success': True}
     else:
         # TODO: return error message
         return {'success': False}
-
-@app.route("/example", methods=['GET'])
-def example():
-    return {'success': True, 'message': f'Your game id is {new_game_id()}'} 
-
-@app.route("/rset", methods=['POST'])
-def set_redis():
-    game_id = request.json.get('gameId')
-    key = request.json.get('key')
-    value = request.json.get('value')
-    rset(key=key, value=value, game_id=game_id)
-    return {'success': True }
-
-@app.route("/rget", methods=['GET'])
-def get_redis():
-    key = request.args.get('key')
+    
+@app.route("/legal_moves", methods=['GET'])
+def legal_moves():
     game_id = request.args.get('gameId')
-    return {'success': True, 'value': rget(key, game_id=game_id)}
+    start = Square(request.args.get('start').upper())
+    board = Board.of_game_id(game_id)
+    return { 'success': True, 'moves': board.legal_moves(start, rget('turn', game_id=game_id)) }
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001 if LOCAL else 5002) 

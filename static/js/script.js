@@ -3,11 +3,10 @@
 URL = 'http://localhost:5001/'
 
 previousToast = null;
-get_btn = document.getElementById('get-button');
-set_btn = document.getElementById('set-button'); 
 
-key = document.getElementById('key');
-value = document.getElementById('value');
+gameId = null;
+newGameButton = document.getElementById('newGameButton');
+copyGameIdButton = document.getElementById('copyGameIdButton');
 
 function showToast(message, seconds = 3) {
     const toast = document.createElement('div');
@@ -58,32 +57,14 @@ function fetchWrapper(url, body, method = 'POST') {
     return fetch(url, makeRequestOptions(body, method));
 }
 
-fetchWrapper(URL + 'example', {}, 'GET')
-    .then((response) => response.json())
-    .then((data) => {
-        document.getElementById('example').textContent = data['message'];
-    }
-    )
-
-set_btn.addEventListener('click', () => {
-    set(key, value);
-});
-
-get_btn.addEventListener('click', () => {
-    get(key.value);
-});
-
-async function set(key, value) {
-    fetchWrapper(URL + 'rset', { 'value': value.value, 'key': key.value })
-}
-
-async function get(key) {
-    fetchWrapper(URL + 'rget', { key }, 'GET')
+function newGame() {
+    fetchWrapper(URL + 'new_game', {}, 'POST')
         .then((response) => response.json())
         .then((data) => {
-            console.log(data);
-            value.value = data.value;
+            gameId = data['gameId'];
         });
+
+    initBoard();
 }
 
 function handleKeyDown(event) {
@@ -97,23 +78,61 @@ function handleKeyDown(event) {
     }
 }
 
+newGameButton.addEventListener('click', newGame);
+
+copyGameIdButton.addEventListener('click', () => {
+    navigator.clipboard.writeText(gameId);
+    showToast(`Copied ${gameId} to clipboard`);
+});
+
 document.addEventListener('keydown', handleKeyDown);
 
-var board,
-    game = new Chess();
+var board, game = new Chess();
 
 /* Initialize the board with a configuration object */
 function initBoard() {
     var config = {
         draggable: true,
         position: 'start',
-        onDrop: handleMove
+        onDragStart: onPickup,
+        onDrop: handleMove,
+        pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
     };
     
     board = Chessboard('board', config);
 }
 
-function handleMove(source, target) {
+legal_destinations = [];
+
+function onPickup(source) {
+    legal_destinations = [];
+
+    fetchWrapper(URL + 'legal_moves', { 'start': source, 'gameId': gameId }, 'GET')
+        .then((response) => response.json())
+        .then((data) => {
+            if (!data['success']) {
+                return;
+            }
+            data['moves'].forEach(move => {
+                legal_destinations.push(move);
+                console.log(move)
+            });
+        })
+    };
+
+function isLegalMove(to) {
+    return legal_destinations.includes(to.toUpperCase());
+}
+
+function handleMove(from, to) {
+    if (isLegalMove(to)) {
+        fetchWrapper(URL + 'move', { 'start': from, 'stop': to, 'gameId': gameId }, 'POST')
+    } else {
+        return 'snapback';
+    }
+}
+
+function handleMove2(source, target) {
     // See if the move is legal
     var move = game.move({
         from: source,
@@ -131,4 +150,4 @@ function handleMove(source, target) {
     }
 }
 
-initBoard();
+newGame();
