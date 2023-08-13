@@ -299,7 +299,8 @@ class Board():
             moves += queen_moves(self, start, color)
         elif piece.piece == Piece.KING:
             moves += king_moves(self, start, color, history.history)
-        return [square.value for square in moves if square and handicap and handicap(self, start, square, history)]
+        handicap = handicap or (lambda board, start, stop, history: True)
+        return [square.value for square in moves if square and handicap(self, start, square, history)]
 
     def to_string(self):
         ret = ''
