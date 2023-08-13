@@ -28,6 +28,9 @@ class ColoredPiece():
     def of_string(s):
         return ColoredPiece(Color.WHITE if s.isupper() else Color.BLACK, Piece(s.upper()))
 
+    def to_string_long(self):
+        return f'{self.color.value.lower()}{self.piece.value}'
+
     def __str__(self):
         return self.to_string()
 
@@ -47,31 +50,33 @@ def char_to_bool(c):
 
 
 class Move():
-    def __init__(self, piece, start, stop, capture, check, promotion):
+    def __init__(self, piece, start, stop, capture, check, castle, promotion):
         self.piece = piece
         self.start = Square(start)
         self.stop = Square(stop)
         self.capture = capture.lower() == 't'
         self.check = check.lower() == 't'
+        self.castle = castle
         self.promotion = promotion
 
-    def validate(self, board, history):
+    def validate(self, board, history, whose_turn):
         if self.piece is None:
             return False
         if board.get(self.stop) and board.get(self.start).color == board.get(self.stop).color:
             return False
-       # TODO: Implement this
+        if self.stop.value not in board.legal_moves(self.start, history, whose_turn): 
+            return False
         return True
 
     def to_string(self):
-        return f'{self.piece}{self.start.value}{self.stop.value}{bool_to_char(self.capture)}{bool_to_char(self.check)}{self.promotion}'
+        return f'{self.piece}{self.start.value}{self.stop.value}{bool_to_char(self.capture)}{bool_to_char(self.check)}{self.castle}{self.promotion}'
 
     def of_string(s):
-        return Move(ColoredPiece.of_string(s[0]), s[1:3], s[3:5], s[5], s[6], s[7])
+        return Move(ColoredPiece.of_string(s[0]), s[1:3], s[3:5], s[5], s[6], s[7], s[8])
 
 # All this actual logic is untested. It'll be easier to test once we get a UI set up so I'm just gonna wait on that.
 
-def castlingRights(history):
+def get_castling_rights(history):
     ret = {'K': True, 'Q': True, 'k': True, 'q': True}
     d = {'a1': 'Q', 'h1': 'K', 'a8': 'q', 'h8': 'k'}
     for move in history:
@@ -86,6 +91,7 @@ def castlingRights(history):
                 ret['q'] = False
     return ret
 
+
 def enPassant(history):
     if history:
         most_recent_move = history[-1]
@@ -94,12 +100,19 @@ def enPassant(history):
             return [most_recent_move.stop.shift(dir, 0)]
     return []
 
+def kingEnPassant(history):
+    if history:
+        most_recent_move = history[-1]
+        if most_recent_move.castle in ['k', 'q']:
+            ret = [most_recent_move.stop.shift(0, 1 if most_recent_move.stop.to_coordinates()[1] == 2 else -1)]
+            return ret
+    return []
+
 # Ranks and files go from 0 to 7, not 1 to 8. Don't get tricked.
 
 def filter_candidates(candidates, board, color):
     return [c for c in candidates if c and (not board.get(c) or board.get(c).color != color)]
 
-# Pawn logic totally ignores promotion
 def pawn_captures(board, square, color, history):
     enPassantSquares = enPassant(history)
     dir = 1 if color == Color.WHITE else -1
@@ -123,7 +136,7 @@ def knight_moves(board, square, color):
         2, 1), (2, -1), (-2, 1), (-2, -1), (1, 2), (-1, 2), (1, -2), (-1, -2)]]
     return filter_candidates(candidates, board, color)
 
-def bishop_moves(board, square, color): 
+def bishop_moves(board, square, color):
     candidates = []
     for i in [1, -1]:
         for j in [1, -1]:
@@ -162,9 +175,20 @@ def rook_moves(board, square, color):
 def queen_moves(board, square, color):
     return bishop_moves(board, square, color) + rook_moves(board, square, color)
 
-# This ignores castling
-def king_moves(board, square, color):
+def king_moves(board, square, color, history):
     candidates = []
+    if square == Square('E1') or square == Square('E8'):
+        castling_rights = get_castling_rights(history)
+        if square == Square('E1') and color == Color.WHITE:
+            if castling_rights['K'] and not board.get(Square('F1')) and not board.get(Square('G1')):
+                candidates.append(Square('G1'))
+            if castling_rights['Q'] and not board.get(Square('D1')) and not board.get(Square('C1')) and not board.get(Square('B1')):
+                candidates.append(Square('C1'))
+        elif square == Square('E8') and color == Color.BLACK:
+            if castling_rights['k'] and not board.get(Square('F8')) and not board.get(Square('G8')):
+                candidates.append(Square('G8'))
+            if castling_rights['q'] and not board.get(Square('D8')) and not board.get(Square('C8')) and not board.get(Square('B8')):
+                candidates.append(Square('C8'))
     for i in [1, 0, -1]:
         for j in [1, 0, -1]:
             if i == 0 and j == 0:
@@ -177,6 +201,7 @@ def king_moves(board, square, color):
                 continue
             candidates.append(candidate)
     return filter_candidates(candidates, board, color)
+
 
 class Board():
     def __init__(self, s):
@@ -193,21 +218,65 @@ class Board():
         rank, file = square.to_coordinates()
         self.board[rank][file] = piece
 
-    def move(self, start, stop, history=None, promote_to=Piece.QUEEN):
+    def move(self, start, stop, whose_turn, history=None, promote_to=Piece.QUEEN):
         piece = self.get(start)
+        extra = []
+        if not piece:
+            return None, None, 'no piece'
+        if piece.color.value != whose_turn:
+            return None, None, 'wrong color'
         capture = 't' if self.get(stop) else 'f'
-        # TODO: implement these
+        enPassantSquares = enPassant(history.history)
+        kingEnPassantSquares = kingEnPassant(history.history)
+        if piece.piece == Piece.PAWN and stop in enPassantSquares:
+            capture = 'e'
+        if stop in kingEnPassantSquares:
+            capture = 'k'
+        # TODO check
         check = 'f'
-        castle = 'f'  # use k, q, f
+        castle = 'f'
+        if piece.piece == Piece.KING and abs(start.to_coordinates()[1] - stop.to_coordinates()[1]) == 2:
+            if stop.to_coordinates()[1] == 2:
+                castle = 'q'
+            else:
+                castle = 'k'
         promotion = promote_to.value if piece and piece.piece == Piece.PAWN and stop.to_coordinates()[
             0] in [0, 7] else 'x'
-        move = Move(piece, start, stop, capture, check, promotion)
-        if not move.validate(self, history):
-            return None
-        # TODO: Need to handle things like castling, promotion, en passant
+        move = Move(piece, start, stop, capture, check, castle, promotion)
+        if not move.validate(self, history, whose_turn):
+            return None, None, 'invalid move'
+        if castle == 'k':
+            self.set(stop.shift(0, 1), None)
+            self.set(stop.shift(0, -1), ColoredPiece(
+                Color.WHITE if piece.color == Color.WHITE else Color.BLACK, Piece.ROOK))
+            if piece.color == Color.WHITE:
+                extra.append(('H1', ''))
+                extra.append(('F1', 'wR'))
+            else:
+                extra.append(('H8', ''))
+                extra.append(('F8', 'bR'))
+        elif castle == 'q':
+            self.set(stop.shift(0, -2), None)
+            self.set(stop.shift(0, 1), ColoredPiece(
+                Color.WHITE if piece.color == Color.WHITE else Color.BLACK, Piece.ROOK))
+            if piece.color == Color.WHITE:
+                extra.append(('A1', ''))
+                extra.append(('D1', 'wR'))
+            else:
+                extra.append(('A8', ''))
+                extra.append(('D8', 'bR'))
+        if capture == 'e':
+            self.set(stop.shift(-1 if piece.color == Color.WHITE else 1, 0), None)
+            print(capture)
+            extra.append((stop.shift(-1 if piece.color == Color.WHITE else 1, 0).value, ''))
+        if capture == 'k':
+            self.set(history.history[-1].stop, None)
+            extra.append((history.history[-1].stop.value, ''))
         self.set(start, None)
         self.set(stop, piece)
-        return move
+        if promotion != 'x':
+            self.set(stop, ColoredPiece(piece.color, Piece(promotion)))
+        return move, extra, None
 
     def legal_moves(self, start, history, whose_turn):
         piece = self.get(start)
@@ -229,7 +298,7 @@ class Board():
         elif piece.piece == Piece.QUEEN:
             moves += queen_moves(self, start, color)
         elif piece.piece == Piece.KING:
-            moves += king_moves(self, start, color)
+            moves += king_moves(self, start, color, history.history)
         return [square.value for square in moves if square]
 
     def to_string(self):
@@ -240,8 +309,18 @@ class Board():
                 ret += ' ' if piece is None else piece.to_string()
         return ret
 
+    def to_dict(self):
+        d = {}
+        for square in Square:
+            piece = self.get(square)
+            if piece:
+                d[square.value.lower()] = piece.to_string_long()
+        return d
+
     def of_game_id(game_id):
-        return Board(rget('board', game_id=game_id))
+        if (board := rget('board', game_id=game_id)):
+            return Board(board)
+        return None
 
 
 empty_rank = ' ' * 8

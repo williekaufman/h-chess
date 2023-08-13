@@ -1,13 +1,10 @@
 <!DOCTYPE html>
 <html>
 
-
 <head>
     <!-- CSS for chessboard.js -->
-    <link rel="stylesheet"
-      href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css"
-      integrity="sha384-q94+BZtLrkL1/ohfjR8c6L+A6qzNH9R2hBLwyoAfu3i/WCvQjzL2RQJ3uNHDISdU"
-      crossorigin="anonymous">
+    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css"
+        integrity="sha384-q94+BZtLrkL1/ohfjR8c6L+A6qzNH9R2hBLwyoAfu3i/WCvQjzL2RQJ3uNHDISdU" crossorigin="anonymous">
 
     <!-- JS for chess.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.2/chess.min.js"></script>
@@ -22,7 +19,7 @@
         crossorigin="anonymous"></script>
 
     <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard.js/1.0.0/chessboard-1.0.0.min.js"></script> -->
-    
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Handicap Chess</title>
@@ -31,10 +28,16 @@
 
 <div>
     <button id="newGameButton" style="margin-right:5px">New Game</button>
-    <button id="copyGameIdButton">Copy Game Id</button> 
+    <button id="copyGameIdButton">Copy Game Id</button>
 </div>
-<div class="board"> 
+<div style="margin-top: 5px"> 
+    <button id="loadGameButton" style="margin-right:5px">Load Game</button>
+    <input type="text" id="gameIdInput" placeholder="Game Id">
+</div>
+
+<div class="board">
     <div id="board"></div>
 </div>
 <script src="{{ url_for('static', filename='js/script.js') }}"></script>
-</html> 
+
+</html>

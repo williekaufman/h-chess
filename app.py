@@ -8,7 +8,7 @@ from secrets import compare_digest, token_hex
 from chess import Board, History, starting_board
 from squares import Square
 
-from enum import Enum
+# from enum import Enum
 
 app = Flask(__name__)
 CORS(app)
@@ -31,9 +31,10 @@ def new_game():
 @app.route("/board", methods=['GET'])
 def get_board():
     game_id = request.args.get('gameId')
-    print(rget('board', game_id=game_id))
-    print(game_id)
-    return {'success': True, 'board': Board(rget('board', game_id=game_id)).to_string()}
+    board = Board.of_game_id(game_id)
+    if not board:
+        return {'success': False, 'error': 'Invalid game id'}
+    return {'success': True, 'board': board.to_dict(), 'whose_turn': rget('turn', game_id=game_id)}
 
 @app.route("/move", methods=['POST'])
 def move():
@@ -42,15 +43,20 @@ def move():
     stop = Square(request.json.get('stop').upper())
     board = Board.of_game_id(game_id)
     history = History.of_game_id(game_id)
-    if (move := board.move(start, stop, history)):
+    whose_turn = rget('turn', game_id=game_id)
+    move, extra, error = board.move(start, stop, whose_turn, history)
+    if move:
         history.add(move)
+        whose_turn = 'W' if whose_turn == 'B' else 'B'
         rset('history', history.to_string(), game_id=game_id)
         rset('board', board.to_string(), game_id=game_id)
-        rset('turn', 'W' if rget('turn', game_id=game_id) == 'B' else 'B', game_id=game_id)
-        return {'success': True}
+        rset('turn', whose_turn, game_id=game_id)
+        return {'success': True , 'extra': extra , 'whose_turn': whose_turn}
     else:
-        # TODO: return error message
-        return {'success': False}
+        # It's bad if we end up here since the UI board will be out of sync with the server board
+        # That's why we snapback the board on the UI side for moves not in the legal_moves list
+        # It's ok for moves that aren't requested via dragging pieces around, e.g. via retry
+        return {'success': False, 'error': error , 'whose_turn': whose_turn}
     
 @app.route("/legal_moves", methods=['GET'])
 def legal_moves():

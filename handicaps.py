@@ -4,6 +4,4 @@ class Handicap():
     
     def filter(self, moves):
         return [move for move in moves if self.rule(move)]
-
-    
-    
+     
