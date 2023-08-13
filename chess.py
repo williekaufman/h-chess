@@ -1,7 +1,7 @@
 from redis_utils import rget
 from enum import Enum
 from squares import Square
-
+from handicaps import example_handicap
 
 class Piece(Enum):
     PAWN = 'P'
@@ -278,7 +278,7 @@ class Board():
             self.set(stop, ColoredPiece(piece.color, Piece(promotion)))
         return move, extra, None
 
-    def legal_moves(self, start, history, whose_turn):
+    def legal_moves(self, start, history, whose_turn, handicap=None):
         piece = self.get(start)
         moves = []
         if not piece:
@@ -299,7 +299,7 @@ class Board():
             moves += queen_moves(self, start, color)
         elif piece.piece == Piece.KING:
             moves += king_moves(self, start, color, history.history)
-        return [square.value for square in moves if square]
+        return [square.value for square in moves if square and handicap and handicap(self, start, square, history)]
 
     def to_string(self):
         ret = ''

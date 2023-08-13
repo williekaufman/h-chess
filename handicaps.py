@@ -1,7 +1,4 @@
-class Handicap():
-    def __init__(self, rule):
-        self.rule = rule
-    
-    def filter(self, moves):
-        return [move for move in moves if self.rule(move)]
-     
+from squares import Square
+
+def example_handicap(board, start, stop, history):
+    return start == Square('E2') and stop == Square('E4')
