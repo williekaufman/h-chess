@@ -1,6 +1,4 @@
-// URL = 'http://ec2-34-192-101-140.compute-1.amazonaws.com:5003/'
-
-URL = 'http://localhost:5001/'
+URL = CONFIG.URL;
 
 function isLocalhost() {
     return window.location.href.includes('localhost');
