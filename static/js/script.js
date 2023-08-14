@@ -128,6 +128,14 @@ function newGameBody() {
     return ret
 }
 
+function getHandicap() {
+    fetchWrapper(URL + 'handicap', { 'gameId': gameId, 'color': color }, 'GET')
+        .then((response) => response.json())
+        .then((data) => {
+            handicapInfo.textContent = `Your handicap is: ${data['handicap']}`;
+        });
+}
+
 function newGame() {
     fetchWrapper(URL + 'new_game', newGameBody(), 'POST')
         .then((response) => response.json())
@@ -139,11 +147,7 @@ function newGame() {
             setGameId(data['gameId']);
             color = data['color'];
             board.orientation(color);
-            fetchWrapper(URL + 'handicap', { 'gameId': gameId, 'color': color }, 'GET')
-                .then((response) => response.json())
-                .then((data) => {
-                    handicapInfo.textContent = `Your handicap is: ${data['handicap']}`;
-                });
+            getHandicap();
         });
 
     setWhoseTurn('W');
@@ -172,6 +176,8 @@ function loadGame() {
                 color = data['color'];
                 board.orientation(color);
                 setWhoseTurn(data['whoseTurn']);
+                getHandicap();
+                showToast('Game loaded', 3);
             }
         });
 }
@@ -323,8 +329,9 @@ function maybeMove(from, to) {
                 return;
             }
             else {
-                setWhoseTurn(data['whoseTurn']);
                 board.move(from + '-' + to);
+                data['winner'] && processGameOver(data['winner']);
+                data['whoseTurn'] && setWhoseTurn(data['whoseTurn']);
                 data['extra'].forEach(x => {
                     square = x[0].toLowerCase()
                     piece = x[1]
@@ -344,10 +351,11 @@ function updateState() {
         .then((data) => {
             if (!data['success']) {
                 return;
-            } if (data['winner']) {
+            }
+            board.position(data['board']);
+            if (data['winner']) {
                 processGameOver(data['result']);
             } else {
-                board.position(data['board']);
                 setWhoseTurn(data['whoseTurn']);
             }
         })

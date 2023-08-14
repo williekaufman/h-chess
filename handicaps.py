@@ -13,11 +13,18 @@ def cant_move_pawn_and_then_rook(board, start, stop, history):
     last_move = history[-2]
     return not (board.get(start) and board.get(start).piece.value == 'R' and last_move.piece.piece.value == 'P')
 
+def die_after_moving_pawn(board, start, stop, history):
+    if len(history) < 2:
+        return True
+    last_move = history[-2]
+    return not last_move.piece.piece.value == 'P'
+
 # number is how bad the handicap is, 1-10
 handicaps = {
     'No handicap': (no_handicap, 1),
     "Can't move pawns": (cant_move_pawns, 7),
-    "Can't move pawn and then rook": (cant_move_pawn_and_then_rook, 3)
+    "Can't move pawn and then rook": (cant_move_pawn_and_then_rook, 3),
+    "Die after moving pawn": (die_after_moving_pawn, 6),
 }
 
 # theoretical args for some kind of config, e.g. difficulties, elos, idk

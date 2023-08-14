@@ -89,9 +89,11 @@ def move():
         rset('board', board.to_string(), game_id=game_id)
         rset('turn', whose_turn, game_id=game_id)
         winner = board.game_over(whose_turn, history, handicap)
+        ret = {'success': True , 'extra': extra , 'whoseTurn': whose_turn}
         if winner:
             rset('winner', winner, game_id=game_id)
-        return {'success': True , 'extra': extra , 'whoseTurn': whose_turn, 'winner': winner}
+            ret['winner'] = winner
+        return ret
     else:
         # It's bad if we end up here since the UI board will be out of sync with the server board
         # That's why we snapback the board on the UI side for moves not in the legal_moves list
