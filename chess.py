@@ -315,7 +315,7 @@ class Board():
                 has_move = True
             if has_move and has_king:
                 return False
-        return 'Black wins' if color == Color.WHITE else 'White wins'
+        return 'B' if color == Color.WHITE else 'W'
 
     def to_string(self):
         ret = ''

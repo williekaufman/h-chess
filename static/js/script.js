@@ -12,7 +12,11 @@ gameId = null;
 newGameButton = document.getElementById('newGameButton');
 copyGameIdButton = document.getElementById('copyGameIdButton');
 
+holdingPiece = false;
+
 loadGameButton = document.getElementById('loadGameButton');
+
+colorSelector = document.getElementById('colorSelector');
 gameIdInput = document.getElementById('gameIdInput');
 
 handicapInfo = document.getElementById('handicapInfo');
@@ -23,9 +27,11 @@ howToPlayBtnText = document.getElementById('how-to-play-btn-text');
 whoseTurn = null;
 whoseTurnElement = document.getElementById('whoseTurn');
 
+gameIsOver = false;
+
 highlightedSquares = [];
 
-color = Math.random() > 0 ? 'white' : 'black';
+color = null;
 
 d = { 'white': 'w', 'black': 'b' }
 
@@ -39,7 +45,8 @@ function highlightSquare(square) {
 }
 
 function processGameOver(result) {
-    showToast(result, 5); 
+    gameIsOver = true;
+    showToast(result === 'W' ? 'White wins' : 'Black wins', 5);
 }
 
 function unhighlightSquares() {
@@ -49,9 +56,19 @@ function unhighlightSquares() {
     highlightedSquares = [];
 }
 
+// I thought we might want to display this information, but it's not really necessary
+// So now this function is just kinda pointless
+function setGameId(id) {
+    gameId = id;
+}
+
 function setWhoseTurn(turn) {
     whoseTurn = turn;
-    whoseTurnElement.textContent = `${whoseTurn === 'W' ? 'White' : 'Black'} to move`;
+    if (!whoseTurn) {
+        whoseTurnElement.textContent = '';
+    } else {
+        whoseTurnElement.textContent = `${whoseTurn === 'W' ? 'White' : 'Black'} to move`;
+    }
 }
 
 function showToast(message, seconds = 3) {
@@ -103,12 +120,28 @@ function fetchWrapper(url, body, method = 'POST') {
     return fetch(url, makeRequestOptions(body, method));
 }
 
+function newGameBody() {
+    ret = {};
+    if (gameIdInput.value) {
+        ret = { 'gameId': gameIdInput.value };
+    } if (colorSelector.value != 'random') {
+        ret = { ...ret, 'color': colorSelector.value };
+    }
+    return ret
+}
+
 function newGame() {
-    fetchWrapper(URL + 'new_game', {}, 'POST')
+    fetchWrapper(URL + 'new_game', newGameBody(), 'POST')
         .then((response) => response.json())
         .then((data) => {
-            gameId = data['gameId'];
-            fetchWrapper(URL + 'handicap', { 'gameId': gameId , 'color': color }, 'GET')
+            if (!data['success']) {
+                showToast(data['error'], 10);
+                return;
+            }
+            setGameId(data['gameId']);
+            color = data['color'];
+            board.orientation(color);
+            fetchWrapper(URL + 'handicap', { 'gameId': gameId, 'color': color }, 'GET')
                 .then((response) => response.json())
                 .then((data) => {
                     handicapInfo.textContent = `Your handicap is: ${data['handicap']}`;
@@ -116,21 +149,32 @@ function newGame() {
         });
 
     setWhoseTurn('W');
+    gameIsOver = false;
     initBoard();
 }
 
 function loadGame() {
-    gameId = gameIdInput.value;
-
-    fetchWrapper(URL + 'board', { 'gameId': gameId }, 'GET')
+    if (!gameIdInput.value) {
+        showToast('Enter the game ID', 3);
+        return;
+    }
+    fetchWrapper(URL + 'join_game', { 'gameId': gameIdInput.value }, 'GET')
         .then((response) => response.json())
         .then((data) => {
             if (!data['success']) {
-                showToast('Invalid game ID');
+                showToast(data['error'], 3);
                 return;
             }
+            setGameId(gameIdInput.value);
+            gameIsOver = false;
             board.position(data['board']);
-            setWhoseTurn(data['whoseTurn']);
+            if (data['winner']) {
+                processGameOver(data['result']);
+            } else {
+                color = data['color'];
+                board.orientation(color);
+                setWhoseTurn(data['whoseTurn']);
+            }
         });
 }
 
@@ -198,11 +242,12 @@ function activePiece(piece) {
 }
 
 function onPickup(source, piece) {
+    holdingPiece = true;
     unhighlightSquares();
-    if (!yourPiece(piece) || !activePiece(piece)) {
-            return false;
+    if (!yourPiece(piece) || !activePiece(piece) || gameIsOver) {
+        return false;
     }
-    
+
     legal_destinations = [];
     on_pickup_in_flight = true;
 
@@ -225,6 +270,7 @@ function isLegalMove(to) {
 }
 
 function handleMove(from, to) {
+    holdingPiece = false;
     unhighlightSquares();
     if (on_pickup_in_flight) {
         retry_move = () => maybeMove(from, to);
@@ -240,7 +286,7 @@ function handleMove(from, to) {
                 }
                 else {
                     setWhoseTurn(data['whoseTurn']);
-                    data['gameOver'] && processGameOver(data['gameOver']);
+                    data['winner'] && processGameOver(data['winner']);
                     data['extra'].forEach(x => {
                         square = x[0].toLowerCase()
                         piece = x[1]
@@ -285,9 +331,36 @@ function maybeMove(from, to) {
         })
 }
 
+function updateState() {
+    fetchWrapper(URL + 'board', { 'gameId': gameId }, 'GET')
+        .then((response) => response.json())
+        .then((data) => {
+            if (!data['success']) {
+                return;
+            } if (data['winner']) {
+                processGameOver(data['result']);
+            } else {
+                board.position(data['board']);
+                setWhoseTurn(data['whoseTurn']);
+            }
+        })
+}
+
 setInterval(function () {
     if (retry_move) {
         retry_move();
-    }}, 200);
+    }
+    if (!holdingPiece) {
+        unhighlightSquares();
+    }
+}, 200);
+
+// This is the stupid constant polling solution
+setInterval(function () {
+    if (gameIsOver) {
+        return;
+    } 
+    updateState();
+}, 1000);
 
 newGame();

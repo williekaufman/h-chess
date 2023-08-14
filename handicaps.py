@@ -5,7 +5,7 @@ def cant_move(board, start, stop, history):
     return False
 
 def no_handicap(board, start, stop, history):
-    return not (start == Square('E2') and stop == Square('E4'))
+    return True
 
 def cant_move_pawns(board, start, stop, history):
     return not (board.get(start) and board.get(start).piece.value == 'P')

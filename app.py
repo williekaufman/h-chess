@@ -8,8 +8,7 @@ from secrets import compare_digest, token_hex
 from chess import Board, History, starting_board
 from squares import Square
 from handicaps import handicaps, get_handicaps
-
-# from enum import Enum
+import random
 
 app = Flask(__name__)
 CORS(app)
@@ -23,14 +22,33 @@ def index():
 
 @app.route("/new_game", methods=['POST'])
 def new_game():
-    game_id = new_game_id()
+    game_id = request.json.get('gameId') or new_game_id()
+    color = request.json.get('color') or ('white' if random.random() > 0.5 else 'black')
+    if rget('board', game_id=game_id):
+        return {'success': False, 'error': 'Game already exists'}
     handicaps = get_handicaps(0, 0)
     rset('board', starting_board.to_string(), game_id=game_id)
     rset('history', History().to_string(), game_id=game_id)
     rset('turn', 'W', game_id=game_id)
     rset('w_handicap', handicaps[0], game_id=game_id)
     rset('b_handicap', handicaps[1], game_id=game_id)
-    return {'success': True, 'gameId': game_id}
+    rset('other_player', 'white' if color == 'black' else 'black', game_id=game_id)
+    return {'success': True, 'gameId': game_id, 'color': color }
+
+@app.route("/join_game", methods=['GET'])
+def join_game():
+    game_id = request.args.get('gameId')
+    board = Board.of_game_id(game_id)
+    winner = rget('winner', game_id=game_id)
+    color = rget('other_player', game_id=game_id)
+    if not board:
+        return {'success': False, 'error': 'Invalid game id'}
+    if not color:
+        return {'success': False, 'error': 'Game already has two players'}
+    if winner:
+        return {'success': True, 'board': board.to_dict(), 'winner': winner}
+    rset('other_player', '', game_id=game_id)
+    return {'success': True, 'color': color, 'board': board.to_dict(), 'whoseTurn': rget('turn', game_id=game_id)}
 
 @app.route('/handicap', methods=['GET'])
 def get_handicap():
@@ -46,8 +64,11 @@ def get_handicap():
 def get_board():
     game_id = request.args.get('gameId')
     board = Board.of_game_id(game_id)
+    winner = rget('winner', game_id=game_id)
     if not board:
         return {'success': False, 'error': 'Invalid game id'}
+    if winner:
+        return {'success': True, 'board': board.to_dict(), 'winner': winner}
     return {'success': True, 'board': board.to_dict(), 'whoseTurn': rget('turn', game_id=game_id)}
 
 @app.route("/move", methods=['POST'])
@@ -67,7 +88,10 @@ def move():
         rset('history', history.to_string(), game_id=game_id)
         rset('board', board.to_string(), game_id=game_id)
         rset('turn', whose_turn, game_id=game_id)
-        return {'success': True , 'extra': extra , 'whoseTurn': whose_turn, 'gameOver': board.game_over(whose_turn, history, handicap)}
+        winner = board.game_over(whose_turn, history, handicap)
+        if winner:
+            rset('winner', winner, game_id=game_id)
+        return {'success': True , 'extra': extra , 'whoseTurn': whose_turn, 'winner': winner}
     else:
         # It's bad if we end up here since the UI board will be out of sync with the server board
         # That's why we snapback the board on the UI side for moves not in the legal_moves list
