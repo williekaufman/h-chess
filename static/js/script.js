@@ -360,7 +360,7 @@ function updateState() {
             }
             board.position(data['board']);
             if (data['winner']) {
-                processGameOver(data['result']);
+                processGameOver(data['winner']);
             } else {
                 setWhoseTurn(data['whoseTurn']);
             }
