@@ -88,7 +88,7 @@ def move():
         rset('history', history.to_string(), game_id=game_id)
         rset('board', board.to_string(), game_id=game_id)
         rset('turn', whose_turn, game_id=game_id)
-        winner = board.game_over(whose_turn, history, handicap)
+        winner = board.winner(whose_turn, history, handicap)
         ret = {'success': True , 'extra': extra , 'whoseTurn': whose_turn}
         if winner:
             rset('winner', winner, game_id=game_id)

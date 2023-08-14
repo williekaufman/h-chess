@@ -302,7 +302,7 @@ class Board():
         handicap = handicap or (lambda board, start, stop, history: True)
         return [square.value for square in moves if square and handicap(self, start, square, history.history)]
 
-    def game_over(self, whose_turn, history, handicap=None):
+    def winner(self, whose_turn, history, handicap=None):
         color = Color.WHITE if whose_turn == 'W' else Color.BLACK
         has_king, has_move = False, False
         for square in Square:
@@ -315,7 +315,7 @@ class Board():
                 has_move = True
             if has_move and has_king:
                 return False
-        return 'B' if color == Color.WHITE else 'W'
+        return 'Black' if color == Color.WHITE else 'White'
 
     def to_string(self):
         ret = ''

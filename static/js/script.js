@@ -26,6 +26,7 @@ whoseTurn = null;
 whoseTurnElement = document.getElementById('whoseTurn');
 
 gameIsOver = false;
+gameResultElement = document.getElementById('game-result');
 
 highlightedSquares = [];
 
@@ -43,8 +44,10 @@ function highlightSquare(square) {
 }
 
 function processGameOver(result) {
+    setWhoseTurn('');
     gameIsOver = true;
-    showToast(result === 'W' ? 'White wins' : 'Black wins', 5);
+    gameResultElement.textContent = `${result} wins`;
+    gameResultElement.style.color = result.toLowerCase() === color ? 'green' : 'red';
 }
 
 function unhighlightSquares() {
@@ -137,6 +140,7 @@ function getHandicap() {
 }
 
 function newGame() {
+    gameResultElement.textContent = '';
     fetchWrapper(URL + 'new_game', newGameBody(), 'POST')
         .then((response) => response.json())
         .then((data) => {
@@ -160,6 +164,7 @@ function loadGame() {
         showToast('Enter the game ID', 3);
         return;
     }
+    gameResultElement.textContent = '';
     fetchWrapper(URL + 'join_game', { 'gameId': gameIdInput.value }, 'GET')
         .then((response) => response.json())
         .then((data) => {
@@ -171,7 +176,7 @@ function loadGame() {
             gameIsOver = false;
             board.position(data['board']);
             if (data['winner']) {
-                processGameOver(data['result']);
+                processGameOver(data['winner']);
             } else {
                 color = data['color'];
                 board.orientation(color);
@@ -298,7 +303,7 @@ function handleMove(from, to) {
                     return;
                 }
                 else {
-                    setWhoseTurn(data['whoseTurn']);
+                    data['whoseTurn'] && setWhoseTurn(data['whoseTurn']);
                     data['winner'] && processGameOver(data['winner']);
                     data['extra'].forEach(x => {
                         square = x[0].toLowerCase()
@@ -320,7 +325,7 @@ function maybeMove(from, to) {
     unhighlightSquares();
     retry_move = null;
     if (to == 'offboard') {
-        return 'snapback';
+        return 
     }
     fetchWrapper(URL + 'move', { 'start': from, 'stop': to, 'gameId': gameId }, 'POST')
         .then((response) => response.json())
@@ -330,8 +335,8 @@ function maybeMove(from, to) {
             }
             else {
                 board.move(from + '-' + to);
-                data['winner'] && processGameOver(data['winner']);
                 data['whoseTurn'] && setWhoseTurn(data['whoseTurn']);
+                data['winner'] && processGameOver(data['winner']);
                 data['extra'].forEach(x => {
                     square = x[0].toLowerCase()
                     piece = x[1]
@@ -362,12 +367,8 @@ function updateState() {
 }
 
 setInterval(function () {
-    if (retry_move) {
-        retry_move();
-    }
-    if (!holdingPiece) {
-        unhighlightSquares();
-    }
+    retry_move && retry_move();
+    !holdingPiece && unhighlightSquares();
 }, 200);
 
 // This is the stupid constant polling solution
