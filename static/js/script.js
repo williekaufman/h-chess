@@ -182,6 +182,7 @@ function loadGame() {
                 board.orientation(color);
                 setWhoseTurn(data['whoseTurn']);
                 getHandicap();
+                gameIdInput.value = '';
                 showToast('Game loaded', 3);
             }
         });
