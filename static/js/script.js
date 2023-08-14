@@ -190,8 +190,17 @@ function handleKeyDown(event) {
 newGameButton.addEventListener('click', newGame);
 loadGameButton.addEventListener('click', loadGame);
 
+function copyToClipboard(text) {
+  var textarea = document.createElement("textarea");
+  textarea.value = text;
+  document.body.appendChild(textarea);
+  textarea.select();
+  document.execCommand("copy");
+  document.body.removeChild(textarea);
+}
+
 copyGameIdButton.addEventListener('click', () => {
-    navigator.clipboard.writeText(gameId);
+    copyToClipboard(gameId);
     showToast(`Copied ${gameId} to clipboard`);
 });
 
