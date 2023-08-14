@@ -1,7 +1,6 @@
 from redis_utils import rget
 from enum import Enum
 from squares import Square
-from handicaps import example_handicap
 
 class Piece(Enum):
     PAWN = 'P'
@@ -59,12 +58,12 @@ class Move():
         self.castle = castle
         self.promotion = promotion
 
-    def validate(self, board, history, whose_turn):
+    def validate(self, board, history, whose_turn, handicap):
         if self.piece is None:
             return False
         if board.get(self.stop) and board.get(self.start).color == board.get(self.stop).color:
             return False
-        if self.stop.value not in board.legal_moves(self.start, history, whose_turn): 
+        if self.stop.value not in board.legal_moves(self.start, history, whose_turn, handicap): 
             return False
         return True
 
@@ -218,7 +217,7 @@ class Board():
         rank, file = square.to_coordinates()
         self.board[rank][file] = piece
 
-    def move(self, start, stop, whose_turn, history=None, promote_to=Piece.QUEEN):
+    def move(self, start, stop, whose_turn, handicap, history=None, promote_to=Piece.QUEEN):
         piece = self.get(start)
         extra = []
         if not piece:
@@ -243,7 +242,7 @@ class Board():
         promotion = promote_to.value if piece and piece.piece == Piece.PAWN and stop.to_coordinates()[
             0] in [0, 7] else 'x'
         move = Move(piece, start, stop, capture, check, castle, promotion)
-        if not move.validate(self, history, whose_turn):
+        if not move.validate(self, history, whose_turn, handicap):
             return None, None, 'invalid move'
         if castle == 'k':
             self.set(stop.shift(0, 1), None)
@@ -276,6 +275,7 @@ class Board():
         self.set(stop, piece)
         if promotion != 'x':
             self.set(stop, ColoredPiece(piece.color, Piece(promotion)))
+            extra.append((stop.value, f'{piece.color.value.lower()}{promotion}'))
         return move, extra, None
 
     def legal_moves(self, start, history, whose_turn, handicap=None):
@@ -300,7 +300,22 @@ class Board():
         elif piece.piece == Piece.KING:
             moves += king_moves(self, start, color, history.history)
         handicap = handicap or (lambda board, start, stop, history: True)
-        return [square.value for square in moves if square and handicap(self, start, square, history)]
+        return [square.value for square in moves if square and handicap(self, start, square, history.history)]
+
+    def game_over(self, whose_turn, history, handicap=None):
+        color = Color.WHITE if whose_turn == 'W' else Color.BLACK
+        has_king, has_move = False, False
+        for square in Square:
+            piece = self.get(square)
+            if not piece:
+                continue
+            if piece.color == color and piece.piece == Piece.KING:
+                has_king = True
+            if piece.color == color and self.legal_moves(square, history, whose_turn, handicap):
+                has_move = True
+            if has_move and has_king:
+                return False
+        return True
 
     def to_string(self):
         ret = ''

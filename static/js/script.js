@@ -15,6 +15,8 @@ copyGameIdButton = document.getElementById('copyGameIdButton');
 loadGameButton = document.getElementById('loadGameButton');
 gameIdInput = document.getElementById('gameIdInput');
 
+handicapInfo = document.getElementById('handicapInfo');
+
 howToPlayPopup = document.getElementById('how-to-play-popup');
 howToPlayBtnText = document.getElementById('how-to-play-btn-text');
 
@@ -78,6 +80,11 @@ function newGame() {
         .then((response) => response.json())
         .then((data) => {
             gameId = data['gameId'];
+            fetchWrapper(URL + 'handicap', { 'gameId': gameId , 'color': color }, 'GET')
+                .then((response) => response.json())
+                .then((data) => {
+                    handicapInfo.textContent = `Your handicap is: ${data['handicap']}`;
+                });
         });
 
     whose_turn = 'W';
@@ -120,8 +127,8 @@ copyGameIdButton.addEventListener('click', () => {
 
 function setSquare(square, piece) {
     board.position({
-        [square]: piece,
         ...board.position(),
+        [square]: piece,
     }, false)
 }
 
