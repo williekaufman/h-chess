@@ -22,5 +22,5 @@ handicaps = {
 
 # theoretical args for some kind of config, e.g. difficulties, elos, idk
 def get_handicaps(x, y):
-    return ['No handicap', 'No handicap']
     return random.sample(handicaps.keys(), 2)
+    return ['No handicap', 'No handicap']

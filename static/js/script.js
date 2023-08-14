@@ -20,11 +20,35 @@ handicapInfo = document.getElementById('handicapInfo');
 howToPlayPopup = document.getElementById('how-to-play-popup');
 howToPlayBtnText = document.getElementById('how-to-play-btn-text');
 
-whose_turn = 'W';
+whoseTurn = null;
+whoseTurnElement = document.getElementById('whoseTurn');
+
+highlightedSquares = [];
 
 color = Math.random() > 0 ? 'white' : 'black';
 
 d = { 'white': 'w', 'black': 'b' }
+
+function getSquareElement(square) {
+    return document.querySelector(`[data-square="${square.toLowerCase()}"]`);
+}
+
+function highlightSquare(square) {
+    getSquareElement(square).classList.add('highlight');
+    highlightedSquares.push(square);
+}
+
+function unhighlightSquares() {
+    highlightedSquares.forEach(square => {
+        getSquareElement(square).classList.remove('highlight');
+    });
+    highlightedSquares = [];
+}
+
+function setWhoseTurn(turn) {
+    whose_turn = turn;
+    whoseTurnElement.textContent = `${whose_turn === 'W' ? 'White' : 'Black'} to move`;
+}
 
 function showToast(message, seconds = 3) {
     const toast = document.createElement('div');
@@ -87,7 +111,7 @@ function newGame() {
                 });
         });
 
-    whose_turn = 'W';
+    setWhoseTurn('W');
     initBoard();
 }
 
@@ -102,7 +126,7 @@ function loadGame() {
                 return;
             }
             board.position(data['board']);
-            whose_turn = data['whose_turn'];
+            setWhoseTurn(data['whose_turn']);
         });
 }
 
@@ -170,6 +194,7 @@ function activePiece(piece) {
 }
 
 function onPickup(source, piece) {
+    unhighlightSquares();
     if (!yourPiece(piece) || !activePiece(piece)) {
             return false;
     }
@@ -185,6 +210,7 @@ function onPickup(source, piece) {
             }
             on_pickup_in_flight = false;
             data['moves'].forEach(move => {
+                highlightSquare(move);
                 legal_destinations.push(move);
             });
         })
@@ -195,6 +221,7 @@ function isLegalMove(to) {
 }
 
 function handleMove(from, to) {
+    unhighlightSquares();
     if (on_pickup_in_flight) {
         retry_move = () => maybeMove(from, to);
         return 'snapback';
@@ -208,7 +235,7 @@ function handleMove(from, to) {
                     return;
                 }
                 else {
-                    whose_turn = data['whose_turn'];
+                    setWhoseTurn(data['whose_turn']);
                     data['extra'].forEach(x => {
                         square = x[0].toLowerCase()
                         piece = x[1]
@@ -226,6 +253,7 @@ function handleMove(from, to) {
 }
 
 function maybeMove(from, to) {
+    unhighlightSquares();
     retry_move = null;
     if (to == 'offboard') {
         return 'snapback';
@@ -237,7 +265,7 @@ function maybeMove(from, to) {
                 return;
             }
             else {
-                whose_turn = data['whose_turn'];
+                setWhoseTurn(data['whose_turn']);
                 board.move(from + '-' + to);
                 data['extra'].forEach(x => {
                     square = x[0].toLowerCase()
