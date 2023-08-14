@@ -38,6 +38,10 @@ function highlightSquare(square) {
     highlightedSquares.push(square);
 }
 
+function processGameOver(result) {
+    showToast(result, 5); 
+}
+
 function unhighlightSquares() {
     highlightedSquares.forEach(square => {
         getSquareElement(square).classList.remove('highlight');
@@ -46,8 +50,8 @@ function unhighlightSquares() {
 }
 
 function setWhoseTurn(turn) {
-    whose_turn = turn;
-    whoseTurnElement.textContent = `${whose_turn === 'W' ? 'White' : 'Black'} to move`;
+    whoseTurn = turn;
+    whoseTurnElement.textContent = `${whoseTurn === 'W' ? 'White' : 'Black'} to move`;
 }
 
 function showToast(message, seconds = 3) {
@@ -126,7 +130,7 @@ function loadGame() {
                 return;
             }
             board.position(data['board']);
-            setWhoseTurn(data['whose_turn']);
+            setWhoseTurn(data['whoseTurn']);
         });
 }
 
@@ -190,7 +194,7 @@ function yourPiece(piece) {
 }
 
 function activePiece(piece) {
-    return piece.search(whose_turn.toLowerCase()) !== -1;
+    return piece.search(whoseTurn.toLowerCase()) !== -1;
 }
 
 function onPickup(source, piece) {
@@ -235,7 +239,8 @@ function handleMove(from, to) {
                     return;
                 }
                 else {
-                    setWhoseTurn(data['whose_turn']);
+                    setWhoseTurn(data['whoseTurn']);
+                    data['gameOver'] && processGameOver(data['gameOver']);
                     data['extra'].forEach(x => {
                         square = x[0].toLowerCase()
                         piece = x[1]
@@ -265,7 +270,7 @@ function maybeMove(from, to) {
                 return;
             }
             else {
-                setWhoseTurn(data['whose_turn']);
+                setWhoseTurn(data['whoseTurn']);
                 board.move(from + '-' + to);
                 data['extra'].forEach(x => {
                     square = x[0].toLowerCase()

@@ -48,7 +48,7 @@ def get_board():
     board = Board.of_game_id(game_id)
     if not board:
         return {'success': False, 'error': 'Invalid game id'}
-    return {'success': True, 'board': board.to_dict(), 'whose_turn': rget('turn', game_id=game_id)}
+    return {'success': True, 'board': board.to_dict(), 'whoseTurn': rget('turn', game_id=game_id)}
 
 @app.route("/move", methods=['POST'])
 def move():
@@ -67,7 +67,7 @@ def move():
         rset('history', history.to_string(), game_id=game_id)
         rset('board', board.to_string(), game_id=game_id)
         rset('turn', whose_turn, game_id=game_id)
-        return {'success': True , 'extra': extra , 'whose_turn': whose_turn, 'gameOver': board.game_over(whose_turn, history, handicap)}
+        return {'success': True , 'extra': extra , 'whoseTurn': whose_turn, 'gameOver': board.game_over(whose_turn, history, handicap)}
     else:
         # It's bad if we end up here since the UI board will be out of sync with the server board
         # That's why we snapback the board on the UI side for moves not in the legal_moves list
