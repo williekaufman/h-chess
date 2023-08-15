@@ -54,11 +54,11 @@ def times(game_id, whose_turn):
         if whose_turn == 'W':
             whiteTime -= time_since_last_move
             if whiteTime < 0:
-                rget('winner', game_id=game_id) or rset('winner', 'B', game_id=game_id)
+                rget('winner', game_id=game_id) or rset('winner', 'Black', game_id=game_id)
         else:
             blackTime -= time_since_last_move
             if blackTime < 0:
-                rget('winner', game_id=game_id) or rset('winner', 'W', game_id=game_id)
+                rget('winner', game_id=game_id) or rset('winner', 'White', game_id=game_id)
     return {
         'whiteTime': whiteTime,
         'blackTime': blackTime,
@@ -205,7 +205,6 @@ def legal_moves():
     game_id = request.args.get('gameId')
     ignore_other_player_check = request.args.get('ignoreOtherPlayerCheck')
     ignore_other_player_check = ignore_other_player_check and ignore_other_player_check.lower() == 'true'
-    print(not ignore_other_player_check)
     if rget('other_player', game_id=game_id) and not ignore_other_player_check:
         return {'success': False, 'error': 'Other player has not joined'}
     start = Square(request.args.get('start').upper())
