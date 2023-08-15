@@ -162,7 +162,7 @@ addFriendButton.addEventListener('click', function () {
             if (data.success) {
                 showToast(`Successfully added ${friend} as a friend`);
             } else {
-                showToast(data.message);
+                showToast(data.error);
             }
         });
     addFriendInputElement.value = '';
