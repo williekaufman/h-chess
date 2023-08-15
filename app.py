@@ -159,6 +159,10 @@ def get_handicap():
     else:
         return {'success': False, 'error': 'Invalid game id'}
 
+@app.route("/all_handicaps", methods=['GET'])
+def get_all_handicaps():
+    return {'success': True, 'handicaps': [k for k in handicaps.keys()]}
+
 @app.route("/board", methods=['GET'])
 def get_board():
     game_id = request.args.get('gameId')
