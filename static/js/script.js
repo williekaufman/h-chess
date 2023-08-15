@@ -162,6 +162,7 @@ addFriendButton.addEventListener('click', function () {
                 showToast(data.message);
             }
         });
+    addFriendInputElement.value = '';
 });
 
 function showToast(message, seconds = 3) {
@@ -255,21 +256,22 @@ function newGame() {
     initBoard();
 }
 
-function loadGame(gameId = null) {
-    gameId = gameId || gameIdInput.value;
-    if (!gameId) {
+function loadGame(game = null) {
+    console.log(game);
+    game = game || gameIdInput.value;
+    if (!game) {
         showToast('Enter the game ID', 3);
         return;
     }
     gameResultElement.textContent = '';
-    fetchWrapper(URL + 'join_game', { gameId }, 'GET')
+    fetchWrapper(URL + 'join_game', { 'gameId': game }, 'GET')
         .then((response) => response.json())
         .then((data) => {
             if (!data['success']) {
                 showToast(data['error'], 3);
                 return;
             }
-            setGameId(gameId);
+            setGameId(game);
             gameIsOver = false;
             board.position(data['board']);
             if (data['winner']) {
@@ -482,10 +484,7 @@ setInterval(function () {
     updateState();
 }, 1000);
 
-setInterval(function () {
-    if (!username) {
-        return;
-    }
+function populateFriendsList() {
     fetchWrapper(URL + 'active_games', { 'username': username }, 'GET')
         .then((response) => response.json())
         .then((data) => {
@@ -494,6 +493,14 @@ setInterval(function () {
             }
             displayActiveGames(data['games']);
         })
+}
+
+setInterval(function () {
+    if (!username) {
+        return;
+    } else {
+        populateFriendsList();
+    }
 }, 10000);
 
 activeGamesWrapper = document.createElement('div');
@@ -505,17 +512,22 @@ activeGamesWrapper.style = `
     bottom: 50px;
 `;
 
+activeGamesWrapper.class = 'active-games-wrapper';
+
 function displayActiveGames(activeGames) {
-    activeGamesWrapper.innerHTML = '';
+    activeGamesWrapper.innerHTML = `<h4> Friends list </h4>`;
     activeGames.forEach(game => {
+        id = game['gameId'];
+        content = id ? `<button "active-game-button" onclick="loadGame('${id}')">Challenge ${game['username']}</button>` : `${game['username']}`;
         activeGamesWrapper.innerHTML += `
-            <div class="active-game">
-                <button "active-game-button" onclick="loadGame('${game['gameId']}')">Challenge ${game['username']}</button>
-            </div>
-        `;
+                <div class="active-game">
+                    ${content}
+                </div>
+            `;
     });
 
     document.body.appendChild(activeGamesWrapper);
 }
 
 newGame();
+populateFriendsList();

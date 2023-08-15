@@ -122,11 +122,10 @@ def active_games():
     games = []
     for friend in friends:
         game_id = rget(live_game_key(friend), game_id=None)
-        if game_id:
-            games.append({
-                'username': friend,
-                'gameId': game_id,
-            })
+        games.append({
+            'username': friend,
+            'gameId': game_id,
+        })
     return {'success': True, 'games': games}
 
 @app.route("/join_game", methods=['GET'])

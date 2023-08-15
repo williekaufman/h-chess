@@ -76,10 +76,17 @@
   background-color: gray;
 }
 
-.active-game {
-  color: white;
+.active-games-wrapper {
+  position: fixed;
+  right: 50px;
+  bottom: 50px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* .active-game {
   display: inline-block;
   text-align: center;
   align-items: center;
   width: 50px;
-}
+} */
