@@ -95,6 +95,8 @@ def remove_friend(username, friend):
 def new_game():
     game_id = request.json.get('gameId') or new_game_id()
     color = request.json.get('color') or ('White' if random.random() > 0.5 else 'Black')
+    if color not in ['White', 'Black']:
+        return {'success': False, 'error': 'Invalid color'}
     username = request.json.get('username')
     if username:
         rset(live_game_key(username), game_id, game_id=None)
@@ -149,7 +151,9 @@ def join_game():
 def get_handicap():
     game_id = request.args.get('gameId')
     color = request.args.get('color')
-    color = 'W' if color == 'white' else 'B'
+    if color not in ['White', 'Black']:
+        return {'success': False, 'error': 'Invalid color'}
+    color = 'W' if color == 'White' else 'B'
     if (handicap := rget(f'{color}_handicap', game_id=game_id)):
         return {'success': True, 'handicap': handicap}
     else:
