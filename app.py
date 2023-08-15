@@ -8,6 +8,7 @@ from secrets import compare_digest, token_hex
 from chess import Board, History, starting_board
 from squares import Square
 from handicaps import handicaps, get_handicaps
+import time
 import random
 
 app = Flask(__name__)
@@ -15,6 +16,52 @@ CORS(app)
 
 def new_game_id():
     return token_hex(16)
+
+def update_time(whose_turn, game_id):
+    now = time.time()
+    key = f'{whose_turn}_time'
+    current_time = rget(key, game_id=game_id)
+    if not current_time:
+        return
+    current_time = float(current_time)
+    last_move = rget('last_move', game_id=game_id)
+    if last_move:
+        time_since_last_move = now - float(last_move)
+        if time_since_last_move > current_time:
+            return 'B' if whose_turn == 'W' else 'W' 
+        rset(key, current_time - time_since_last_move, game_id=game_id)
+    rset('last_move', now, game_id=game_id)
+    
+
+def times(game_id, whose_turn):
+    last_move = rget('last_move', game_id=game_id)
+    whiteTime = rget('W_time', game_id=game_id)
+    blackTime = rget('B_time', game_id=game_id)
+    # This is kinda hacky but it's just so the frontend always displays something
+    # for games that don't have time controls
+    if not whiteTime or not blackTime:
+        return {
+            'whiteTime': 'White',
+            'blackTime': 'Black',
+        }
+    whiteTime = float(whiteTime)
+    blackTime = float(blackTime)
+    if last_move:
+        last_move = float(last_move)
+        now = time.time()
+        time_since_last_move = now - last_move
+        if whose_turn == 'W':
+            whiteTime -= time_since_last_move
+            if whiteTime < 0:
+                rget('winner', game_id=game_id) or rset('winner', 'B', game_id=game_id)
+        else:
+            blackTime -= time_since_last_move
+            if blackTime < 0:
+                rget('winner', game_id=game_id) or rset('winner', 'W', game_id=game_id)
+    return {
+        'whiteTime': whiteTime,
+        'blackTime': blackTime,
+    }
 
 @app.route("/", methods=['GET'])
 def index():
@@ -24,14 +71,17 @@ def index():
 def new_game():
     game_id = request.json.get('gameId') or new_game_id()
     color = request.json.get('color') or ('white' if random.random() > 0.5 else 'black')
+    if (timeControl := request.json.get('timeControl')):
+        rset('W_time', timeControl, game_id=game_id)
+        rset('B_time', timeControl, game_id=game_id) 
     if rget('board', game_id=game_id):
         return {'success': False, 'error': 'Game already exists'}
     handicaps = get_handicaps(0, 0)
     rset('board', starting_board.to_string(), game_id=game_id)
     rset('history', History().to_string(), game_id=game_id)
     rset('turn', 'W', game_id=game_id)
-    rset('w_handicap', handicaps[0], game_id=game_id)
-    rset('b_handicap', handicaps[1], game_id=game_id)
+    rset('W_handicap', handicaps[0], game_id=game_id)
+    rset('B_handicap', handicaps[1], game_id=game_id)
     rset('other_player', 'white' if color == 'black' else 'black', game_id=game_id)
     return {'success': True, 'gameId': game_id, 'color': color }
 
@@ -54,7 +104,7 @@ def join_game():
 def get_handicap():
     game_id = request.args.get('gameId')
     color = request.args.get('color')
-    color = 'w' if color == 'white' else 'b'
+    color = 'W' if color == 'white' else 'B'
     if (handicap := rget(f'{color}_handicap', game_id=game_id)):
         return {'success': True, 'handicap': handicap}
     else:
@@ -65,11 +115,12 @@ def get_board():
     game_id = request.args.get('gameId')
     board = Board.of_game_id(game_id)
     winner = rget('winner', game_id=game_id)
+    whose_turn = rget('turn', game_id=game_id)
     if not board:
         return {'success': False, 'error': 'Invalid game id'}
     if winner:
         return {'success': True, 'board': board.to_dict(), 'winner': winner}
-    return {'success': True, 'board': board.to_dict(), 'whoseTurn': rget('turn', game_id=game_id)}
+    return {'success': True, 'board': board.to_dict(), 'whoseTurn': whose_turn, **times(game_id, whose_turn)}
 
 @app.route("/move", methods=['POST'])
 def move():
@@ -79,21 +130,22 @@ def move():
     board = Board.of_game_id(game_id)
     history = History.of_game_id(game_id)
     whose_turn = rget('turn', game_id=game_id)
-    handicap = handicaps[rget(f'{whose_turn.lower()}_handicap', game_id=game_id)][0]
+    handicap = handicaps[rget(f'{whose_turn}_handicap', game_id=game_id)][0]
     move, extra, error = board.move(start, stop, whose_turn, handicap, history)
     if move:
+        winner_on_time = update_time(whose_turn, game_id)
         history.add(move)
         whose_turn = 'W' if whose_turn == 'B' else 'B'
-        handicap = handicaps[rget(f'{whose_turn.lower()}_handicap', game_id=game_id)][0]
+        handicap = handicaps[rget(f'{whose_turn}_handicap', game_id=game_id)][0]
         rset('history', history.to_string(), game_id=game_id)
         rset('board', board.to_string(), game_id=game_id)
         rset('turn', whose_turn, game_id=game_id)
-        winner = board.winner(whose_turn, history, handicap)
+        winner = winner_on_time or board.winner(whose_turn, history, handicap)
         ret = {'success': True , 'extra': extra , 'whoseTurn': whose_turn}
         if winner:
             rset('winner', winner, game_id=game_id)
             ret['winner'] = winner
-        return ret
+        return {**ret, **times(game_id, whose_turn)}
     else:
         # It's bad if we end up here since the UI board will be out of sync with the server board
         # That's why we snapback the board on the UI side for moves not in the legal_moves list
@@ -107,8 +159,8 @@ def legal_moves():
     board = Board.of_game_id(game_id)
     history = History.of_game_id(game_id)
     whose_turn = rget('turn', game_id=game_id)
-    handicap = handicaps[rget(f'{whose_turn.lower()}_handicap', game_id=game_id)][0]
+    handicap = handicaps[rget(f'{whose_turn}_handicap', game_id=game_id)][0]
     return { 'success': True, 'moves': board.legal_moves(start, history, whose_turn, handicap) }
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5001 if LOCAL else 5003) 
+    app.run(host='0.0.0.0', port=5001 if LOCAL else 5003)

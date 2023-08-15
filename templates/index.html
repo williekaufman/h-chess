@@ -32,8 +32,8 @@
     <button id="copyGameIdButton">Copy Game Id</button>
 </div>
 <div style="margin-top: 5px">
-    New game color:  
-    <select id="colorSelector"> 
+    New game color:
+    <select id="colorSelector">
         <option value="random">Random</option>
         <option value="white">White</option>
         <option value="black">Black</option>
@@ -42,10 +42,12 @@
 </div>
 <div id="handicapInfo" style="margin-top: 5px"> </div>
 <div id="whoseTurn" style="margin-top: 5px"> </div>
+<div id="times" style="margin-top: 5px"></div>
 <div class="board">
     <div id="board"></div>
     <h1 id="game-result"></h1>
 </div>
 <script src="{{ url_for('static', filename='js/config.js') }}"></script>
 <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+
 </html>

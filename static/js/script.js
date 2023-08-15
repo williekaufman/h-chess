@@ -34,6 +34,11 @@ color = null;
 
 d = { 'white': 'w', 'black': 'b' }
 
+whiteTime = null;
+blackTime = null;
+
+timesElement = document.getElementById('times');
+
 function getSquareElement(square) {
     return document.querySelector(`[data-square="${square.toLowerCase()}"]`);
 }
@@ -46,8 +51,8 @@ function highlightSquare(square) {
 function processGameOver(result) {
     setWhoseTurn('');
     gameIsOver = true;
-    gameResultElement.textContent = `${result} wins`;
-    gameResultElement.style.color = result.toLowerCase() === color ? 'green' : 'red';
+    gameResultElement.textContent = `${result === 'W' ? 'White' : 'Black'} wins`;
+    gameResultElement.style.color = result.toLowerCase() === (color && color[0]) ? 'green' : 'red';
 }
 
 function unhighlightSquares() {
@@ -57,19 +62,40 @@ function unhighlightSquares() {
     highlightedSquares = [];
 }
 
+function formatTime(seconds, bold = false) {
+    if (typeof(seconds) == 'string') {
+        return bold ? `<b>${seconds}</b>` : seconds;
+    }
+    if (seconds <= 0) {
+        return '0:00';
+    }
+    ret = `${Math.floor(seconds / 60)}:${seconds % 60 < 10 ? '0' : ''}${Math.floor(seconds % 60)}`;
+    if (bold) {
+        ret = `<b>${ret}</b>`;
+    }
+    return ret;
+}
+
+function updateTimes(white, black) {
+    if (gameIsOver || !white || !black) {
+        return;
+    }
+    whiteTime = formatTime(white, whoseTurn === 'W');
+    blackTime = formatTime(black, whoseTurn === 'B');
+    timesElement.innerHTML = `${whiteTime} - ${blackTime}`
+}
+
 // I thought we might want to display this information, but it's not really necessary
-// So now this function is just kinda pointless
+// Too lazy to refactor
 function setGameId(id) {
     gameId = id;
 }
 
+// Used to be used to populate a textbox with whose turn it was, but 
+// no longer necessary since the time controls stuff handles that. 
+// Too lazy to refactor
 function setWhoseTurn(turn) {
     whoseTurn = turn;
-    if (!whoseTurn) {
-        whoseTurnElement.textContent = '';
-    } else {
-        whoseTurnElement.textContent = `${whoseTurn === 'W' ? 'White' : 'Black'} to move`;
-    }
 }
 
 function showToast(message, seconds = 3) {
@@ -127,7 +153,7 @@ function newGameBody() {
         ret = { 'gameId': gameIdInput.value };
     } if (colorSelector.value != 'random') {
         ret = { ...ret, 'color': colorSelector.value };
-    }
+    } ret = {...ret, 'timeControl': 300 };
     return ret
 }
 
@@ -363,6 +389,7 @@ function updateState() {
                 processGameOver(data['winner']);
             } else {
                 setWhoseTurn(data['whoseTurn']);
+                updateTimes(data['whiteTime'], data['blackTime']);
             }
         })
 }
