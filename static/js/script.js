@@ -300,6 +300,9 @@ function onPickup(source, piece) {
         .then((response) => response.json())
         .then((data) => {
             if (!data['success']) {
+                if (data['error'] === 'Other player has not joined') {
+                    showToast("Can't move until other player joins", 3);
+                }
                 return;
             }
             on_pickup_in_flight = false;
@@ -327,10 +330,7 @@ function handleMove(from, to) {
             .then((response) => response.json())
             .then((data) => {
                 if (!data['success']) {
-                    if (data['error'] == 'Other player has not joined') {
-                        showToast("Can't move until other player joins", 3);
-                    }
-                    return;
+                   return;
                 }
                 else {
                     data['whoseTurn'] && setWhoseTurn(data['whoseTurn']);
