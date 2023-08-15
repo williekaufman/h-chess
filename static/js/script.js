@@ -155,11 +155,12 @@ addFriendButton.addEventListener('click', function () {
         showToast('Please enter a friend to add');
         return;
     }
-    fetchWrapper(URL + 'add_friend', { 'username': username, 'friend': addFriendInputElement.value })
+    friend = addFriendInputElement.value;
+    fetchWrapper(URL + 'add_friend', { 'username': username, friend })
         .then((response) => response.json())
         .then((data) => {
             if (data.success) {
-                showToast(`Successfully added ${addFriendInputElement.value} as a friend`);
+                showToast(`Successfully added ${friend} as a friend`);
             } else {
                 showToast(data.message);
             }
