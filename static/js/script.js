@@ -360,7 +360,7 @@ on_pickup_in_flight = false;
 retry_move = null;
 
 function yourPiece(piece) {
-    return piece.search(color.charAt(0)) !== -1 || ignoreOtherPlayerCheck.checked;
+    return color && piece.search(color.charAt(0).toLowerCase()) !== -1 || ignoreOtherPlayerCheck.checked;
 }
 
 function activePiece(piece) {
