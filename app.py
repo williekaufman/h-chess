@@ -10,6 +10,7 @@ from squares import Square
 from handicaps import handicaps, get_handicaps
 import time
 import random
+import json
 
 app = Flask(__name__)
 CORS(app)
@@ -67,10 +68,37 @@ def times(game_id, whose_turn):
 def index():
     return render_template('index.html')
 
+def live_game_key(username):
+    return 'live_game:' + username
+
+def friends_key(username):
+    return 'friends:' + username
+
+def get_friends(username):
+    return json.loads(rget(friends_key(username), game_id=None) or '[]')
+
+def add_friend(username, friend):
+    friends = get_friends(username)
+    if friend in friends:
+        return False
+    friends.append(friend)
+    rset(friends_key(username), json.dumps(friends), game_id=None, ex=None)
+
+def remove_friend(username, friend):
+    friends = get_friends(username)
+    if friend not in friends:
+        return False
+    friends.remove(friend)
+    rset(friends_key(username), json.dumps(friends), game_id=None, ex=None)
+
 @app.route("/new_game", methods=['POST'])
 def new_game():
     game_id = request.json.get('gameId') or new_game_id()
     color = request.json.get('color') or ('white' if random.random() > 0.5 else 'black')
+    username = request.json.get('username')
+    if username:
+        rset(live_game_key(username), game_id, game_id=None)
+        rset('username', username, game_id=game_id)
     if (timeControl := request.json.get('timeControl')):
         rset('W_time', timeControl, game_id=game_id)
         rset('B_time', timeControl, game_id=game_id) 
@@ -85,6 +113,22 @@ def new_game():
     rset('other_player', 'white' if color == 'black' else 'black', game_id=game_id)
     return {'success': True, 'gameId': game_id, 'color': color }
 
+@app.route("/active_games", methods=['GET'])
+def active_games():
+    username = request.args.get('username')
+    if not username:
+        return {'success': False, 'error': 'No username provided'}
+    friends = [str(f) for f in get_friends(username)]
+    games = []
+    for friend in friends:
+        game_id = rget(live_game_key(friend), game_id=None)
+        if game_id:
+            games.append({
+                'username': friend,
+                'gameId': game_id,
+            })
+    return {'success': True, 'games': games}
+
 @app.route("/join_game", methods=['GET'])
 def join_game():
     game_id = request.args.get('gameId')
@@ -97,6 +141,8 @@ def join_game():
         return {'success': False, 'error': 'Game already has two players'}
     if winner:
         return {'success': True, 'board': board.to_dict(), 'winner': winner}
+    username = rget('username', game_id=game_id)
+    username and rset(live_game_key(username), '', game_id=None)
     rset('other_player', '', game_id=game_id)
     return {'success': True, 'color': color, 'board': board.to_dict(), 'whoseTurn': rget('turn', game_id=game_id)}
 
@@ -165,6 +211,15 @@ def legal_moves():
     whose_turn = rget('turn', game_id=game_id)
     handicap = handicaps[rget(f'{whose_turn}_handicap', game_id=game_id)][0]
     return { 'success': True, 'moves': board.legal_moves(start, history, whose_turn, handicap) }
+
+@app.route("/add_friend", methods=['POST'])
+def befriend():
+    username = request.json.get('username')
+    friend = request.json.get('friend')
+    if not username or not friend:
+        return {'success': False, 'error': 'No username or friend provided'}
+    add_friend(username, friend)
+    return {'success': True}
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001 if LOCAL else 5003)

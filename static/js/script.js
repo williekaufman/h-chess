@@ -7,6 +7,13 @@ function isLocalhost() {
 previousToast = null;
 
 gameId = null;
+
+usernameInputElement = document.getElementById('usernameInput');
+username = null;
+
+addFriendInputElement = document.getElementById('addFriendInput');
+addFriendButton = document.getElementById('addFriendButton');
+
 newGameButton = document.getElementById('newGameButton');
 copyGameIdButton = document.getElementById('copyGameIdButton');
 
@@ -33,11 +40,6 @@ timeControlSelectorElement = document.getElementById('timeControlSelector');
 highlightedSquares = [];
 
 color = null;
-
-d = { 'white': 'w', 'black': 'b' }
-
-whiteTime = null;
-blackTime = null;
 
 timesElement = document.getElementById('times');
 
@@ -100,6 +102,68 @@ function setWhoseTurn(turn) {
     whoseTurn = turn;
 }
 
+function setUsername() {
+    username = usernameInputElement.value;
+    localStorage.setItem('handicap-chess-username', username);
+}
+
+usernameInputElement.addEventListener('blur', function () {
+    setUsername();
+    document.addEventListener('keydown', handleKeyDown);
+});
+
+usernameInputElement.addEventListener('focus', function () {
+    document.removeEventListener('keydown', handleKeyDown);
+});
+
+usernameInputElement.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+        setUsername();
+    }
+    if (e.key === 'Escape') {
+        usernameInputElement.blur();
+    }
+});
+
+if (localStorage.getItem('handicap-chess-username')) {
+    usernameInputElement.value = localStorage.getItem('handicap-chess-username');
+    username = usernameInputElement.value;
+}
+
+gameIdInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+        loadGameButton.click();
+    }
+});
+
+addFriendInputElement.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+        addFriendButton.click();
+    } else if (e.key === 'Escape') {
+        addFriendInputElement.blur();
+    }
+});
+
+addFriendButton.addEventListener('click', function () {
+    if (!username) {
+        showToast('Please enter a username');
+        return;
+    }
+    if (!addFriendInputElement.value) {
+        showToast('Please enter a friend to add');
+        return;
+    }
+    fetchWrapper(URL + 'add_friend', { 'username': username, 'friend': addFriendInputElement.value })
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.success) {
+                showToast(`Successfully added ${addFriendInputElement.value} as a friend`);
+            } else {
+                showToast(data.message);
+            }
+        });
+});
+
 function showToast(message, seconds = 3) {
     const toast = document.createElement('div');
 
@@ -152,11 +216,13 @@ function fetchWrapper(url, body, method = 'POST') {
 function newGameBody() {
     ret = {};
     if (gameIdInput.value) {
-        ret = { 'gameId': gameIdInput.value };
+        ret['gameId'] = gameIdInput.value;
     } if (colorSelector.value != 'random') {
-        ret = { ...ret, 'color': colorSelector.value };
+        ret['color'] = colorSelector.value;
     } if (timeControlSelectorElement.value) {
-        ret = { ...ret, 'timeControl': timeControlSelectorElement.value };
+        ret['timeControl'] = timeControlSelectorElement.value;
+    } if (username) {
+        ret['username'] = username;
     }
     return ret
 }
@@ -189,20 +255,21 @@ function newGame() {
     initBoard();
 }
 
-function loadGame() {
-    if (!gameIdInput.value) {
+function loadGame(gameId = null) {
+    gameId = gameId || gameIdInput.value;
+    if (!gameId) {
         showToast('Enter the game ID', 3);
         return;
     }
     gameResultElement.textContent = '';
-    fetchWrapper(URL + 'join_game', { 'gameId': gameIdInput.value }, 'GET')
+    fetchWrapper(URL + 'join_game', { gameId }, 'GET')
         .then((response) => response.json())
         .then((data) => {
             if (!data['success']) {
                 showToast(data['error'], 3);
                 return;
             }
-            setGameId(gameIdInput.value);
+            setGameId(gameId);
             gameIsOver = false;
             board.position(data['board']);
             if (data['winner']) {
@@ -219,11 +286,7 @@ function loadGame() {
 }
 
 function handleKeyDown(event) {
-    if (event.key == 'Enter') {
-        if (document.activeElement == gameIdInput) { 
-            loadGame();
-        }
-    } if (event.ctrlKey) {
+    if (event.ctrlKey) {
         if (event.key == 'c') {
             copyGameId();
         }
@@ -288,7 +351,7 @@ on_pickup_in_flight = false;
 retry_move = null;
 
 function yourPiece(piece) {
-    return piece.search(d[color]) !== -1 || isLocalhost();
+    return piece.search(color.charAt(0)) !== -1 || isLocalhost();
 }
 
 function activePiece(piece) {
@@ -418,5 +481,41 @@ setInterval(function () {
     }
     updateState();
 }, 1000);
+
+setInterval(function () {
+    if (!username) {
+        return;
+    }
+    fetchWrapper(URL + 'active_games', { 'username': username }, 'GET')
+        .then((response) => response.json())
+        .then((data) => {
+            if (!data['success']) {
+                return;
+            }
+            displayActiveGames(data['games']);
+        })
+}, 10000);
+
+activeGamesWrapper = document.createElement('div');
+activeGamesWrapper.id = 'active-games-wrapper';
+
+activeGamesWrapper.style = `
+    position: fixed;
+    right: 50px;
+    bottom: 50px;
+`;
+
+function displayActiveGames(activeGames) {
+    activeGamesWrapper.innerHTML = '';
+    activeGames.forEach(game => {
+        activeGamesWrapper.innerHTML += `
+            <div class="active-game">
+                <button "active-game-button" onclick="loadGame('${game['gameId']}')">Challenge ${game['username']}</button>
+            </div>
+        `;
+    });
+
+    document.body.appendChild(activeGamesWrapper);
+}
 
 newGame();

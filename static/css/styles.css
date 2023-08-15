@@ -75,3 +75,11 @@
 .highlight {
   background-color: gray;
 }
+
+.active-game {
+  color: white;
+  display: inline-block;
+  text-align: center;
+  align-items: center;
+  width: 50px;
+}
