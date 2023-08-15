@@ -105,6 +105,8 @@ function setWhoseTurn(turn) {
 function setUsername() {
     username = usernameInputElement.value;
     localStorage.setItem('handicap-chess-username', username);
+    populateFriendsList();
+
 }
 
 usernameInputElement.addEventListener('blur', function () {
