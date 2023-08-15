@@ -125,6 +125,8 @@ def get_board():
 @app.route("/move", methods=['POST'])
 def move():
     game_id = request.json.get('gameId')
+    if rget('other_player', game_id=game_id):
+        return {'success': False, 'error': 'Other player has not joined'}
     start = Square(request.json.get('start').upper())
     stop = Square(request.json.get('stop').upper())
     board = Board.of_game_id(game_id)
@@ -155,6 +157,8 @@ def move():
 @app.route("/legal_moves", methods=['GET'])
 def legal_moves():
     game_id = request.args.get('gameId')
+    if rget('other_player', game_id=game_id):
+        return {'success': False, 'error': 'Other player has not joined'}
     start = Square(request.args.get('start').upper())
     board = Board.of_game_id(game_id)
     history = History.of_game_id(game_id)
