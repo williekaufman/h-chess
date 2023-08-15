@@ -217,6 +217,8 @@ def befriend():
     friend = request.json.get('friend')
     if not username or not friend:
         return {'success': False, 'error': 'No username or friend provided'}
+    if username == friend:
+        return {'success': False, 'error': 'Befriending yourself is just sad'}
     add_friend(username, friend)
     return {'success': True}
 
