@@ -159,11 +159,8 @@ addFriendButton.addEventListener('click', function () {
     fetchWrapper(URL + 'add_friend', { 'username': username, friend })
         .then((response) => response.json())
         .then((data) => {
-            if (data.success) {
-                showToast(`Successfully added ${friend} as a friend`);
-            } else {
-                showToast(data.error);
-            }
+            showToast(data.success ? `Successfully added ${friend} as a friend` : data.error);
+            populateFriendsList();
         });
     addFriendInputElement.value = '';
 });
