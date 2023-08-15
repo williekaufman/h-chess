@@ -222,5 +222,15 @@ def befriend():
     add_friend(username, friend)
     return {'success': True}
 
+# Ya this should probably be DELETE type but whatever
+@app.route("/remove_friend", methods=['POST'])
+def unfriend():
+    username = request.json.get('username')
+    friend = request.json.get('friend')
+    if not username or not friend:
+        return {'success': False, 'error': 'No username or friend provided'}
+    remove_friend(username, friend)
+    return {'success': True}
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001 if LOCAL else 5003)

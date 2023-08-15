@@ -84,9 +84,33 @@
   flex-direction: column;
 }
 
-/* .active-game {
-  display: inline-block;
-  text-align: center;
-  align-items: center;
-  width: 50px;
-} */
+.active-game-button {
+  width: 250px;
+  white-space: nowrap;
+}
+
+.active-game-button:hover {
+  background-color: lightblue;
+}
+
+.dead-button {
+  background-color: lightpink;
+  width: 250px;
+  white-space: nowrap;
+  outline: none;
+}
+
+.dead-button:hover {
+  background-color: lightpink;
+}
+
+.friend {
+  width: 250px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.remove-friend-button:hover {
+  background-color: lightblue;
+}

@@ -165,6 +165,15 @@ addFriendButton.addEventListener('click', function () {
     addFriendInputElement.value = '';
 });
 
+function removeFriend(friend) {
+    fetchWrapper(URL + 'remove_friend', { 'username': username, friend })
+        .then((response) => response.json())
+        .then((data) => {
+            showToast(data.success ? `Successfully removed ${friend} as a friend` : data.error);
+            populateFriendsList();
+        });
+}
+
 function showToast(message, seconds = 3) {
     const toast = document.createElement('div');
 
@@ -506,22 +515,22 @@ setInterval(function () {
 activeGamesWrapper = document.createElement('div');
 activeGamesWrapper.id = 'active-games-wrapper';
 
-activeGamesWrapper.style = `
-    position: fixed;
-    right: 50px;
-    bottom: 50px;
-`;
-
-activeGamesWrapper.class = 'active-games-wrapper';
+activeGamesWrapper.classList.add('active-games-wrapper');
 
 function displayActiveGames(activeGames) {
     activeGamesWrapper.innerHTML = `<h4> Friends list </h4>`;
     activeGames.forEach(game => {
         id = game['gameId'];
-        content = id ? `<button "active-game-button" onclick="loadGame('${id}')">Challenge ${game['username']}</button>` : `${game['username']}`;
+        display_username = game['username'].slice(0, 9);
+        if (id) {
+            content = `<button class="active-game-button" onclick="loadGame('${id}')">Challenge ${display_username}</button>`;
+        } else {
+            content = `<button class="dead-button">Challenge ${display_username}</button>`;
+        }
         activeGamesWrapper.innerHTML += `
-                <div class="active-game">
+                <div class="friend">
                     ${content}
+                    <button class="remove-friend-button" onClick="removeFriend('${game['username']}')">Remove friend</button>
                 </div>
             `;
     });
