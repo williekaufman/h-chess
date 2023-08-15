@@ -26,29 +26,29 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 
-<div>
-    <input id="usernameInput" type="text" placeholder="username" size="15">
-</div>
-<div style="margin-top: 5px">
-    <input id="addFriendInput" type="text" placeholder="add friend" size="15">
-    <button id="addFriendButton" style="margin-left:5px">Add</button>
-</div>
 <div style="margin-top: 5px">
     <button id="newGameButton" style="margin-right:5px">New Game</button>
     <button id="loadGameButton" style="margin-right:5px">Load Game</button>
     <button id="copyGameIdButton">Copy Game Id</button>
+    <div style="position: absolute; right: 20px; top: 5px">
+        <input id="usernameInput" type="text" placeholder="username" size="15">
+        <div style="margin-top: 5px">
+            <input id="addFriendInput" type="text" placeholder="add friend" size="15">
+            <button id="addFriendButton" style="margin-left:5px">Add</button>
+        </div>
+
+    </div>
 </div>
 <div style="margin-top: 5px">
-    New game color
+    <span> New game params </span>
     <select id="colorSelector">
+        <option value="random" selected disabled>Color</option>
         <option value="random">Random</option>
         <option value="white">White</option>
         <option value="black">Black</option>
     </select>
-</div>
-<div style="margin-top: 5px">
-    Time control
     <select id="timeControlSelector">
+        <option value="" selected disabled>Time control</option>
         <option value="">Unlimited</option>
         <option value="180">3m</option>
         <option value="300">5m</option>
@@ -57,6 +57,10 @@
 </div>
 <div style="margin-top: 5px">
     <input type="text" id="gameIdInput" placeholder="custom game id" size="30">
+</div>
+<div style="margin-top: 5px"> 
+    <input type="checkbox" id="ignoreOtherPlayerCheck">
+    <label for="ignoreOtherPlayerCheck">Allow moving opponent's pieces and pieces without an opponent</label> 
 </div>
 <div id="handicapInfo" style="margin-top: 5px"> </div>
 <div id="whoseTurn" style="margin-top: 5px"> </div>

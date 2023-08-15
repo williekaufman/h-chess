@@ -1,9 +1,5 @@
 URL = CONFIG.URL;
 
-function isLocalhost() {
-    return window.location.href.includes('localhost');
-}
-
 previousToast = null;
 
 gameId = null;
@@ -42,6 +38,8 @@ highlightedSquares = [];
 color = null;
 
 timesElement = document.getElementById('times');
+
+ignoreOtherPlayerCheck = document.getElementById('ignoreOtherPlayerCheck');
 
 function getSquareElement(square) {
     return document.querySelector(`[data-square="${square.toLowerCase()}"]`);
@@ -362,7 +360,7 @@ on_pickup_in_flight = false;
 retry_move = null;
 
 function yourPiece(piece) {
-    return piece.search(color.charAt(0)) !== -1 || isLocalhost();
+    return piece.search(color.charAt(0)) !== -1 || ignoreOtherPlayerCheck.checked;
 }
 
 function activePiece(piece) {
@@ -379,7 +377,7 @@ function onPickup(source, piece) {
     legal_destinations = [];
     on_pickup_in_flight = true;
 
-    fetchWrapper(URL + 'legal_moves', { 'start': source, 'gameId': gameId }, 'GET')
+    fetchWrapper(URL + 'legal_moves', { 'start': source, 'gameId': gameId , 'ignoreOtherPlayerCheck': ignoreOtherPlayerCheck.checked }, 'GET')
         .then((response) => response.json())
         .then((data) => {
             if (!data['success']) {
@@ -409,7 +407,7 @@ function handleMove(from, to) {
     }
     retry_move = null;
     if (isLegalMove(to)) {
-        fetchWrapper(URL + 'move', { 'start': from, 'stop': to, 'gameId': gameId }, 'POST')
+        fetchWrapper(URL + 'move', { 'start': from, 'stop': to, 'gameId': gameId , 'ignoreOtherPlayerCheck': ignoreOtherPlayerCheck.checked }, 'POST')
             .then((response) => response.json())
             .then((data) => {
                 if (!data['success']) {
@@ -440,7 +438,7 @@ function maybeMove(from, to) {
     if (to == 'offboard') {
         return
     }
-    fetchWrapper(URL + 'move', { 'start': from, 'stop': to, 'gameId': gameId }, 'POST')
+    fetchWrapper(URL + 'move', { 'start': from, 'stop': to, 'gameId': gameId , 'ignoreOtherPlayerCheck': ignoreOtherPlayerCheck.checked }, 'POST')
         .then((response) => response.json())
         .then((data) => {
             if (!data['success']) {
