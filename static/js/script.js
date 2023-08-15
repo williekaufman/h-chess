@@ -28,6 +28,8 @@ whoseTurnElement = document.getElementById('whoseTurn');
 gameIsOver = false;
 gameResultElement = document.getElementById('game-result');
 
+timeControlSelectorElement = document.getElementById('timeControlSelector');
+
 highlightedSquares = [];
 
 color = null;
@@ -63,7 +65,7 @@ function unhighlightSquares() {
 }
 
 function formatTime(seconds, bold = false) {
-    if (typeof(seconds) == 'string') {
+    if (typeof (seconds) == 'string') {
         return bold ? `<b>${seconds}</b>` : seconds;
     }
     if (seconds <= 0) {
@@ -153,7 +155,9 @@ function newGameBody() {
         ret = { 'gameId': gameIdInput.value };
     } if (colorSelector.value != 'random') {
         ret = { ...ret, 'color': colorSelector.value };
-    } ret = {...ret, 'timeControl': 300 };
+    } if (timeControlSelectorElement.value) {
+        ret = { ...ret, 'timeControl': timeControlSelectorElement.value };
+    }
     return ret
 }
 
@@ -216,11 +220,12 @@ function loadGame() {
 
 function handleKeyDown(event) {
     if (event.key == 'Enter') {
-        if (document.activeElement == key) {
-            get(key.value);
+        if (document.activeElement == gameIdInput) { 
+            loadGame();
         }
-        if (document.activeElement == value) {
-            set(key, value);
+    } if (event.ctrlKey) {
+        if (event.key == 'c') {
+            copyGameId();
         }
     }
 }
@@ -229,17 +234,21 @@ newGameButton.addEventListener('click', newGame);
 loadGameButton.addEventListener('click', loadGame);
 
 function copyToClipboard(text) {
-  var textarea = document.createElement("textarea");
-  textarea.value = text;
-  document.body.appendChild(textarea);
-  textarea.select();
-  document.execCommand("copy");
-  document.body.removeChild(textarea);
+    var textarea = document.createElement("textarea");
+    textarea.value = text;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand("copy");
+    document.body.removeChild(textarea);
+}
+
+function copyGameId() {
+    copyToClipboard(gameId);
+    showToast(`Copied ${gameId} to clipboard`);
 }
 
 copyGameIdButton.addEventListener('click', () => {
-    copyToClipboard(gameId);
-    showToast(`Copied ${gameId} to clipboard`);
+    copyGameId();
 });
 
 function setSquare(square, piece) {
@@ -330,7 +339,7 @@ function handleMove(from, to) {
             .then((response) => response.json())
             .then((data) => {
                 if (!data['success']) {
-                   return;
+                    return;
                 }
                 else {
                     data['whoseTurn'] && setWhoseTurn(data['whoseTurn']);
@@ -355,7 +364,7 @@ function maybeMove(from, to) {
     unhighlightSquares();
     retry_move = null;
     if (to == 'offboard') {
-        return 
+        return
     }
     fetchWrapper(URL + 'move', { 'start': from, 'stop': to, 'gameId': gameId }, 'POST')
         .then((response) => response.json())
@@ -406,7 +415,7 @@ setInterval(function () {
 setInterval(function () {
     if (gameIsOver) {
         return;
-    } 
+    }
     updateState();
 }, 1000);
 
