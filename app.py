@@ -94,7 +94,7 @@ def remove_friend(username, friend):
 @app.route("/new_game", methods=['POST'])
 def new_game():
     game_id = request.json.get('gameId') or new_game_id()
-    color = request.json.get('color') or ('white' if random.random() > 0.5 else 'black')
+    color = request.json.get('color') or ('White' if random.random() > 0.5 else 'Black')
     username = request.json.get('username')
     if username:
         rset(live_game_key(username), game_id, game_id=None)
@@ -110,7 +110,7 @@ def new_game():
     rset('turn', 'W', game_id=game_id)
     rset('W_handicap', handicaps[0], game_id=game_id)
     rset('B_handicap', handicaps[1], game_id=game_id)
-    rset('other_player', 'white' if color == 'black' else 'black', game_id=game_id)
+    rset('other_player', 'White' if color == 'Black' else 'Black', game_id=game_id)
     return {'success': True, 'gameId': game_id, 'color': color }
 
 @app.route("/active_games", methods=['GET'])

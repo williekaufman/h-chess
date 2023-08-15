@@ -54,7 +54,7 @@ function processGameOver(result) {
     setWhoseTurn('');
     gameIsOver = true;
     gameResultElement.textContent = `${result} wins`;
-    gameResultElement.style.color = result.toLowerCase() === (color && color[0]) ? 'green' : 'red';
+    gameResultElement.style.color = result === color ? 'green' : 'red';
 }
 
 function unhighlightSquares() {
