@@ -327,6 +327,9 @@ function handleMove(from, to) {
             .then((response) => response.json())
             .then((data) => {
                 if (!data['success']) {
+                    if (data['error'] == 'Other player has not joined') {
+                        showToast("Can't move until other player joins", 3);
+                    }
                     return;
                 }
                 else {
