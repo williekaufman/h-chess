@@ -345,7 +345,7 @@ function initBoard() {
     var config = {
         draggable: true,
         position: 'start',
-        orientation: color,
+        orientation: color && color.toLowerCase() || 'white',
         onDragStart: onPickup,
         onDrop: handleMove,
         moveSpeed: 'fast',
