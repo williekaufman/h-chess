@@ -254,7 +254,7 @@ function newGame() {
             }
             setGameId(data['gameId']);
             color = data['color'];
-            board.orientation(color);
+            board.orientation(color.toLowerCase());
             getHandicap();
         });
 
@@ -285,7 +285,7 @@ function loadGame(game = null) {
                 processGameOver(data['winner']);
             } else {
                 color = data['color'];
-                board.orientation(color);
+                board.orientation(color.toLowerCase());
                 setWhoseTurn(data['whoseTurn']);
                 getHandicap();
                 gameIdInput.value = '';
@@ -345,7 +345,7 @@ function initBoard() {
     var config = {
         draggable: true,
         position: 'start',
-        orientation: color && color.toLowerCase() || 'white',
+        orientation: (color && color.toLowerCase()) || 'white',
         onDragStart: onPickup,
         onDrop: handleMove,
         moveSpeed: 'fast',
