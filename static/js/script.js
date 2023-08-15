@@ -53,7 +53,7 @@ function highlightSquare(square) {
 function processGameOver(result) {
     setWhoseTurn('');
     gameIsOver = true;
-    gameResultElement.textContent = `${result === 'W' ? 'White' : 'Black'} wins`;
+    gameResultElement.textContent = `${result} wins`;
     gameResultElement.style.color = result.toLowerCase() === (color && color[0]) ? 'green' : 'red';
 }
 
