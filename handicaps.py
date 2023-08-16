@@ -43,7 +43,7 @@ def bongcloud(board, start, stop, history):
 def cant_move_to_opponents_side_of_board(board, start, stop, history):
     color = history.whose_turn
     ranks = [Rank.First, Rank.Second, Rank.Third, Rank.Fourth] if color == Color.BLACK else [Rank.Fifth, Rank.Sixth, Rank.Seventh, Rank.Eighth]
-    return not stop.rank in ranks
+    return not stop.rank() in ranks
 
 # number is how bad the handicap is, 1-10
 handicaps = {
