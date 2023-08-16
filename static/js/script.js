@@ -204,15 +204,15 @@ timeSelectionElements = document.querySelectorAll('.time-selection');
 
 timeSelectionElements.forEach(element => {
     element.addEventListener('click', function () {
-        if (element.classList.contains('selected')) {
-            element.classList.remove('selected');
+        if (element.classList.contains('selected-time')) {
+            element.classList.remove('selected-time');
             timeSelection = null;
             return;
         }
         timeSelectionElements.forEach(element => {
-            element.classList.remove('selected');
+            element.classList.remove('selected-time');
         });
-        element.classList.add('selected');
+        element.classList.add('selected-time');
         timeSelection = element.getAttribute('seconds');
     });
 });

@@ -75,13 +75,16 @@
         <div class="label-container">
             <label style="margin-bottom: 5px" for="timeSelection"> Time </label>
             <div id="timeSelector" class="grid-container">
-                <span class="time-selection" seconds="1"> 1s </span>
-                <span class="time-selection" seconds="180"> 3m </span>
-                <span class="time-selection" seconds="300"> 5m </span>
-                <span class="time-selection" seconds="900"> 15m </span>
+                <button class="time-selection" seconds="1"> 1s </button>
+                <button class="time-selection" seconds="180"> 3m </button>
+                <button class="time-selection" seconds="300"> 5m </button>
+                <button class="time-selection" seconds="900"> 15m </button>
             </div>
         </div>
-        <button id="createGameButton" class="create-game-button">Create Game</button>
+        <div class="label-container">
+            <label style="margin-bottom: 5px" for="createGameButton">Submit</label>
+            <button id="createGameButton" class="create-game-button">Create Game</button>
+        </div>
     </div>
 </div>
 <script src="{{ url_for('static', filename='js/config.js') }}"></script>
