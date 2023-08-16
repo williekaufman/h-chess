@@ -34,7 +34,7 @@ class ColoredPiece():
         return ColoredPiece(Color.WHITE if s.isupper() else Color.BLACK, Piece(s.upper()))
 
     def to_string_long(self):
-        return f'{self.color.value.lower()}{self.piece.value}'
+        return f'{self.color.value[0].lower()}{self.piece.value}'
 
     def __str__(self):
         return self.to_string()

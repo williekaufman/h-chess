@@ -37,6 +37,8 @@ timeControlSelectorElement = document.getElementById('timeControlSelector');
 
 highlightedSquares = [];
 
+// Colors should try to be 'White' or 'Black' (capitalization matters sometimes!) unless something else
+// is required to interact with chessboard.js, e.g. in the charAt(0) stuff below
 color = null;
 
 timesElement = document.getElementById('times');
