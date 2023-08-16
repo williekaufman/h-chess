@@ -266,7 +266,6 @@ function newGame() {
 }
 
 function loadGame(game = null) {
-    console.log(game);
     game = game || gameIdInput.value;
     if (!game) {
         showToast('Enter the game ID', 3);
