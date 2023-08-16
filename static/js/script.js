@@ -11,13 +11,15 @@ addFriendInputElement = document.getElementById('addFriendInput');
 addFriendButton = document.getElementById('addFriendButton');
 
 newGameButton = document.getElementById('newGameButton');
+newGameModal = document.getElementById('newGameModal');
+newGameModalOverlay = document.getElementById('newGameModalOverlay');
+createGameButton = document.getElementById('createGameButton');
 copyGameIdButton = document.getElementById('copyGameIdButton');
 
 holdingPiece = false;
 
 loadGameButton = document.getElementById('loadGameButton');
 
-colorSelector = document.getElementById('colorSelector');
 gameIdInput = document.getElementById('gameIdInput');
 
 promotionSelector = document.getElementById('promotionSelector');
@@ -33,7 +35,11 @@ whoseTurnElement = document.getElementById('whoseTurn');
 gameIsOver = false;
 gameResultElement = document.getElementById('game-result');
 
-timeControlSelectorElement = document.getElementById('timeControlSelector');
+colorSelection = 'random';
+whiteKingElement = document.getElementById('whiteKing');
+blackKingElement = document.getElementById('blackKing');
+
+timeSelection = null;
 
 highlightedSquares = [];
 
@@ -140,6 +146,45 @@ gameIdInput.addEventListener('keydown', function (e) {
     }
 });
 
+whiteKingElement.addEventListener('click', function () {
+    if (colorSelection == 'White') {
+        colorSelection = 'random';
+        whiteKingElement.classList.remove('selected');
+    } else {
+        colorSelection = 'White';
+        whiteKingElement.classList.add('selected');
+        blackKingElement.classList.remove('selected');
+    }
+});
+
+blackKingElement.addEventListener('click', function () {
+    if (colorSelection == 'Black') {
+        colorSelection = 'random';
+        blackKingElement.classList.remove('selected');
+    } else {
+        colorSelection = 'Black';
+        blackKingElement.classList.add('selected');
+        whiteKingElement.classList.remove('selected');
+    }
+});
+
+timeSelectionElements = document.querySelectorAll('.time-selection');
+
+timeSelectionElements.forEach(element => {
+    element.addEventListener('click', function () {
+        if (element.classList.contains('selected')) {
+            element.classList.remove('selected');
+            timeSelection = null;
+            return;
+        }
+        timeSelectionElements.forEach(element => {
+            element.classList.remove('selected');
+        });
+        element.classList.add('selected');
+        timeSelection = element.getAttribute('seconds');
+    });
+});
+
 addFriendInputElement.addEventListener('keydown', function (e) {
     if (e.key === 'Enter') {
         addFriendButton.click();
@@ -229,10 +274,10 @@ function newGameBody() {
     ret = {};
     if (gameIdInput.value) {
         ret['gameId'] = gameIdInput.value;
-    } if (colorSelector.value != 'random') {
-        ret['color'] = colorSelector.value;
-    } if (timeControlSelectorElement.value) {
-        ret['timeControl'] = timeControlSelectorElement.value;
+    } if (colorSelection != 'random') {
+        ret['color'] = colorSelection;
+    } if (timeSelection) {
+        ret['timeControl'] = timeSelection;
     } if (username) {
         ret['username'] = username;
     }
@@ -297,15 +342,41 @@ function loadGame(game = null) {
         });
 }
 
+function openModal() {
+    newGameModal.style.display = 'flex';
+    newGameModalOverlay.style.display = 'block';
+}
+
+function closeModal() {
+    newGameModal.style.display = 'none';
+    newGameModalOverlay.style.display = 'none';
+}
+
 function handleKeyDown(event) {
     if (event.ctrlKey) {
         if (event.key == 'c') {
             copyGameId();
         }
+    } else if (event.key == 'Escape') {
+        closeModal();
     }
 }
 
-newGameButton.addEventListener('click', () => newGame());
+document.addEventListener("click", function (event) {
+    if (event.target === newGameModalOverlay) {
+        closeModal();
+    }
+});
+
+newGameButton.addEventListener('click', () => {
+    openModal();
+});
+
+createGameButton.addEventListener('click', () => {
+    newGame();
+    closeModal();
+});
+
 loadGameButton.addEventListener('click', () => loadGame());
 
 function copyToClipboard(text) {
@@ -380,7 +451,7 @@ function onPickup(source, piece) {
     legal_destinations = [];
     on_pickup_in_flight = true;
 
-    fetchWrapper(URL + 'legal_moves', { 'start': source, 'gameId': gameId , 'ignoreOtherPlayerCheck': ignoreOtherPlayerCheck.checked }, 'GET')
+    fetchWrapper(URL + 'legal_moves', { 'start': source, 'gameId': gameId, 'ignoreOtherPlayerCheck': ignoreOtherPlayerCheck.checked }, 'GET')
         .then((response) => response.json())
         .then((data) => {
             if (!data['success']) {
@@ -402,7 +473,7 @@ function isLegalMove(to) {
 }
 
 function sendMove(from, to) {
-    fetchWrapper(URL + 'move', { 'start': from, 'stop': to, 'gameId': gameId , 'ignoreOtherPlayerCheck': ignoreOtherPlayerCheck.checked , 'promotion': promotionSelector.value }, 'POST')
+    fetchWrapper(URL + 'move', { 'start': from, 'stop': to, 'gameId': gameId, 'ignoreOtherPlayerCheck': ignoreOtherPlayerCheck.checked, 'promotion': promotionSelector.value }, 'POST')
         .then((response) => response.json())
         .then((data) => {
             if (!data['success']) {
@@ -446,7 +517,7 @@ function maybeMove(from, to) {
     if (to == 'offboard') {
         return
     }
-    sendMove(from, to);    
+    sendMove(from, to);
 }
 
 function updateState() {
@@ -525,7 +596,7 @@ function displayActiveGames(activeGames) {
 }
 
 if (localStorage.getItem('hchess-testing-mode')) {
-    colorSelector.value = 'White';
+    whiteKingElement.click();
     ignoreOtherPlayerCheck.checked = true;
 }
 
