@@ -53,11 +53,12 @@ handicaps = {
     "Die after moving pawn": (die_after_moving_pawn, 7),
     "Lose if you have no queen": (lose_if_no_queen, 7),
     "When you get checked, you must move your king": (skittish, 2),
-    "When your king is on the back rank, you can only move pawns and kings": (bongcloud, 2),
+    # Commented out since it would randomly just end some games instantly lol
+    # "When your king is on the back rank, you can only move pawns and kings": (bongcloud, 2),
     "Can't move to opponent's side of board": (cant_move_to_opponents_side_of_board, 5),
 }
 
 # theoretical args for some kind of config, e.g. difficulties, elos, idk
 def get_handicaps(x, y):
-    return ["Can't move to opponent's side of board", "No handicap"]
+    # return ["Can't move to opponent's side of board", "No handicap"]
     return random.sample(handicaps.keys(), 2)
