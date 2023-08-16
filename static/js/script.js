@@ -388,6 +388,9 @@ function handleKeyDown(event) {
         }
     } else if (event.key == 'Escape') {
         closeModal();
+    } else if (event.key == 'Enter' && newGameModal.style.display == 'flex') {
+        newGame();
+        closeModal();
     }
 }
 
