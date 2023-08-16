@@ -408,7 +408,7 @@ function sendMove(from, to, updateBoard = false) {
                 return;
             }
             else {
-                updateBoard && board.move(`${from}-${to}`, false)
+                updateBoard && board.move(`${from}-${to}`, false);
                 data['whoseTurn'] && setWhoseTurn(data['whoseTurn']);
                 data['winner'] && processGameOver(data['winner']);
                 data['extra'].forEach(x => {
@@ -521,6 +521,11 @@ function displayActiveGames(activeGames) {
     });
 
     document.body.appendChild(activeGamesWrapper);
+}
+
+if (localStorage.getItem('hchess-testing-mode')) {
+    colorSelector.value = 'White';
+    ignoreOtherPlayerCheck.checked = true;
 }
 
 newGame();
