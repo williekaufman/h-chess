@@ -26,6 +26,9 @@ promotionSelector = document.getElementById('promotionSelector');
 promotionPiece = null;
 displayPromotionOptionsElement = document.getElementById('displayPromotionOptions');
 
+mostRecentFrom = null;
+mostRecentTo = null;
+
 handicapInfo = document.getElementById('handicapInfo');
 
 howToPlayPopup = document.getElementById('how-to-play-popup');
@@ -62,6 +65,15 @@ function highlightSquare(square) {
     highlightedSquares.push(square);
 }
 
+function updateMostRecentMove(from, to) {
+    mostRecentFrom && getSquareElement(mostRecentFrom).classList.remove('recent-move');
+    mostRecentTo && getSquareElement(mostRecentTo).classList.remove('recent-move');
+    getSquareElement(from).classList.add('recent-move');
+    getSquareElement(to).classList.add('recent-move');
+    mostRecentFrom = from;
+    mostRecentTo = to;
+}
+
 function processGameOver(result) {
     setWhoseTurn('');
     gameIsOver = true;
@@ -70,10 +82,17 @@ function processGameOver(result) {
 }
 
 function unhighlightSquares() {
-    highlightedSquares.forEach(square => {
-        getSquareElement(square).classList.remove('highlight');
-    });
+    highlightedSquares.forEach(unhighlightSquare);
     highlightedSquares = [];
+}
+
+function unhighlightSquare(square, removeRecent = false) {
+    if (removeRecent) {
+        getSquareElement(square).classList.remove('recent');
+    }
+    ['highlight'].forEach(className => {
+        getSquareElement(square).classList.remove(className);
+    });
 }
 
 function formatTime(seconds, bold = false) {
@@ -405,6 +424,11 @@ newGameButton.addEventListener('click', () => {
     openModal();
 });
 
+
+// I'm sure this is stupid but whatever it works to get the button to be aligned better
+createGameButtonLabel.textContent = 'fake label';
+createGameButtonLabel.style.opacity = 0;
+
 createGameButton.addEventListener('click', () => {
     newGame();
     closeModal();
@@ -518,6 +542,7 @@ function sendMove(from, to) {
             }
             else {
                 board.move(`${from}-${to}`, false); // this should be unnecessary except in a retry but it doesn't hurt anyway
+                updateMostRecentMove(from, to);
                 data['whoseTurn'] && setWhoseTurn(data['whoseTurn']);
                 data['winner'] && processGameOver(data['winner']);
                 data['extra'].forEach(x => {

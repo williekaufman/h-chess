@@ -73,7 +73,17 @@
 }
 
 .highlight {
-  background-color: gray;
+  background-color: lightblue;
+  box-sizing: border-box;
+  border: 2px solid red;
+}
+
+.recent-move {
+  box-sizing: border-box;
+  border: 2px solid green;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .active-games-wrapper {
