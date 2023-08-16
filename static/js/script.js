@@ -1,4 +1,4 @@
- URL = CONFIG.URL;
+URL = CONFIG.URL;
 
 previousToast = null;
 
@@ -135,7 +135,7 @@ promotionElements.forEach(element => {
         promotionElements.forEach(element => {
             element.classList.remove('selected');
         });
-        promotionPiece = element.getAttribute('piece'); 
+        promotionPiece = element.getAttribute('piece');
         element.classList.add('selected');
     });
 });
@@ -173,6 +173,7 @@ if (localStorage.getItem('handicap-chess-username')) {
 
 gameIdInput.addEventListener('keydown', function (e) {
     if (e.key === 'Enter') {
+        console.log('asdf asdf'); 
         loadGame();
     }
 });
@@ -389,8 +390,8 @@ function handleKeyDown(event) {
     } else if (event.key == 'Escape') {
         closeModal();
     } else if (event.key == 'Enter' && newGameModal.style.display == 'flex') {
-        newGame();
-        closeModal();
+        event.preventDefault();
+        createGameButton.click();
     }
 }
 
