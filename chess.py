@@ -267,7 +267,6 @@ class Board():
                 extra.append(('D8', 'bR'))
         if capture == 'e':
             self.set(stop.shift(-1 if piece.color == Color.WHITE else 1, 0), None)
-            print(capture)
             extra.append((stop.shift(-1 if piece.color == Color.WHITE else 1, 0).value, ''))
         if capture == 'k':
             self.set(history.history[-1].stop, None)
@@ -370,3 +369,6 @@ class History():
 
     def of_game_id(game_id):
         return History(rget('history', game_id=game_id))
+    
+    def to_list(self):
+        return [move.to_string() for move in self.history]

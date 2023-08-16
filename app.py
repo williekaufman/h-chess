@@ -175,6 +175,14 @@ def get_board():
         return {'success': True, 'board': board.to_dict(), 'winner': winner}
     return {'success': True, 'board': board.to_dict(), 'whoseTurn': whose_turn, **times(game_id, whose_turn)}
 
+@app.route("/history", methods=['GET'])
+def get_history():
+    game_id = request.args.get('gameId')
+    history = History.of_game_id(game_id)
+    if not history:
+        return {'success': False, 'error': 'Invalid game id'}
+    return {'success': True, 'history': history.to_list()}
+
 @app.route("/move", methods=['POST'])
 def move():
     game_id = request.json.get('gameId')
