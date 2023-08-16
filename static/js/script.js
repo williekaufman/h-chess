@@ -134,7 +134,7 @@ if (localStorage.getItem('handicap-chess-username')) {
 
 gameIdInput.addEventListener('keydown', function (e) {
     if (e.key === 'Enter') {
-        loadGameButton.click();
+        loadGame();
     }
 });
 
@@ -304,8 +304,8 @@ function handleKeyDown(event) {
     }
 }
 
-newGameButton.addEventListener('click', newGame);
-loadGameButton.addEventListener('click', loadGame);
+newGameButton.addEventListener('click', () => newGame());
+loadGameButton.addEventListener('click', () => loadGame());
 
 function copyToClipboard(text) {
     var textarea = document.createElement("textarea");
