@@ -209,8 +209,8 @@ def move():
         winner = winner_on_time or board.winner(whose_turn, history, handicap)
         ret = {'success': True , 'extra': extra , 'whoseTurn': whose_turn.value}
         if winner:
-            rset('winner', winner, game_id=game_id)
-            ret['winner'] = winner
+            rset('winner', winner.value, game_id=game_id)
+            ret['winner'] = winner.value
         return {**ret, **times(game_id, whose_turn)}
     else:
         # It's bad if we end up here since the UI board will be out of sync with the server board

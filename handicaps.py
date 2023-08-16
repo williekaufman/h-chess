@@ -1,5 +1,5 @@
 from squares import Square, Rank, File
-from chess import Color, Piece
+from chess import Color, Piece, ColoredPiece
 import random
 
 def no_handicap(board, start, stop, history):
@@ -23,11 +23,7 @@ def die_after_moving_pawn(board, start, stop, history):
     return not last_move.piece.piece.value == 'P'
 
 def lose_if_no_queen(board, start, stop, history):
-    color = history.whose_turn
-    for square in Square:
-        if board.get(square) and board.get(square).piece == Piece.QUEEN and board.get(square).color == color:
-            return True
-    return False
+    return board.loc(ColoredPiece(history.whose_turn(), Piece.QUEEN))
 
 # This doesn't work b/c check isn't implemented
 def skittish(board, start, stop, history):
@@ -41,7 +37,7 @@ def bongcloud(board, start, stop, history):
     return False
 
 def cant_move_to_opponents_side_of_board(board, start, stop, history):
-    color = history.whose_turn
+    color = history.whose_turn()
     ranks = [Rank.First, Rank.Second, Rank.Third, Rank.Fourth] if color == Color.BLACK else [Rank.Fifth, Rank.Sixth, Rank.Seventh, Rank.Eighth]
     return not stop.rank() in ranks
 
@@ -60,5 +56,4 @@ handicaps = {
 
 # theoretical args for some kind of config, e.g. difficulties, elos, idk
 def get_handicaps(x, y):
-    # return ["Can't move to opponent's side of board", "No handicap"]
     return random.sample(handicaps.keys(), 2)

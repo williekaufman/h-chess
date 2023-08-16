@@ -27,6 +27,9 @@ class ColoredPiece():
         self.color = color
         self.piece = piece
 
+    def equals(self, other):
+        return self.color == other.color and self.piece == other.piece
+
     def to_string(self):
         return self.piece.value if self.color == Color.WHITE else self.piece.value.lower()
 
@@ -315,15 +318,15 @@ class Board():
         has_king, has_move = False, False
         for square in Square:
             piece = self.get(square)
-            if not piece:
+            if not piece or piece.color != whose_turn:
                 continue
-            if piece.color == whose_turn and piece.piece == Piece.KING:
+            if piece.piece == Piece.KING:
                 has_king = True
-            if piece.color == whose_turn and self.legal_moves(square, history, whose_turn, handicap):
+            if self.legal_moves(square, history, whose_turn, handicap):
                 has_move = True
             if has_move and has_king:
                 return False
-        return 'Black' if whose_turn == Color.WHITE else 'White'
+        return whose_turn.other()
 
     def to_string(self):
         ret = ''
@@ -346,6 +349,8 @@ class Board():
             return Board(board)
         return None
 
+    def loc(self, piece):
+        return [square for square in Square if self.get(square) and self.get(square).equals(piece)]
 
 empty_rank = ' ' * 8
 
