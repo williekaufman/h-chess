@@ -231,8 +231,9 @@ class Board():
             capture = 'e'
         if stop in kingEnPassantSquares:
             capture = 'k'
-        # TODO check
-        check = 'f'
+        
+
+    
         castle = 'f'
         if piece.piece == Piece.KING and abs(start.to_coordinates()[1] - stop.to_coordinates()[1]) == 2:
             if stop.to_coordinates()[1] == 2:
@@ -242,6 +243,7 @@ class Board():
         promotion = promote_to.value if piece and piece.piece == Piece.PAWN and stop.to_coordinates()[
             0] in [0, 7] else 'x'
         move = Move(piece, start, stop, capture, check, castle, promotion)
+        # if this validates, then the move will actually happen 
         if not move.validate(self, history, whose_turn, handicap):
             return None, None, 'invalid move'
         if castle == 'k':
@@ -276,6 +278,10 @@ class Board():
         if promotion != 'x':
             self.set(stop, ColoredPiece(piece.color, Piece(promotion)))
             extra.append((stop.value, f'{piece.color.value.lower()}{promotion}'))
+        
+        # TODO -- check = 't' if the king is in check at the end of the move
+        check = 'f'
+        
         return move, extra, None
 
     def legal_moves(self, start, history, whose_turn, handicap=None):
