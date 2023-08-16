@@ -1,5 +1,50 @@
 from enum import Enum
 
+class Rank(Enum):
+    First = '1'
+    Second = '2'
+    Third = '3'
+    Fourth = '4'
+    Fifth = '5'
+    Sixth = '6'
+    Seventh = '7'
+    Eighth = '8'
+
+    def to_index(self):
+        return int(self.name) - 1
+    
+    def of_index(index):
+        try:
+            return Rank(str(index + 1))
+        except:
+            return None
+
+    def shift(self, shift):
+        return Rank.of_index(self.to_index() + shift)
+
+class File(Enum):
+    A = 'A'
+    B = 'B'
+    C = 'C'
+    D = 'D'
+    E = 'E'
+    F = 'F'
+    G = 'G'
+    H = 'H'
+
+    def to_index(self):
+        return ord(self.name) - 65
+
+    def of_index(index):
+        try:
+            return File(chr(index + 65))
+        except:
+            return None
+
+    def shift(self, shift):
+        return File.of_index(self.to_index() + shift)
+    
+
 class Square(Enum):
     A1 = 'A1'
     A2 = 'A2'
@@ -74,6 +119,24 @@ class Square(Enum):
             return Square(chr(file + 65) + str(rank + 1))
         except:
             return None
+
+    def of_rank_and_file(file, rank):
+        try:
+            return Square(file.name + rank.name)
+        except:
+            return None
+
+    def of_rank(rank):
+        return [square for square in Square if square.name[1] == rank.name]
+
+    def of_file(file):
+        return [square for square in Square if square.name[0] == file.name]
+
+    def rank(self):
+        return Rank(self.name[1])
+    
+    def file(self):
+        return File(self.name[0])
 
     def shift(self, rank_shift, file_shift):
         rank, file = self.to_coordinates()

@@ -84,8 +84,8 @@ function updateTimes(white, black) {
     if (gameIsOver || !white || !black) {
         return;
     }
-    whiteTime = formatTime(white, whoseTurn === 'W');
-    blackTime = formatTime(black, whoseTurn === 'B');
+    whiteTime = formatTime(white, whoseTurn === 'White');
+    blackTime = formatTime(black, whoseTurn === 'Black');
     timesElement.innerHTML = `${whiteTime} - ${blackTime}`
 }
 
@@ -260,7 +260,7 @@ function newGame() {
             getHandicap();
         });
 
-    setWhoseTurn('W');
+    setWhoseTurn('White');
     gameIsOver = false;
     initBoard();
 }
@@ -365,7 +365,7 @@ function yourPiece(piece) {
 }
 
 function activePiece(piece) {
-    return piece.search(whoseTurn.toLowerCase()) !== -1;
+    return piece.search(whoseTurn.charAt(0).toLowerCase()) !== -1;
 }
 
 function onPickup(source, piece) {

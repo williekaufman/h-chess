@@ -12,9 +12,15 @@ class Piece(Enum):
 
 
 class Color(Enum):
-    WHITE = 'W'
-    BLACK = 'B'
+    WHITE = 'White'
+    BLACK = 'Black'
 
+
+    def other(self):
+        return Color.WHITE if self == Color.BLACK else Color.BLACK
+    
+    def whose_turn(game_id):
+        return Color.WHITE if rget('turn', game_id=game_id) == 'White' else Color.BLACK
 
 class ColoredPiece():
     def __init__(self, color, piece):
@@ -222,7 +228,7 @@ class Board():
         extra = []
         if not piece:
             return None, None, 'no piece'
-        if piece.color.value != whose_turn:
+        if piece.color != whose_turn:
             return None, None, 'wrong color'
         capture = 't' if self.get(stop) else 'f'
         enPassantSquares = enPassant(history.history)
@@ -287,39 +293,37 @@ class Board():
         moves = []
         if not piece:
             return moves
-        color = piece.color
-        if color != (Color.WHITE if whose_turn == 'W' else Color.BLACK):
+        if piece.color != whose_turn:
             return moves
         if piece.piece == Piece.PAWN:
-            moves += pawn_moves(self, start, color)
-            moves += pawn_captures(self, start, color, history.history)
+            moves += pawn_moves(self, start, whose_turn)
+            moves += pawn_captures(self, start, whose_turn, history.history)
         elif piece.piece == Piece.ROOK:
-            moves += rook_moves(self, start, color)
+            moves += rook_moves(self, start, whose_turn)
         elif piece.piece == Piece.KNIGHT:
-            moves += knight_moves(self, start, color)
+            moves += knight_moves(self, start, whose_turn)
         elif piece.piece == Piece.BISHOP:
-            moves += bishop_moves(self, start, color)
+            moves += bishop_moves(self, start, whose_turn)
         elif piece.piece == Piece.QUEEN:
-            moves += queen_moves(self, start, color)
+            moves += queen_moves(self, start, whose_turn)
         elif piece.piece == Piece.KING:
-            moves += king_moves(self, start, color, history.history)
+            moves += king_moves(self, start, whose_turn, history.history)
         handicap = handicap or (lambda board, start, stop, history: True)
-        return [square.value for square in moves if square and handicap(self, start, square, history.history)]
+        return [square.value for square in moves if square and handicap(self, start, square, history)]
 
     def winner(self, whose_turn, history, handicap=None):
-        color = Color.WHITE if whose_turn == 'W' else Color.BLACK
         has_king, has_move = False, False
         for square in Square:
             piece = self.get(square)
             if not piece:
                 continue
-            if piece.color == color and piece.piece == Piece.KING:
+            if piece.color == whose_turn and piece.piece == Piece.KING:
                 has_king = True
-            if piece.color == color and self.legal_moves(square, history, whose_turn, handicap):
+            if piece.color == whose_turn and self.legal_moves(square, history, whose_turn, handicap):
                 has_move = True
             if has_move and has_king:
                 return False
-        return 'Black' if color == Color.WHITE else 'White'
+        return 'Black' if whose_turn == Color.WHITE else 'White'
 
     def to_string(self):
         ret = ''
@@ -360,6 +364,9 @@ class History():
             self.history = []
         else:
             self.history = [Move.of_string(move) for move in s.split('|')]
+
+    def whose_turn(self):
+        return Color.WHITE if len(self.history) % 2 == 0 else Color.BLACK
 
     def add(self, move):
         self.history.append(move)
