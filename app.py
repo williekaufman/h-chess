@@ -140,10 +140,10 @@ def join_game():
         return {'success': False, 'error': 'Invalid game id'}
     if not color:
         return {'success': False, 'error': 'Game already has two players'}
-    if winner:
-        return {'success': True, 'board': board.to_dict(), 'winner': winner}
     username = rget('username', game_id=game_id)
     username and rset(live_game_key(username), '', game_id=None)
+    if winner:
+        return {'success': True, 'board': board.to_dict(), 'winner': winner}
     rset('other_player', '', game_id=game_id)
     return {'success': True, 'color': color, 'board': board.to_dict(), 'whoseTurn': rget('turn', game_id=game_id)}
 
