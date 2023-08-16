@@ -11,7 +11,7 @@ class Rank(Enum):
     Eighth = '8'
 
     def to_index(self):
-        return int(self.name) - 1
+        return int(self.value) - 1
     
     def of_index(index):
         try:
@@ -21,6 +21,9 @@ class Rank(Enum):
 
     def shift(self, shift):
         return Rank.of_index(self.to_index() + shift)
+    
+    def flip(self):
+        return Rank.of_index(7 - self.to_index())
 
 class File(Enum):
     A = 'A'

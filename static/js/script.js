@@ -401,7 +401,7 @@ function isLegalMove(to) {
     return legal_destinations.includes(to.toUpperCase());
 }
 
-function sendMove(from, to, updateBoard = false) {
+function sendMove(from, to) {
     fetchWrapper(URL + 'move', { 'start': from, 'stop': to, 'gameId': gameId , 'ignoreOtherPlayerCheck': ignoreOtherPlayerCheck.checked , 'promotion': promotionSelector.value }, 'POST')
         .then((response) => response.json())
         .then((data) => {
@@ -409,7 +409,7 @@ function sendMove(from, to, updateBoard = false) {
                 return;
             }
             else {
-                updateBoard && board.move(`${from}-${to}`, false);
+                board.move(`${from}-${to}`, false); // this should be unnecessary except in a retry but it doesn't hurt anyway
                 data['whoseTurn'] && setWhoseTurn(data['whoseTurn']);
                 data['winner'] && processGameOver(data['winner']);
                 data['extra'].forEach(x => {
@@ -446,7 +446,7 @@ function maybeMove(from, to) {
     if (to == 'offboard') {
         return
     }
-    sendMove(from, to, true);    
+    sendMove(from, to);    
 }
 
 function updateState() {

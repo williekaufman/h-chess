@@ -1,5 +1,6 @@
 from squares import Square, Rank, File
 from chess import Color, Piece, ColoredPiece
+from settings import LOCAL
 import random
 
 def no_handicap(board, start, stop, history):
@@ -44,19 +45,10 @@ def bongcloud(board, start, stop, history):
 
 def cant_move_to_opponents_side_of_board(board, start, stop, history):
     color = history.whose_turn()
-    ranks = [Rank.First, Rank.Second, Rank.Third, Rank.Fourth] if color == Color.BLACK else [Rank.Fifth, Rank.Sixth, Rank.Seventh, Rank.Eighth]
+    ranks = [Rank.First, Rank.Second, Rank.Third, Rank.Fourth]
+    if color == Color.WHITE:
+        ranks = [rank.flip() for rank in ranks]
     return not stop.rank() in ranks
-
-descriptions = {
-    no_handicap: "No handicap",
-    cant_move_pawns: "Can't move pawns",
-    cant_move_pawn_and_then_rook: "Can't move pawn and then rook",
-    die_after_moving_pawn: "Die after moving pawn",
-    lose_if_no_queen: "Lose if you have no queen",
-    skittish: "When you get checked, you must move your king",
-    bongcloud: "When your king is on the back rank, you can only move pawns and kings",
-    cant_move_to_opponents_side_of_board: "Can't move to opponent's side of board",
-}
 
 # number is how bad the handicap is, 1-10
 handicaps = {
@@ -70,7 +62,11 @@ handicaps = {
     "Can't move to opponent's side of board": (cant_move_to_opponents_side_of_board, 5),
 }
 
+descriptions = {v[0]: k for k, v in handicaps.items()}
+
 # theoretical args for some kind of config, e.g. difficulties, elos, idk
 def get_handicaps(x, y):
-    # return descriptions[bongcloud], descriptions[skittish]
-    return random.sample(handicaps.keys(), 2)
+    # So I can't forget to undo anything weird
+    if not LOCAL:
+        return random.sample(handicaps.keys(), 2) 
+    return descriptions[cant_move_to_opponents_side_of_board], descriptions[cant_move_to_opponents_side_of_board]
