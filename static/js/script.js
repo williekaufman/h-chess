@@ -20,6 +20,8 @@ loadGameButton = document.getElementById('loadGameButton');
 colorSelector = document.getElementById('colorSelector');
 gameIdInput = document.getElementById('gameIdInput');
 
+promotionSelector = document.getElementById('promotionSelector');
+
 handicapInfo = document.getElementById('handicapInfo');
 
 howToPlayPopup = document.getElementById('how-to-play-popup');
@@ -398,54 +400,15 @@ function isLegalMove(to) {
     return legal_destinations.includes(to.toUpperCase());
 }
 
-function handleMove(from, to) {
-    holdingPiece = false;
-    unhighlightSquares();
-    if (on_pickup_in_flight) {
-        retry_move = () => maybeMove(from, to);
-        return 'snapback';
-    }
-    retry_move = null;
-    if (isLegalMove(to)) {
-        fetchWrapper(URL + 'move', { 'start': from, 'stop': to, 'gameId': gameId , 'ignoreOtherPlayerCheck': ignoreOtherPlayerCheck.checked }, 'POST')
-            .then((response) => response.json())
-            .then((data) => {
-                if (!data['success']) {
-                    return;
-                }
-                else {
-                    data['whoseTurn'] && setWhoseTurn(data['whoseTurn']);
-                    data['winner'] && processGameOver(data['winner']);
-                    data['extra'].forEach(x => {
-                        square = x[0].toLowerCase()
-                        piece = x[1]
-                        if (piece == '') {
-                            clearSquare(square);
-                        } else {
-                            setSquare(square, piece);
-                        }
-                    });
-                }
-            })
-    } else {
-        return 'snapback';
-    }
-}
-
-function maybeMove(from, to) {
-    unhighlightSquares();
-    retry_move = null;
-    if (to == 'offboard') {
-        return
-    }
-    fetchWrapper(URL + 'move', { 'start': from, 'stop': to, 'gameId': gameId , 'ignoreOtherPlayerCheck': ignoreOtherPlayerCheck.checked }, 'POST')
+function sendMove(from, to, updateBoard = false) {
+    fetchWrapper(URL + 'move', { 'start': from, 'stop': to, 'gameId': gameId , 'ignoreOtherPlayerCheck': ignoreOtherPlayerCheck.checked , 'promotion': promotionSelector.value }, 'POST')
         .then((response) => response.json())
         .then((data) => {
             if (!data['success']) {
                 return;
             }
             else {
-                board.move(from + '-' + to);
+                updateBoard && board.move(`${from}-${to}`, false)
                 data['whoseTurn'] && setWhoseTurn(data['whoseTurn']);
                 data['winner'] && processGameOver(data['winner']);
                 data['extra'].forEach(x => {
@@ -458,7 +421,31 @@ function maybeMove(from, to) {
                     }
                 });
             }
-        })
+        });
+}
+
+function handleMove(from, to) {
+    holdingPiece = false;
+    unhighlightSquares();
+    if (on_pickup_in_flight) {
+        retry_move = () => maybeMove(from, to);
+        return 'snapback';
+    }
+    retry_move = null;
+    if (isLegalMove(to)) {
+        sendMove(from, to);
+    } else {
+        return 'snapback';
+    }
+}
+
+function maybeMove(from, to) {
+    unhighlightSquares();
+    retry_move = null;
+    if (to == 'offboard') {
+        return
+    }
+    sendMove(from, to, true);    
 }
 
 function updateState() {

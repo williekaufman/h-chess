@@ -217,7 +217,7 @@ class Board():
         rank, file = square.to_coordinates()
         self.board[rank][file] = piece
 
-    def move(self, start, stop, whose_turn, handicap, history=None, promote_to=Piece.QUEEN):
+    def move(self, start, stop, whose_turn, handicap, history=None, promote_to=None):
         piece = self.get(start)
         extra = []
         if not piece:
@@ -231,16 +231,15 @@ class Board():
             capture = 'e'
         if stop in kingEnPassantSquares:
             capture = 'k'
-        
-
-    
+        # TODO: implement check
+        check = 'f'
         castle = 'f'
         if piece.piece == Piece.KING and abs(start.to_coordinates()[1] - stop.to_coordinates()[1]) == 2:
             if stop.to_coordinates()[1] == 2:
                 castle = 'q'
             else:
                 castle = 'k'
-        promotion = promote_to.value if piece and piece.piece == Piece.PAWN and stop.to_coordinates()[
+        promotion = promote_to.upper() or 'Q' if piece and piece.piece == Piece.PAWN and stop.to_coordinates()[
             0] in [0, 7] else 'x'
         move = Move(piece, start, stop, capture, check, castle, promotion)
         # if this validates, then the move will actually happen 

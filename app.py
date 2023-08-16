@@ -179,6 +179,7 @@ def get_board():
 def move():
     game_id = request.json.get('gameId')
     ignore_other_player_check = request.json.get('ignoreOtherPlayerCheck')
+    promotion = request.json.get('promotion')
     if rget('other_player', game_id=game_id) and not ignore_other_player_check:
         return {'success': False, 'error': 'Other player has not joined'}
     start = Square(request.json.get('start').upper())
@@ -187,7 +188,7 @@ def move():
     history = History.of_game_id(game_id)
     whose_turn = rget('turn', game_id=game_id)
     handicap = handicaps[rget(f'{whose_turn}_handicap', game_id=game_id)][0]
-    move, extra, error = board.move(start, stop, whose_turn, handicap, history)
+    move, extra, error = board.move(start, stop, whose_turn, handicap, history, promotion)
     if move:
         winner_on_time = update_time(whose_turn, game_id)
         history.add(move)
