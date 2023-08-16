@@ -43,15 +43,6 @@
     <input type="text" id="gameIdInput" placeholder="custom game id" size="30">
 </div>
 <div style="margin-top: 5px">
-    <select id="promotionSelector">
-        <option value="q" selected disabled>Promote to</option>
-        <option value="q">Queen</option>
-        <option value="r">Rook</option>
-        <option value="b">Bishop</option>
-        <option value="n">Knight</option>
-    </select>
-</div>
-<div style="margin-top: 5px">
     <input type="checkbox" id="ignoreOtherPlayerCheck">
     <label for="ignoreOtherPlayerCheck">Allow moving opponent's pieces and pieces without an opponent</label>
 </div>
@@ -60,7 +51,16 @@
 <div id="times" style="margin-top: 5px"></div>
 <div class="board">
     <div id="board"></div>
-    <div id="promotionSelector"></div>
+    <div>
+        Display promotion options
+        <input type="checkbox" id="displayPromotionOptions">
+    </div>
+    <div class="promotion-container" id="promotionSelector">
+        <img class="promotion-piece" src="https://chessboardjs.com/img/chesspieces/wikipedia/wQ.png" piece="Q">
+        <img class="promotion-piece" src="https://chessboardjs.com/img/chesspieces/wikipedia/wR.png" piece="R">
+        <img class="promotion-piece" src="https://chessboardjs.com/img/chesspieces/wikipedia/wB.png" piece="B">
+        <img class="promotion-piece" src="https://chessboardjs.com/img/chesspieces/wikipedia/wN.png" piece="N">
+    </div>
     <h1 id="game-result"></h1>
 </div>
 <div id="newGameModalOverlay" class="modal-overlay">

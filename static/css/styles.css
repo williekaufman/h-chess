@@ -121,6 +121,21 @@
   box-sizing: border-box;
 }
 
+.promotion-piece {
+  width: 75px;
+  height: 75px;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.promotion-container {
+  display: none;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
+  margin-top: 25px;
+}
+
 .time-selection {
   width: 50px;
   height: 25px;

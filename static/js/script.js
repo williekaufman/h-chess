@@ -1,4 +1,4 @@
-URL = CONFIG.URL;
+ URL = CONFIG.URL;
 
 previousToast = null;
 
@@ -23,6 +23,8 @@ loadGameButton = document.getElementById('loadGameButton');
 gameIdInput = document.getElementById('gameIdInput');
 
 promotionSelector = document.getElementById('promotionSelector');
+promotionPiece = null;
+displayPromotionOptionsElement = document.getElementById('displayPromotionOptions');
 
 handicapInfo = document.getElementById('handicapInfo');
 
@@ -115,6 +117,35 @@ function setUsername() {
     localStorage.setItem('handicap-chess-username', username);
     populateFriendsList();
 
+}
+
+displayPromotionOptionsElement.addEventListener('change', function () {
+    promotionSelector.style.display = displayPromotionOptionsElement.checked ? 'flex' : 'none';
+});
+
+promotionElements = document.querySelectorAll('.promotion-piece');
+
+promotionElements.forEach(element => {
+    element.addEventListener('click', function () {
+        if (element.classList.contains('selected')) {
+            element.classList.remove('selected');
+            promotionPiece = null;
+            return;
+        }
+        promotionElements.forEach(element => {
+            element.classList.remove('selected');
+        });
+        promotionPiece = element.getAttribute('piece'); 
+        element.classList.add('selected');
+    });
+});
+
+function setOrientation(orientation) {
+    color = orientation;
+    board.orientation(orientation.toLowerCase());
+    promotionElements.forEach(element => {
+        element.src = element.src.replace(/w(.)\.png/, `${orientation.charAt(0).toLowerCase()}$1.png`);
+    });
 }
 
 usernameInputElement.addEventListener('blur', function () {
@@ -302,8 +333,7 @@ function newGame() {
                 return;
             }
             setGameId(data['gameId']);
-            color = data['color'];
-            board.orientation(color.toLowerCase());
+            setOrientation(data['color']);
             getHandicap();
         });
 
@@ -332,8 +362,7 @@ function loadGame(game = null) {
             if (data['winner']) {
                 processGameOver(data['winner']);
             } else {
-                color = data['color'];
-                board.orientation(color.toLowerCase());
+                setOrientation(data['color']);
                 setWhoseTurn(data['whoseTurn']);
                 getHandicap();
                 gameIdInput.value = '';
@@ -414,6 +443,10 @@ document.addEventListener('keydown', handleKeyDown);
 
 var board, game = new Chess();
 
+function imgUrl(piece) {
+    return `https://chessboardjs.com/img/chesspieces/wikipedia/${piece}.png`
+}
+
 /* Initialize the board with a configuration object */
 function initBoard() {
     var config = {
@@ -473,7 +506,7 @@ function isLegalMove(to) {
 }
 
 function sendMove(from, to) {
-    fetchWrapper(URL + 'move', { 'start': from, 'stop': to, 'gameId': gameId, 'ignoreOtherPlayerCheck': ignoreOtherPlayerCheck.checked, 'promotion': promotionSelector.value }, 'POST')
+    fetchWrapper(URL + 'move', { 'start': from, 'stop': to, 'gameId': gameId, 'ignoreOtherPlayerCheck': ignoreOtherPlayerCheck.checked, 'promotion': promotionPiece || 'Q' }, 'POST')
         .then((response) => response.json())
         .then((data) => {
             if (!data['success']) {
