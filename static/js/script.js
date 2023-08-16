@@ -144,7 +144,7 @@ function setOrientation(orientation) {
     color = orientation;
     board.orientation(orientation.toLowerCase());
     promotionElements.forEach(element => {
-        element.src = element.src.replace(/w(.)\.png/, `${orientation.charAt(0).toLowerCase()}$1.png`);
+        element.src = element.src.replace(/.(.)\.png/, `${orientation.charAt(0).toLowerCase()}$1.png`);
     });
 }
 
