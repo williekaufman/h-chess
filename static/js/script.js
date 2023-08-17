@@ -19,7 +19,7 @@ copyGameIdButton = document.getElementById('copyGameIdButton');
 
 holdingPiece = false;
 
-loadGameButton = document.getElementById('loadGameButton');
+joinGameButton = document.getElementById('joinGameButton');
 
 gameIdInput = document.getElementById('gameIdInput');
 
@@ -184,11 +184,12 @@ if (localStorage.getItem('handicap-chess-username')) {
     username = usernameInputElement.value;
 }
 
-gameIdInput.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') {
-        console.log('asdf asdf'); 
-        loadGame();
-    }
+gameIdInput.addEventListener('focus', function () {
+    document.removeEventListener('keydown', handleKeyDown);
+});
+
+gameIdInput.addEventListener('blur', function () {
+    document.addEventListener('keydown', handleKeyDown);
 });
 
 whiteKingElement.addEventListener('click', function () {
@@ -337,7 +338,7 @@ function getHandicap() {
         });
 }
 
-function newGame() {
+function newGame(toast = true) {
     gameResultElement.textContent = '';
     fetchWrapper(URL + 'new_game', newGameBody(), 'POST')
         .then((response) => response.json())
@@ -349,6 +350,7 @@ function newGame() {
             setGameId(data['gameId']);
             setOrientation(data['color']);
             getHandicap();
+            toast && showToast('Successfully created game', 3);
         });
 
     setWhoseTurn('White');
@@ -362,6 +364,7 @@ function loadGame(game = null) {
         showToast('Enter the game ID', 3);
         return;
     }
+    closeModal();
     gameResultElement.textContent = '';
     fetchWrapper(URL + 'join_game', { 'gameId': game }, 'GET')
         .then((response) => response.json())
@@ -438,7 +441,7 @@ createGameButton.addEventListener('click', () => {
     closeModal();
 });
 
-loadGameButton.addEventListener('click', () => loadGame());
+joinGameButton.addEventListener('click', () => loadGame());
 
 function copyToClipboard(text) {
     var textarea = document.createElement("textarea");
@@ -666,5 +669,5 @@ if (localStorage.getItem('hchess-testing-mode')) {
     whiteKingElement.click();
 }
 
-newGame();
+newGame(false);
 populateFriendsList();

@@ -28,7 +28,6 @@
 
 <div style="margin-top: 5px">
     <button id="newGameButton" style="margin-right:5px">New Game</button>
-    <button id="loadGameButton" style="margin-right:5px">Load Game</button>
     <button id="copyGameIdButton">Copy Game Id</button>
     <div style="position: absolute; right: 20px; top: 5px">
         <input id="usernameInput" type="text" placeholder="username" size="15">
@@ -38,9 +37,6 @@
         </div>
 
     </div>
-</div>
-<div style="margin-top: 5px">
-    <input type="text" id="gameIdInput" placeholder="custom game id" size="30">
 </div>
 <div id="handicapInfo" style="margin-top: 5px"> </div>
 <div id="whoseTurn" style="margin-top: 5px"> </div>
@@ -57,27 +53,33 @@
 </div>
 <div id="newGameModalOverlay" class="modal-overlay">
     <div id="newGameModal" class="modal">
-        <div class="label-container">
-            <!-- <label style="margin-bottom: 5px" for="colorSelection"></label> -->
-            <div class="grid-container" id="colorSelection">
-                <img class="piece-image" id="whiteKing" src="https://chessboardjs.com/img/chesspieces/wikipedia/wK.png">
-                <img class="piece-image" id="blackKing" src="https://chessboardjs.com/img/chesspieces/wikipedia/bK.png">
+        <div class="grid">
+            <div class="label-container">
+                <div class="grid-container" id="colorSelection">
+                    <img class="piece-image" id="whiteKing"
+                        src="https://chessboardjs.com/img/chesspieces/wikipedia/wK.png">
+                    <img class="piece-image" id="blackKing"
+                        src="https://chessboardjs.com/img/chesspieces/wikipedia/bK.png">
+                </div>
+            </div>
+            <div class="label-container">
+                <div id="timeSelector" class="grid-container">
+                    <button class="time-selection" seconds="1"> 1s </button>
+                    <button class="time-selection" seconds="180"> 3m </button>
+                    <button class="time-selection" seconds="300"> 5m </button>
+                    <button class="time-selection" seconds="900"> 15m </button>
+                </div>
+            </div>
+            <div class="label-container">
+                <div class="grid-container" style="grid-template-columns: repeat(2, 1fr)">
+                    <button id="createGameButton" class="create-game-button">New Game</button>
+                    <button id="joinGameButton" class="create-game-button">Join Game</button>
+                </div>
             </div>
         </div>
-        <div class="label-container">
-            <!-- <label style="margin-bottom: 5px" for="timeSelection"></label> -->
-            <div id="timeSelector" class="grid-container">
-                <button class="time-selection" seconds="1"> 1s </button>
-                <button class="time-selection" seconds="180"> 3m </button>
-                <button class="time-selection" seconds="300"> 5m </button>
-                <button class="time-selection" seconds="900"> 15m </button>
-            </div>
-        </div>
-        <div class="label-container">
-            <!-- <label id="createGameButtonLabel" style="margin-bottom: 5px" for="createGameButton"></label> -->
-            <button id="createGameButton" class="create-game-button">Submit</button>
-        </div>
+        <div> <input type="text" class="game-id-box" id="gameIdInput" placeholder="game id" size="30"> </div>
     </div>
+</div>
 </div>
 <script src="{{ url_for('static', filename='js/config.js') }}"></script>
 <script src="{{ url_for('static', filename='js/script.js') }}"></script>
