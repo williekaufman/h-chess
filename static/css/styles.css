@@ -32,8 +32,8 @@
 .time {
   text-align: right; 
   background-color: lightblue;
-  border-radius: 5px;
-  padding: 5px;
+  border-radius: 15px;
+  padding: 15px;
   font-size: 20px;
 }
 
@@ -43,6 +43,8 @@
 }
 
 .board {
+  margin-top: 5px;
+  margin-bottom: 5px;
   width: 100%;
 }
 
@@ -226,6 +228,7 @@
   height: 75%;
 }
 
+/* This is slightly off-center which is annoying but I'm too lazy to figure it out */
 .modal {
   display: none;
   position: absolute;
