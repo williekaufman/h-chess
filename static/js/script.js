@@ -26,6 +26,8 @@ gameIdInput = document.getElementById('gameIdInput');
 promotionSelector = document.getElementById('promotionSelector');
 promotionPiece = null;
 
+ignoreOtherPlayerCheck = false;
+
 mostRecentFrom = null;
 mostRecentTo = null;
 
@@ -119,7 +121,9 @@ function updateTimes(white, black) {
 // I thought we might want to display this information, but it's not really necessary
 // Too lazy to refactor
 function setGameId(id) {
+    gameId && socket.emit('leave', { room: gameId })
     gameId = id;
+    socket.emit('join', { room: id });
 }
 
 // Used to be used to populate a textbox with whose turn it was, but 
@@ -668,6 +672,20 @@ function displayActiveGames(activeGames) {
 if (localStorage.getItem('hchess-testing-mode')) {
     whiteKingElement.click();
 }
+
+const socket = io.connect('http://' + document.domain + ':' + location.port);
+
+socket.on('connect', () => {
+    console.log('Connected to server');
+});
+
+socket.on('message', (message) => {
+    console.log(message);
+});
+
+socket.on('move', (data) => {
+    console.log(data);
+});
 
 newGame(false);
 populateFriendsList();

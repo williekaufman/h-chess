@@ -1,7 +1,9 @@
 #!/usr/bin/python3
 
 from flask import Flask, jsonify, request, make_response, render_template
+from flask_socketio import SocketIO, send, emit, join_room, leave_room
 from flask_cors import CORS, cross_origin
+from threading import Thread
 from redis_utils import rget, rset, redis
 from settings import LOCAL
 from secrets import compare_digest, token_hex
@@ -13,6 +15,7 @@ import random
 import json
 
 app = Flask(__name__)
+socketio = SocketIO(app)
 CORS(app)
 
 def new_game_id():
@@ -211,6 +214,7 @@ def move():
         if winner:
             rset('winner', winner.value, game_id=game_id)
             ret['winner'] = winner.value
+        socketio.emit('move', {'data': 'move was made'}, room=game_id)
         return {**ret, **times(game_id, whose_turn)}
     else:
         # It's bad if we end up here since the UI board will be out of sync with the server board
@@ -253,5 +257,20 @@ def unfriend():
     remove_friend(username, friend)
     return {'success': True}
 
+@socketio.on('connect')
+def example():
+    print('connected', request.sid)
+    emit('message', 'ping', broadcast=True) 
+
+@socketio.on('join')
+def on_join(data):
+    join_room(data['room'])
+    print('joined', data['room'])
+
+@socketio.on('leave')
+def on_leave(data):
+    leave_room(data['room'])
+    print('left', data['room'])
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5001 if LOCAL else 5003)
+    Thread(target=socketio.run, args=[app], kwargs={'host': '0.0.0.0', 'port': 5001 if LOCAL else 5003}).start()
