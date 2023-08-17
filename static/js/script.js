@@ -673,11 +673,11 @@ function updateState() {
                 return;
             }
             board.position(data['board']);
+            updateTimes(data['whiteTime'], data['blackTime']);
             if (data['winner']) {
                 processGameOver(data['winner']);
             } else {
                 setWhoseTurn(data['whoseTurn']);
-                updateTimes(data['whiteTime'], data['blackTime']);
             }
         })
 }
