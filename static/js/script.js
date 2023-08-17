@@ -424,11 +424,6 @@ newGameButton.addEventListener('click', () => {
     openModal();
 });
 
-
-// I'm sure this is stupid but whatever it works to get the button to be aligned better
-createGameButtonLabel.textContent = 'fake label';
-createGameButtonLabel.style.opacity = 0;
-
 createGameButton.addEventListener('click', () => {
     newGame();
     closeModal();
