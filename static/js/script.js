@@ -429,6 +429,7 @@ document.addEventListener("click", function (event) {
 });
 
 newGameButton.addEventListener('click', () => {
+    console.log(ctrlKeyIsDown);
     if (ctrlKeyIsDown) {
         newGame();
     } else {
