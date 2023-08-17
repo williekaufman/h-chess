@@ -5,7 +5,7 @@
   display: flex;
   flex-direction: column;
   transform: translate(-50%, -10%);
-  width: 35%;
+  width: 33%;
 }
 
 .handicap-info {
@@ -49,7 +49,7 @@
 }
 
 .hotkeys {
-  position: absolute;
+  position: fixed;
   display: grid;
   grid-template-columns: repeat(1, 1fr);
   grid-gap: 10px;
@@ -141,7 +141,7 @@
 .active-games-wrapper {
   position: fixed;
   right: 50px;
-  bottom: 50px;
+  bottom: 20px;
   display: flex;
   flex-direction: column;
 }

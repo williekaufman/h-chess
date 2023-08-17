@@ -282,6 +282,14 @@ timeSelectionElements.forEach(element => {
     });
 });
 
+addFriendInputElement.addEventListener('focus', function () {
+    document.removeEventListener('keydown', handleKeyDown);
+});
+
+addFriendInputElement.addEventListener('blur', function () {
+    document.addEventListener('keydown', handleKeyDown);
+});
+
 addFriendInputElement.addEventListener('keydown', function (e) {
     if (e.key === 'Enter') {
         addFriendButton.click();
@@ -715,7 +723,11 @@ function displayActiveGames(activeGames) {
     activeGamesWrapper.innerHTML = `<h4> Friends list </h4>`;
     activeGames.forEach(game => {
         id = game['gameId'];
-        display_username = game['username'].slice(0, 9);
+        if (game['username'].length > 9) {
+            display_username = game['username'].slice(0, 9) + '...';
+        } else {
+            display_username = game['username'];
+        }
         if (id) {
             content = `<button class="active-game-button" onclick="loadGame('${id}')">Challenge ${display_username}</button>`;
         } else {
