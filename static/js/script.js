@@ -117,6 +117,10 @@ function updateTimes(white, black) {
     if (gameIsOver || !white || !black) {
         return;
     }
+    if (white < -1 || black < -1) {
+        updateState();
+        return;
+    }
     whiteTime = white;
     blackTime = black;
     whiteTimeStr = formatTime(white, whoseTurn === 'White');

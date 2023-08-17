@@ -31,11 +31,12 @@ def update_time(whose_turn, game_id):
     last_move = rget('last_move', game_id=game_id)
     if last_move:
         time_since_last_move = now - float(last_move)
+        rset(key, current_time - time_since_last_move, game_id=game_id)
+        rset('last_move', now, game_id=game_id)
         if time_since_last_move > current_time:
             return whose_turn.other()
-        rset(key, current_time - time_since_last_move, game_id=game_id)
-    rset('last_move', now, game_id=game_id)
-    
+    else:
+        rset('last_move', now, game_id=game_id)
 
 def times(game_id, whose_turn):
     last_move = rget('last_move', game_id=game_id)
