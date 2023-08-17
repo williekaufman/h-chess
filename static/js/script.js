@@ -47,8 +47,11 @@ colorSelection = 'random';
 whiteKingElement = document.getElementById('whiteKing');
 blackKingElement = document.getElementById('blackKing');
 
-whiteTime = 'Untimed';
-blackTime = 'Untimed';
+
+untimedString = 'No time controls';
+whiteTime = untimedString;
+blackTime = untimedString;
+
 firstMove = false;
 
 currentWidth = window.innerWidth;
@@ -116,7 +119,7 @@ function unhighlightSquare(square, removeRecent = false) {
 
 function formatTime(seconds) {
     if (typeof (seconds) == 'string') {
-        return 'Untimed';
+        return untimedString;
     }
     if (seconds <= 0) {
         return '0:00';
