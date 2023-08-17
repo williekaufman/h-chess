@@ -1,6 +1,7 @@
 URL = CONFIG.URL;
 
 previousToast = null;
+toastElement = document.getElementById('toast');
 
 gameId = null;
 
@@ -99,8 +100,8 @@ function processGameOver(result) {
     setWhoseTurn('');
     gameIsOver = true;
     gameResultElement.style.visibility = 'visible';
-    gameResultElement.textContent = `${result} wins`;
-    gameResultElement.style.color = result === color ? 'green' : 'red';
+    gameResultElement.textContent = `${result} wins!`;
+    gameResultElement.style.backgroundColor = result === color ? 'green' : 'red';
 }
 
 function unhighlightSquares() {
@@ -327,22 +328,16 @@ function removeFriend(friend) {
 }
 
 function showToast(message, seconds = 3) {
-    const toast = document.createElement('div');
-
-    toast.classList.add('toast');
-    toast.textContent = message;
-
-    previousToast?.remove();
-
-    previousToast = toast;
-
     if (seconds == 0) {
+        toastElement.style.visibility = 'hidden';
         return;
     }
-    document.body.appendChild(toast);
+
+    toastElement.textContent = message;
+    toastElement.style.visibility = 'visible';
 
     setTimeout(function () {
-        toast.remove();
+        toastElement.style.visibility = 'hidden';
     }, seconds * 1000);
 }
 
