@@ -26,20 +26,21 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 
-<div style="margin-top: 5px">
+<div class="header">
+    <div> 
     <button id="newGameButton" style="margin-right:5px">New Game</button>
     <button id="copyGameIdButton">Copy Game Id</button>
-    <div style="position: absolute; right: 20px; top: 5px">
+    <div class="username">
         <input id="usernameInput" type="text" placeholder="username" size="15">
         <div style="margin-top: 5px">
             <input id="addFriendInput" type="text" placeholder="add friend" size="15">
             <button id="addFriendButton" style="margin-left:5px">Add</button>
         </div>
-
     </div>
+    </div>
+    <div> <span class="toast" id="toast"> </span> </div>
+    <div> <span class="result-toast" id="game-result"></span> </div>
 </div>
-<div> <span class="toast" id="toast"> </span> </div>
-<div> <span class="result-toast" id="game-result"></span> </div>
 <div class="chess">
     <h2 class="handicap-info" id="handicapInfo"> </h2>
     <div class="color-info" id="opponentInfo" style="margin-top: 5px">
@@ -48,14 +49,14 @@
     </div>
     <div class="board" id="board"></div>
     <div class="color-info" id="yourInfo" style="margin-top: 5px">
-        <div class="name" id="yourName"></div> <!-- currently unused -->
+        <div class="promotion-container" id="promotionSelector">
+            <img class="promotion-piece" src="https://chessboardjs.com/img/chesspieces/wikipedia/wQ.png" piece="Q">
+            <img class="promotion-piece" src="https://chessboardjs.com/img/chesspieces/wikipedia/wR.png" piece="R">
+            <img class="promotion-piece" src="https://chessboardjs.com/img/chesspieces/wikipedia/wB.png" piece="B">
+            <img class="promotion-piece" src="https://chessboardjs.com/img/chesspieces/wikipedia/wN.png" piece="N">
+        </div>
+
         <div class="time" id="yourTime">No time controls</div>
-    </div>
-    <div class="promotion-container" id="promotionSelector">
-        <img class="promotion-piece" src="https://chessboardjs.com/img/chesspieces/wikipedia/wQ.png" piece="Q">
-        <img class="promotion-piece" src="https://chessboardjs.com/img/chesspieces/wikipedia/wR.png" piece="R">
-        <img class="promotion-piece" src="https://chessboardjs.com/img/chesspieces/wikipedia/wB.png" piece="B">
-        <img class="promotion-piece" src="https://chessboardjs.com/img/chesspieces/wikipedia/wN.png" piece="N">
     </div>
 </div>
 <div id="newGameModalOverlay" class="modal-overlay">
