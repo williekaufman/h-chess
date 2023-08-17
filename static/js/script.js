@@ -27,6 +27,7 @@ promotionSelector = document.getElementById('promotionSelector');
 promotionPiece = null;
 
 ignoreOtherPlayerCheck = false;
+lastIgnoreOtherPlayerCheck = false;
 
 mostRecentFrom = null;
 mostRecentTo = null;
@@ -46,9 +47,14 @@ colorSelection = 'random';
 whiteKingElement = document.getElementById('whiteKing');
 blackKingElement = document.getElementById('blackKing');
 
-whiteTime = null;
-blackTime = null;
+whiteTime = 'No time controls';
+blackTime = 'No time controls';
 firstMove = false;
+
+currentWidth = window.innerWidth;
+
+yourTimeElement = document.getElementById('yourTime');
+opponentTimeElement = document.getElementById('opponentTime');
 
 timeSelection = null;
 
@@ -78,6 +84,14 @@ function updateMostRecentMove(from, to) {
     mostRecentTo = to;
 }
 
+function highlightMostRecentMove() {
+    if (!mostRecentFrom || !mostRecentTo) {
+        return;
+    }
+    getSquareElement(mostRecentFrom).classList.add('recent-move');
+    getSquareElement(mostRecentTo).classList.add('recent-move');
+}
+
 function processGameOver(result) {
     setWhoseTurn('');
     gameIsOver = true;
@@ -101,6 +115,7 @@ function unhighlightSquare(square, removeRecent = false) {
 
 function formatTime(seconds, bold = false) {
     if (typeof (seconds) == 'string') {
+        seconds = 'No time controls' 
         return bold ? `<b>${seconds}</b>` : seconds;
     }
     if (seconds <= 0) {
@@ -125,18 +140,16 @@ function updateTimes(white, black) {
     blackTime = black;
     whiteTimeStr = formatTime(white, whoseTurn === 'White');
     blackTimeStr = formatTime(black, whoseTurn === 'Black');
-    timesElement.innerHTML = `${whiteTimeStr} - ${blackTimeStr}`
+    yourTimeElement.innerHTML = color === 'White' ? whiteTimeStr : blackTimeStr;
+    opponentTimeElement.innerHTML = color === 'White' ? blackTimeStr : whiteTimeStr;
 }
 
 setInterval(() => {
     if (gameIsOver || firstMove) {
         return;
     }
-    if (whoseTurn === 'White') {
-        whiteTime--;
-    } else {
-        blackTime--;
-    }
+    whiteTime = typeof(whiteTime) == 'string' && whoseTurn === 'White' ? whiteTime : whiteTime - 1;
+    blackTime = typeof(blackTime) == 'string' && whoseTurn === 'Black' ? blackTime : blackTime - 1;
     updateTimes(whiteTime, blackTime);
 }, 1000);
 
@@ -535,7 +548,8 @@ on_pickup_in_flight = false;
 retry_move = null;
 
 function yourPiece(piece) {
-    return color && piece.search(color.charAt(0).toLowerCase()) !== -1 || ignoreOtherPlayerCheck;
+    lastIgnoreOtherPlayerCheck = ignoreOtherPlayerCheck;
+    return (color && piece.search(color.charAt(0).toLowerCase()) !== -1) || ignoreOtherPlayerCheck;
 }
 
 function activePiece(piece) {
@@ -570,7 +584,11 @@ function onPickup(source, piece) {
 }
 
 function isLegalMove(to) {
-    return legal_destinations.includes(to.toUpperCase());
+    if (lastIgnoreOtherPlayerCheck && !ignoreOtherPlayerCheck) {
+        showToast("Can't move until other player joins", 3);
+        return false;
+    }
+    return lastIgnoreOtherPlayerCheck === ignoreOtherPlayerCheck && legal_destinations.includes(to.toUpperCase());
 }
 
 function sendMove(from, to) {
@@ -601,7 +619,7 @@ function sendMove(from, to) {
 function handleMove(from, to) {
     holdingPiece = false;
     unhighlightSquares();
-    if (on_pickup_in_flight) {
+    if (on_pickup_in_flight && lastIgnoreOtherPlayerCheck === ignoreOtherPlayerCheck) {
         retry_move = () => maybeMove(from, to);
         return 'snapback';
     }
@@ -649,7 +667,7 @@ setInterval(function () {
 //     if (gameIsOver) {
 //         return;
 //     }
-    // updateState();
+// updateState();
 // }, 1000);
 
 function populateFriendsList() {
@@ -715,6 +733,14 @@ socket.on('update', (data) => {
     firstMove = false;
     data['color'] === color && updateState();
 });
+
+setInterval(() => {
+    if (currentWidth != window.innerWidth) {
+        currentWidth = window.innerWidth;
+        !holdingPiece && board.resize();
+        highlightMostRecentMove();
+    }
+}, 100);
 
 newGame(false);
 populateFriendsList();

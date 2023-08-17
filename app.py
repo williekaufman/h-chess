@@ -18,8 +18,10 @@ app = Flask(__name__)
 socketio = SocketIO(app)
 CORS(app)
 
+
 def new_game_id():
     return token_hex(16)
+
 
 def update_time(whose_turn, game_id):
     now = time.time()
@@ -38,12 +40,12 @@ def update_time(whose_turn, game_id):
     else:
         rset('last_move', now, game_id=game_id)
 
+
 def times(game_id, whose_turn):
     last_move = rget('last_move', game_id=game_id)
     whiteTime = rget(f'{Color.WHITE.value}_time', game_id=game_id)
-    blackTime = rget(f'{Color.BLACK.value}_time', game_id=game_id) 
-    # This is kinda hacky but it's just so the frontend always displays something
-    # for games that don't have time controls
+    blackTime = rget(f'{Color.BLACK.value}_time', game_id=game_id)
+    # TODO handle case where one player has no time control
     if not whiteTime or not blackTime:
         return {
             'whiteTime': 'White',
@@ -58,28 +60,35 @@ def times(game_id, whose_turn):
         if whose_turn == Color.WHITE:
             whiteTime -= time_since_last_move
             if whiteTime < 0:
-                rget('winner', game_id=game_id) or rset('winner', 'Black', game_id=game_id)
+                rget('winner', game_id=game_id) or rset(
+                    'winner', 'Black', game_id=game_id)
         else:
             blackTime -= time_since_last_move
             if blackTime < 0:
-                rget('winner', game_id=game_id) or rset('winner', 'White', game_id=game_id)
+                rget('winner', game_id=game_id) or rset(
+                    'winner', 'White', game_id=game_id)
     return {
         'whiteTime': whiteTime,
         'blackTime': blackTime,
     }
 
+
 @app.route("/", methods=['GET'])
 def index():
     return render_template('index.html')
 
+
 def live_game_key(username):
     return 'live_game:' + username
+
 
 def friends_key(username):
     return 'friends:' + username
 
+
 def get_friends(username):
     return json.loads(rget(friends_key(username), game_id=None) or '[]')
+
 
 def add_friend(username, friend):
     friends = get_friends(username)
@@ -88,12 +97,14 @@ def add_friend(username, friend):
     friends.append(friend)
     rset(friends_key(username), json.dumps(friends), game_id=None, ex=None)
 
+
 def remove_friend(username, friend):
     friends = get_friends(username)
     if friend not in friends:
         return False
     friends.remove(friend)
     rset(friends_key(username), json.dumps(friends), game_id=None, ex=None)
+
 
 @app.route("/new_game", methods=['POST'])
 def new_game():
@@ -118,7 +129,8 @@ def new_game():
     for color, handicap in zip(Color, handicaps):
         rset(f'{color.value}_handicap', handicap, game_id=game_id)
     rset('other_player', playerColor.other().value, game_id=game_id)
-    return {'success': True, 'gameId': game_id, 'color': playerColor.value }
+    return {'success': True, 'gameId': game_id, 'color': playerColor.value}
+
 
 @app.route("/active_games", methods=['GET'])
 def active_games():
@@ -134,6 +146,7 @@ def active_games():
             'gameId': game_id,
         })
     return {'success': True, 'games': games}
+
 
 @app.route("/join_game", methods=['GET'])
 def join_game():
@@ -153,6 +166,7 @@ def join_game():
     rset('other_player', '', game_id=game_id)
     return {'success': True, 'color': color, 'board': board.to_dict(), 'whoseTurn': rget('turn', game_id=game_id), 'firstMove': last_move is None}
 
+
 @app.route('/handicap', methods=['GET'])
 def get_handicap():
     game_id = request.args.get('gameId')
@@ -165,9 +179,11 @@ def get_handicap():
     else:
         return {'success': False, 'error': 'Invalid game id'}
 
+
 @app.route("/all_handicaps", methods=['GET'])
 def get_all_handicaps():
     return {'success': True, 'handicaps': [k for k in handicaps.keys()]}
+
 
 @app.route("/board", methods=['GET'])
 def get_board():
@@ -181,6 +197,7 @@ def get_board():
         return {'success': True, 'board': board.to_dict(), 'winner': winner}
     return {'success': True, 'board': board.to_dict(), 'whoseTurn': whose_turn.value, **times(game_id, whose_turn)}
 
+
 @app.route("/history", methods=['GET'])
 def get_history():
     game_id = request.args.get('gameId')
@@ -189,12 +206,11 @@ def get_history():
         return {'success': False, 'error': 'Invalid game id'}
     return {'success': True, 'history': history.to_list()}
 
+
 @app.route("/move", methods=['POST'])
 def move():
     game_id = request.json.get('gameId')
-    # This can let the frontend board get out of sync with the backend board 
-    # ignore_other_player_check = request.json.get('ignoreOtherPlayerCheck')
-    ignore_other_player_check = True
+    ignore_other_player_check = request.json.get('ignoreOtherPlayerCheck')
     promotion = request.json.get('promotion')
     if rget('other_player', game_id=game_id) and not ignore_other_player_check:
         return {'success': False, 'error': 'Other player has not joined'}
@@ -202,19 +218,22 @@ def move():
     stop = Square(request.json.get('stop').upper())
     board = Board.of_game_id(game_id)
     history = History.of_game_id(game_id)
-    whose_turn = Color.whose_turn(game_id) 
-    handicap = handicaps[rget(f'{whose_turn.value}_handicap', game_id=game_id)][0]
-    move, extra, error = board.move(start, stop, whose_turn, handicap, history, promotion)
+    whose_turn = Color.whose_turn(game_id)
+    handicap = handicaps[rget(
+        f'{whose_turn.value}_handicap', game_id=game_id)][0]
+    move, extra, error = board.move(
+        start, stop, whose_turn, handicap, history, promotion)
     if move:
         winner_on_time = update_time(whose_turn, game_id)
         history.add(move)
         whose_turn = whose_turn.other()
-        handicap = handicaps[rget(f'{whose_turn.value}_handicap', game_id=game_id)][0]
+        handicap = handicaps[rget(
+            f'{whose_turn.value}_handicap', game_id=game_id)][0]
         rset('history', history.to_string(), game_id=game_id)
         rset('board', board.to_string(), game_id=game_id)
         rset('turn', whose_turn.value, game_id=game_id)
         winner = winner_on_time or board.winner(whose_turn, history, handicap)
-        ret = {'success': True , 'extra': extra , 'whoseTurn': whose_turn.value}
+        ret = {'success': True, 'extra': extra, 'whoseTurn': whose_turn.value}
         if winner:
             rset('winner', winner.value, game_id=game_id)
             ret['winner'] = winner.value
@@ -225,8 +244,9 @@ def move():
         # It's bad if we end up here since the UI board will be out of sync with the server board
         # That's why we snapback the board on the UI side for moves not in the legal_moves list
         # It's ok for moves that aren't requested via dragging pieces around, e.g. via retry
-        return {'success': False, 'error': error , 'whose_turn': whose_turn.value}
-    
+        return {'success': False, 'error': error, 'whose_turn': whose_turn.value}
+
+
 @app.route("/legal_moves", methods=['GET'])
 def legal_moves():
     game_id = request.args.get('gameId')
@@ -238,8 +258,10 @@ def legal_moves():
     board = Board.of_game_id(game_id)
     history = History.of_game_id(game_id)
     whose_turn = Color.whose_turn(game_id)
-    handicap = handicaps[rget(f'{whose_turn.value}_handicap', game_id=game_id)][0]
-    return { 'success': True, 'moves': board.legal_moves(start, history, whose_turn, handicap) }
+    handicap = handicaps[rget(
+        f'{whose_turn.value}_handicap', game_id=game_id)][0]
+    return {'success': True, 'moves': board.legal_moves(start, history, whose_turn, handicap)}
+
 
 @app.route("/add_friend", methods=['POST'])
 def befriend():
@@ -253,6 +275,8 @@ def befriend():
     return {'success': True}
 
 # Ya this should probably be DELETE type but whatever
+
+
 @app.route("/remove_friend", methods=['POST'])
 def unfriend():
     username = request.json.get('username')
@@ -262,18 +286,23 @@ def unfriend():
     remove_friend(username, friend)
     return {'success': True}
 
+
 @socketio.on('connect')
 def example():
     print('connected', request.sid)
-    emit('message', 'ping', broadcast=True) 
+    emit('message', 'ping', broadcast=True)
+
 
 @socketio.on('join')
 def on_join(data):
     join_room(data['room'])
 
+
 @socketio.on('leave')
 def on_leave(data):
     leave_room(data['room'])
 
+
 if __name__ == '__main__':
-    Thread(target=socketio.run, args=[app], kwargs={'host': '0.0.0.0', 'port': 5001 if LOCAL else 5003}).start()
+    Thread(target=socketio.run, args=[app], kwargs={
+           'host': '0.0.0.0', 'port': 5001 if LOCAL else 5003}).start()
