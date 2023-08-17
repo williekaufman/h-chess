@@ -116,7 +116,7 @@ def new_game():
     rset('turn', f'{Color.WHITE.value}', game_id=game_id)
     for color, handicap in zip(Color, handicaps):
         rset(f'{color.value}_handicap', handicap, game_id=game_id)
-    rset('other_player', color.other().value, game_id=game_id)
+    rset('other_player', playerColor.other().value, game_id=game_id)
     return {'success': True, 'gameId': game_id, 'color': playerColor.value }
 
 @app.route("/active_games", methods=['GET'])
@@ -140,6 +140,7 @@ def join_game():
     board = Board.of_game_id(game_id)
     winner = rget('winner', game_id=game_id)
     color = rget('other_player', game_id=game_id)
+    last_move = rget('last_move', game_id=game_id)
     if not board:
         return {'success': False, 'error': 'Invalid game id'}
     if not color:
@@ -149,7 +150,7 @@ def join_game():
     if winner:
         return {'success': True, 'board': board.to_dict(), 'winner': winner}
     rset('other_player', '', game_id=game_id)
-    return {'success': True, 'color': color, 'board': board.to_dict(), 'whoseTurn': rget('turn', game_id=game_id)}
+    return {'success': True, 'color': color, 'board': board.to_dict(), 'whoseTurn': rget('turn', game_id=game_id), 'firstMove': last_move is None}
 
 @app.route('/handicap', methods=['GET'])
 def get_handicap():
@@ -190,7 +191,9 @@ def get_history():
 @app.route("/move", methods=['POST'])
 def move():
     game_id = request.json.get('gameId')
-    ignore_other_player_check = request.json.get('ignoreOtherPlayerCheck')
+    # This can let the frontend board get out of sync with the backend board 
+    # ignore_other_player_check = request.json.get('ignoreOtherPlayerCheck')
+    ignore_other_player_check = True
     promotion = request.json.get('promotion')
     if rget('other_player', game_id=game_id) and not ignore_other_player_check:
         return {'success': False, 'error': 'Other player has not joined'}
@@ -214,7 +217,8 @@ def move():
         if winner:
             rset('winner', winner.value, game_id=game_id)
             ret['winner'] = winner.value
-        socketio.emit('move', {'data': 'move was made'}, room=game_id)
+        # This tells the frontend to pull down the new state
+        socketio.emit('update', {'color': whose_turn.value}, room=game_id)
         return {**ret, **times(game_id, whose_turn)}
     else:
         # It's bad if we end up here since the UI board will be out of sync with the server board
@@ -265,12 +269,10 @@ def example():
 @socketio.on('join')
 def on_join(data):
     join_room(data['room'])
-    print('joined', data['room'])
 
 @socketio.on('leave')
 def on_leave(data):
     leave_room(data['room'])
-    print('left', data['room'])
 
 if __name__ == '__main__':
     Thread(target=socketio.run, args=[app], kwargs={'host': '0.0.0.0', 'port': 5001 if LOCAL else 5003}).start()

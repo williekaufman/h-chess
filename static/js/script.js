@@ -46,6 +46,10 @@ colorSelection = 'random';
 whiteKingElement = document.getElementById('whiteKing');
 blackKingElement = document.getElementById('blackKing');
 
+whiteTime = null;
+blackTime = null;
+firstMove = false;
+
 timeSelection = null;
 
 highlightedSquares = [];
@@ -113,10 +117,25 @@ function updateTimes(white, black) {
     if (gameIsOver || !white || !black) {
         return;
     }
-    whiteTime = formatTime(white, whoseTurn === 'White');
-    blackTime = formatTime(black, whoseTurn === 'Black');
-    timesElement.innerHTML = `${whiteTime} - ${blackTime}`
+    whiteTime = white;
+    blackTime = black;
+    whiteTimeStr = formatTime(white, whoseTurn === 'White');
+    blackTimeStr = formatTime(black, whoseTurn === 'Black');
+    timesElement.innerHTML = `${whiteTimeStr} - ${blackTimeStr}`
 }
+
+setInterval(() => {
+    if (gameIsOver || firstMove) {
+        return;
+    }
+    if (whoseTurn === 'White') {
+        whiteTime--;
+    } else {
+        blackTime--;
+    }
+    updateTimes(whiteTime, blackTime);
+}, 1000);
+
 
 // I thought we might want to display this information, but it's not really necessary
 // Too lazy to refactor
@@ -355,6 +374,8 @@ function newGame(toast = true) {
             setOrientation(data['color']);
             getHandicap();
             toast && showToast('Successfully created game', 3);
+            updateState();
+            firstMove = true;
         });
 
     setWhoseTurn('White');
@@ -379,16 +400,19 @@ function loadGame(game = null) {
             }
             setGameId(game);
             gameIsOver = false;
-            board.position(data['board']);
             if (data['winner']) {
+                board.position(data['board']);
                 processGameOver(data['winner']);
             } else {
                 setOrientation(data['color']);
+                board.position(data['board']);
                 setWhoseTurn(data['whoseTurn']);
                 getHandicap();
                 gameIdInput.value = '';
                 showToast('Game loaded', 3);
+                firstMove = true;
             }
+            updateState();
         });
 }
 
@@ -616,13 +640,13 @@ setInterval(function () {
     !holdingPiece && unhighlightSquares();
 }, 200);
 
-// This is the stupid constant polling solution
-setInterval(function () {
-    if (gameIsOver) {
-        return;
-    }
-    updateState();
-}, 1000);
+// // This is the stupid constant polling solution
+// setInterval(function () {
+//     if (gameIsOver) {
+//         return;
+//     }
+    // updateState();
+// }, 1000);
 
 function populateFriendsList() {
     fetchWrapper(URL + 'active_games', { 'username': username }, 'GET')
@@ -683,8 +707,9 @@ socket.on('message', (message) => {
     console.log(message);
 });
 
-socket.on('move', (data) => {
-    console.log(data);
+socket.on('update', (data) => {
+    firstMove = false;
+    data['color'] === color && updateState();
 });
 
 newGame(false);

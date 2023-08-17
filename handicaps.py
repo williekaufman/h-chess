@@ -69,4 +69,5 @@ def get_handicaps(x, y):
     # So I can't forget to undo anything weird
     if not LOCAL:
         return random.sample(handicaps.keys(), 2) 
-    return descriptions[cant_move_to_opponents_side_of_board], descriptions[cant_move_to_opponents_side_of_board]
+    return descriptions[die_after_moving_pawn], descriptions[lose_if_no_queen]
+    # return descriptions[cant_move_to_opponents_side_of_board], descriptions[cant_move_to_opponents_side_of_board]
