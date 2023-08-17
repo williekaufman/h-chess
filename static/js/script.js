@@ -10,6 +10,7 @@ username = null;
 addFriendInputElement = document.getElementById('addFriendInput');
 addFriendButton = document.getElementById('addFriendButton');
 
+ctrlKeyIsDown = false;
 newGameButton = document.getElementById('newGameButton');
 newGameModal = document.getElementById('newGameModal');
 newGameModalOverlay = document.getElementById('newGameModalOverlay');
@@ -403,6 +404,7 @@ function closeModal() {
 
 function handleKeyDown(event) {
     if (event.ctrlKey) {
+        ctrlKeyIsDown = true;
         if (event.key == 'c') {
             copyGameId();
         }
@@ -414,6 +416,12 @@ function handleKeyDown(event) {
     }
 }
 
+function handleKeyUp(event) {
+    if (event.key == 'Control') {
+        ctrlKeyIsDown = false;
+    }
+}
+
 document.addEventListener("click", function (event) {
     if (event.target === newGameModalOverlay) {
         closeModal();
@@ -421,7 +429,11 @@ document.addEventListener("click", function (event) {
 });
 
 newGameButton.addEventListener('click', () => {
-    openModal();
+    if (ctrlKeyIsDown) {
+        newGame();
+    } else {
+        openModal();
+    }
 });
 
 createGameButton.addEventListener('click', () => {
@@ -463,6 +475,7 @@ function clearSquare(square) {
 }
 
 document.addEventListener('keydown', handleKeyDown);
+document.addEventListener('keyup', handleKeyUp);
 
 var board, game = new Chess();
 
