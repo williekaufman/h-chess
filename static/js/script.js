@@ -25,7 +25,6 @@ gameIdInput = document.getElementById('gameIdInput');
 
 promotionSelector = document.getElementById('promotionSelector');
 promotionPiece = null;
-displayPromotionOptionsElement = document.getElementById('displayPromotionOptions');
 
 mostRecentFrom = null;
 mostRecentTo = null;
@@ -54,8 +53,6 @@ highlightedSquares = [];
 color = null;
 
 timesElement = document.getElementById('times');
-
-ignoreOtherPlayerCheck = document.getElementById('ignoreOtherPlayerCheck');
 
 function getSquareElement(square) {
     return document.querySelector(`[data-square="${square.toLowerCase()}"]`);
@@ -138,10 +135,6 @@ function setUsername() {
     populateFriendsList();
 
 }
-
-displayPromotionOptionsElement.addEventListener('change', function () {
-    promotionSelector.style.display = displayPromotionOptionsElement.checked ? 'flex' : 'none';
-});
 
 promotionElements = document.querySelectorAll('.promotion-piece');
 
@@ -413,12 +406,20 @@ function handleKeyDown(event) {
     } else if (event.key == 'Enter' && newGameModal.style.display == 'flex') {
         event.preventDefault();
         createGameButton.click();
+    } else if (event.key == 'd') {
+        promotionSelector.style.display = 'flex';
+    } else if (event.key == 'a') {
+        ignoreOtherPlayerCheck = true;
     }
 }
 
 function handleKeyUp(event) {
     if (event.key == 'Control') {
         ctrlKeyIsDown = false;
+    } if (event.key == 'd') {
+        promotionSelector.style.display = 'none';
+    } else if (event.key == 'a') {
+        ignoreOtherPlayerCheck = false;
     }
 }
 
@@ -499,7 +500,7 @@ on_pickup_in_flight = false;
 retry_move = null;
 
 function yourPiece(piece) {
-    return color && piece.search(color.charAt(0).toLowerCase()) !== -1 || ignoreOtherPlayerCheck.checked;
+    return color && piece.search(color.charAt(0).toLowerCase()) !== -1 || ignoreOtherPlayerCheck;
 }
 
 function activePiece(piece) {
@@ -516,7 +517,7 @@ function onPickup(source, piece) {
     legal_destinations = [];
     on_pickup_in_flight = true;
 
-    fetchWrapper(URL + 'legal_moves', { 'start': source, 'gameId': gameId, 'ignoreOtherPlayerCheck': ignoreOtherPlayerCheck.checked }, 'GET')
+    fetchWrapper(URL + 'legal_moves', { 'start': source, 'gameId': gameId, ignoreOtherPlayerCheck }, 'GET')
         .then((response) => response.json())
         .then((data) => {
             if (!data['success']) {
@@ -538,7 +539,7 @@ function isLegalMove(to) {
 }
 
 function sendMove(from, to) {
-    fetchWrapper(URL + 'move', { 'start': from, 'stop': to, 'gameId': gameId, 'ignoreOtherPlayerCheck': ignoreOtherPlayerCheck.checked, 'promotion': promotionPiece || 'Q' }, 'POST')
+    fetchWrapper(URL + 'move', { 'start': from, 'stop': to, 'gameId': gameId, ignoreOtherPlayerCheck, 'promotion': promotionPiece || 'Q' }, 'POST')
         .then((response) => response.json())
         .then((data) => {
             if (!data['success']) {
@@ -663,7 +664,6 @@ function displayActiveGames(activeGames) {
 
 if (localStorage.getItem('hchess-testing-mode')) {
     whiteKingElement.click();
-    ignoreOtherPlayerCheck.checked = true;
 }
 
 newGame();
