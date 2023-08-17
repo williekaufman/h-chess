@@ -10,7 +10,7 @@ username = null;
 addFriendInputElement = document.getElementById('addFriendInput');
 addFriendButton = document.getElementById('addFriendButton');
 
-ctrlKeyIsDown = false;
+shiftKeyIsDown = false;
 newGameButton = document.getElementById('newGameButton');
 newGameModal = document.getElementById('newGameModal');
 newGameModalOverlay = document.getElementById('newGameModalOverlay');
@@ -47,8 +47,8 @@ colorSelection = 'random';
 whiteKingElement = document.getElementById('whiteKing');
 blackKingElement = document.getElementById('blackKing');
 
-whiteTime = 'No time controls';
-blackTime = 'No time controls';
+whiteTime = 'Untimed';
+blackTime = 'Untimed';
 firstMove = false;
 
 currentWidth = window.innerWidth;
@@ -95,6 +95,7 @@ function highlightMostRecentMove() {
 function processGameOver(result) {
     setWhoseTurn('');
     gameIsOver = true;
+    gameResultElement.style.visibility = 'visible';
     gameResultElement.textContent = `${result} wins`;
     gameResultElement.style.color = result === color ? 'green' : 'red';
 }
@@ -113,19 +114,23 @@ function unhighlightSquare(square, removeRecent = false) {
     });
 }
 
-function formatTime(seconds, bold = false) {
+function formatTime(seconds) {
     if (typeof (seconds) == 'string') {
-        seconds = 'No time controls' 
-        return bold ? `<b>${seconds}</b>` : seconds;
+        return 'Untimed';
     }
     if (seconds <= 0) {
         return '0:00';
     }
     ret = `${Math.floor(seconds / 60)}:${seconds % 60 < 10 ? '0' : ''}${Math.floor(seconds % 60)}`;
-    if (bold) {
-        ret = `<b>${ret}</b>`;
-    }
     return ret;
+}
+
+function setBold(element, bold) {
+    if (bold) {
+        element.classList.add('bold');
+    } else {
+        element.classList.remove('bold');
+    }
 }
 
 function updateTimes(white, black) {
@@ -138,8 +143,11 @@ function updateTimes(white, black) {
     }
     whiteTime = white;
     blackTime = black;
-    whiteTimeStr = formatTime(white, whoseTurn === 'White');
-    blackTimeStr = formatTime(black, whoseTurn === 'Black');
+
+    whiteTimeStr = formatTime(white);
+    blackTimeStr = formatTime(black);
+    setBold(yourTimeElement, color == whoseTurn);
+    setBold(opponentTimeElement, color != whoseTurn);
     yourTimeElement.innerHTML = color === 'White' ? whiteTimeStr : blackTimeStr;
     opponentTimeElement.innerHTML = color === 'White' ? blackTimeStr : whiteTimeStr;
 }
@@ -148,8 +156,8 @@ setInterval(() => {
     if (gameIsOver || firstMove) {
         return;
     }
-    whiteTime = typeof(whiteTime) == 'string' && whoseTurn === 'White' ? whiteTime : whiteTime - 1;
-    blackTime = typeof(blackTime) == 'string' && whoseTurn === 'Black' ? blackTime : blackTime - 1;
+    whiteTime = (typeof (whiteTime) != 'string' && whoseTurn === 'White') ? whiteTime - 1 : whiteTime;
+    blackTime = (typeof (blackTime) != 'string' && whoseTurn === 'Black') ? blackTime - 1 : blackTime;
     updateTimes(whiteTime, blackTime);
 }, 1000);
 
@@ -379,7 +387,7 @@ function getHandicap() {
 }
 
 function newGame(toast = true) {
-    gameResultElement.textContent = '';
+    gameResultElement.style.visibility = 'hidden';
     fetchWrapper(URL + 'new_game', newGameBody(), 'POST')
         .then((response) => response.json())
         .then((data) => {
@@ -407,7 +415,7 @@ function loadGame(game = null) {
         return;
     }
     closeModal();
-    gameResultElement.textContent = '';
+    gameResultElement.style.visibility = 'hidden';
     fetchWrapper(URL + 'join_game', { 'gameId': game }, 'GET')
         .then((response) => response.json())
         .then((data) => {
@@ -444,29 +452,35 @@ function closeModal() {
 }
 
 function handleKeyDown(event) {
-    if (event.ctrlKey) {
-        ctrlKeyIsDown = true;
-        if (event.key == 'c') {
-            copyGameId();
-        }
-    } else if (event.key == 'Escape') {
+    k = event.key.toLowerCase();
+    if (event.shiftKey) {
+        shiftKeyIsDown = true;
+    }
+    if (k == 'c') {
+        copyGameId();
+    }
+
+    if (k == 'escape') {
         closeModal();
-    } else if (event.key == 'Enter' && newGameModal.style.display == 'flex') {
+    } if (k == 'enter' && newGameModal.style.display == 'flex') {
         event.preventDefault();
         createGameButton.click();
-    } else if (event.key == 'd') {
-        promotionSelector.style.display = 'flex';
-    } else if (event.key == 'a') {
+    } if (k == 'd') {
+        promotionSelector.style.visibility = 'visible';
+    } if (k == 'a') {
         ignoreOtherPlayerCheck = true;
+    } if (k == 'n') {
+        newGameButton.click();
     }
 }
 
 function handleKeyUp(event) {
-    if (event.key == 'Control') {
-        ctrlKeyIsDown = false;
-    } if (event.key == 'd') {
-        promotionSelector.style.display = 'none';
-    } else if (event.key == 'a') {
+    k = event.key.toLowerCase();
+    if (event.key == 'Shift') {
+        shiftKeyIsDown = false;
+    } if (k == 'd') {
+        promotionSelector.style.visibility = 'hidden';
+    } if (k == 'a') {
         ignoreOtherPlayerCheck = false;
     }
 }
@@ -478,7 +492,7 @@ document.addEventListener("click", function (event) {
 });
 
 newGameButton.addEventListener('click', () => {
-    ctrlKeyIsDown ? newGame() : openModal();
+    shiftKeyIsDown ? newGame() : openModal();
 });
 
 createGameButton.addEventListener('click', () => {

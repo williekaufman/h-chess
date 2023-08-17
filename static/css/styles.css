@@ -1,12 +1,11 @@
 .chess {
   position: absolute;
   left: 50%;
-  top: 50%;
+  top: 10%;
   display: flex;
   flex-direction: column;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -10%);
   width: 35%;
-  margin-top: 10px;
 }
 
 .handicap-info {
@@ -21,6 +20,11 @@
   margin-top: 5px;
 }
 
+.result {
+  visibility: hidden;
+  align-self: center;
+}
+
 .name {
   text-align: left;
 }
@@ -33,8 +37,22 @@
   font-size: 20px;
 }
 
+.time.bold {
+  font-weight: bold;
+  letter-spacing: -0.03em; /* So bolding doesn't grow the box */
+}
+
 .board {
   width: 100%;
+}
+
+.hotkeys {
+  position: absolute;
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  grid-gap: 10px;
+  left: 20px;
+  bottom: 20px;
 }
 
 .container {
@@ -107,12 +125,12 @@
 .highlight {
   background-color: lightblue;
   box-sizing: border-box;
-  border: 2px solid red;
+  border: 5px solid red;
 }
 
 .recent-move {
   box-sizing: border-box;
-  border: 2px solid green;
+  border: 5px solid green;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -165,14 +183,15 @@
 }
 
 .promotion-piece {
-  width: 75px;
-  height: 75px;
+  width: 15%;
+  height: 15%;
   box-sizing: border-box;
   cursor: pointer;
 }
 
 .promotion-container {
-  display: none;
+  visibility: hidden;
+  display: flex;
   flex-direction: row;
   justify-content: space-around;
   align-items: center;
@@ -218,6 +237,7 @@
   top: 40%;
   width: 30%;
   height: 20%;
+  transform: translate(-15%, -10%);
   overflow: auto;
   padding: 20px;
   border-radius: 10px;

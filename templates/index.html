@@ -41,23 +41,23 @@
 <div id="whoseTurn" style="margin-top: 5px"> </div>
 <div id="times" style="margin-top: 5px"></div>
 <div class="chess">
+    <h1 class="result" id="game-result">Placeholder</h1>
     <h2 class="handicap-info" id="handicapInfo"> </h2>
-    <div class="color-info" id="opponentInfo" style="margin-top: 5px"> 
-        <div class="name" id="opponentName"></div>         <!-- currently unused -->
+    <div class="color-info" id="opponentInfo" style="margin-top: 5px">
+        <div class="name" id="opponentName"></div> <!-- currently unused -->
         <div class="time" id="opponentTime">No time controls</div>
     </div>
     <div class="board" id="board"></div>
+    <div class="color-info" id="yourInfo" style="margin-top: 5px">
+        <div class="name" id="yourName"></div> <!-- currently unused -->
+        <div class="time" id="yourTime">Untimed</div>
+    </div>
     <div class="promotion-container" id="promotionSelector">
         <img class="promotion-piece" src="https://chessboardjs.com/img/chesspieces/wikipedia/wQ.png" piece="Q">
         <img class="promotion-piece" src="https://chessboardjs.com/img/chesspieces/wikipedia/wR.png" piece="R">
         <img class="promotion-piece" src="https://chessboardjs.com/img/chesspieces/wikipedia/wB.png" piece="B">
         <img class="promotion-piece" src="https://chessboardjs.com/img/chesspieces/wikipedia/wN.png" piece="N">
     </div>
-    <div class="color-info" id="yourInfo" style="margin-top: 5px"> 
-        <div class="name" id="yourName"></div>            <!-- currently unused -->
-        <div class="time" id="yourTime">No time controls</div>  
-    </div>
-    <h1 id="game-result"></h1>
 </div>
 <div id="newGameModalOverlay" class="modal-overlay">
     <div id="newGameModal" class="modal">
@@ -87,6 +87,15 @@
         </div>
         <div> <input type="text" class="game-id-box" id="gameIdInput" placeholder="game id" size="30"> </div>
     </div>
+</div>
+<div class="hotkeys">
+    <div> Hotkeys </div>
+    <div> <b> n </b> - new game </div>
+    <div> <b> c </b> - copy game id </div>
+    <div> Hold down </div>
+    <div> <b> Shift </b> - skip new game dialog, use defaults </div>
+    <div> <b> d </b> - display promotion options </div>
+    <div> <b> a </b> - allow moving opponent's pieces / pieces in a one player game </div>
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.3/socket.io.js"></script>

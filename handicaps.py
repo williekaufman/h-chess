@@ -32,6 +32,8 @@ def lose_if_no_queen(board, start, stop, history):
     return board.loc(ColoredPiece(history.whose_turn(), Piece.QUEEN))
 
 # This doesn't work b/c check isn't implemented
+
+
 def skittish(board, start, stop, history):
     history = history.history
     if history:
@@ -66,7 +68,7 @@ handicaps = {
     "Can't move pawn and then rook": (cant_move_pawn_and_then_rook, 3),
     "Die after moving pawn": (die_after_moving_pawn, 7),
     "Lose if you have no queen": (lose_if_no_queen, 7),
-    "When you get checked, you must move your king": (skittish, 2),
+    "While in check, you must move your king": (skittish, 2),
     "When your king is on the back rank, you can only move pawns and kings": (bongcloud, 2),
     "Can't move to opponent's side of board": (cant_move_to_opponents_side_of_board, 5),
 }
