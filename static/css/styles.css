@@ -22,6 +22,8 @@
 
 .handicap-info {
   align-self: center;
+  font-weight: bold;
+  font-size: 23px;
 }
 
 .color-info {
@@ -51,7 +53,7 @@
 
 .time.bold {
   font-weight: bold;
-  letter-spacing: -0.03em; /* So bolding doesn't grow the box */
+  letter-spacing: -0.02em; /* So bolding doesn't grow the box */
 }
 
 .board {
