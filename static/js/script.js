@@ -56,6 +56,7 @@ blackTime = untimedString;
 firstMove = false;
 
 currentWidth = window.innerWidth;
+currentHeight = window.innerHeight;
 
 yourTimeElement = document.getElementById('yourTime');
 opponentTimeElement = document.getElementById('opponentTime');
@@ -759,8 +760,9 @@ socket.on('update', (data) => {
 });
 
 setInterval(() => {
-    if (currentWidth != window.innerWidth) {
+    if (currentWidth != window.innerWidth || currentHeight != window.innerHeight) {
         currentWidth = window.innerWidth;
+        currentHeight = window.innerHeight;
         !holdingPiece && board.resize();
         highlightMostRecentMove();
     }
