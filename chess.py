@@ -276,7 +276,6 @@ class Board():
         # This could theoretically collide but it never will
         random.seed(int(self.game_id, 16) + len(history.history))
         self.cache = Cache(kings, random.random())
-        print(self.cache.dict())
 
     def get(self, square):
         rank, file = square.to_coordinates()

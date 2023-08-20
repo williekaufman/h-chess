@@ -155,6 +155,9 @@
   background-color: lightblue;
   box-sizing: border-box;
   border: 5px solid red;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .recent-move {
