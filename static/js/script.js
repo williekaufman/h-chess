@@ -716,14 +716,10 @@ activeGamesWrapper.id = 'active-games-wrapper';
 activeGamesWrapper.classList.add('active-games-wrapper');
 
 function displayActiveGames(activeGames) {
-    activeGamesWrapper.innerHTML = `<h4> Friends list </h4>`;
+    activeGamesWrapper.innerHTML = '';
     activeGames.forEach(game => {
         id = game['gameId'];
-        if (game['username'].length > 9) {
-            display_username = game['username'].slice(0, 9) + '...';
-        } else {
-            display_username = game['username'];
-        }
+        display_username = game['username'].length > 9 ? game['username'].slice(0, 9) + '...' : game['username'];   
         if (id) {
             content = `<button class="active-game-button" onclick="loadGame('${id}')">Challenge ${display_username}</button>`;
         } else {
