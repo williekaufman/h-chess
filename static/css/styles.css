@@ -77,8 +77,7 @@
 }
 
 .toast {
-  visibility: hidden;
-  display: inline-block;
+  display: none;
   padding: 10px;
   margin-top: 10px;
   background-color: blue;
@@ -88,9 +87,19 @@
   z-index: 9999;
 }
 
+.state-toast {
+  display: none;
+  padding: 10px;
+  margin-top: 10px;
+  background-color: magenta;
+  color: #fff;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+}
+
 .result-toast {
-  visibility: hidden;
-  display: inline-block;
+  display: none;
   font-size: 30px;
   font-weight: bold;
   padding: 10px;

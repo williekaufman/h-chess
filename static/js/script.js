@@ -41,8 +41,10 @@ howToPlayBtnText = document.getElementById('how-to-play-btn-text');
 whoseTurn = null;
 whoseTurnElement = document.getElementById('whoseTurn');
 
+stateToast = document.getElementById('stateToast');
+
 gameIsOver = false;
-gameResultElement = document.getElementById('game-result');
+gameResultElement = document.getElementById('gameResult');
 
 colorSelection = 'random';
 whiteKingElement = document.getElementById('whiteKing');
@@ -70,6 +72,33 @@ highlightedSquares = [];
 color = null;
 
 timesElement = document.getElementById('times');
+
+const socket = io.connect('http://' + document.domain + ':' + location.port);
+
+socket.on('connect', () => {
+    console.log('Connected to server');
+});
+
+socket.on('message', (message) => {
+    console.log(message);
+    showToast(message, 10);
+});
+
+socket.on('update', (data) => {
+    firstMove = false;
+    data['color'] === color && updateState();
+});
+
+
+function toggleOtherPlayerCheck() {
+    ignoreOtherPlayerCheck = !ignoreOtherPlayerCheck;
+    if (ignoreOtherPlayerCheck) {
+        stateToast.textContent = `Moving your opponent's pieces enabled`;
+        stateToast.style.display = 'inline-block';
+    } else {
+        stateToast.style.display = 'none';
+    }
+}
 
 function getSquareElement(square) {
     return document.querySelector(`[data-square="${square.toLowerCase()}"]`);
@@ -100,7 +129,7 @@ function highlightMostRecentMove() {
 function processGameOver(result) {
     setWhoseTurn('');
     gameIsOver = true;
-    gameResultElement.style.visibility = 'visible';
+    gameResultElement.style.display = 'inline-block';
     gameResultElement.textContent = `${result} wins!`;
     gameResultElement.style.backgroundColor = result === color ? 'green' : 'red';
 }
@@ -183,8 +212,10 @@ function setWhoseTurn(turn) {
 }
 
 function setUsername() {
+    username && socket.emit('leave', { room: username });
     username = usernameInputElement.value;
     localStorage.setItem('handicap-chess-username', username);
+    socket.emit('join', { room: username });
     populateFriendsList();
 
 }
@@ -234,7 +265,7 @@ usernameInputElement.addEventListener('keydown', function (e) {
 
 if (localStorage.getItem('handicap-chess-username')) {
     usernameInputElement.value = localStorage.getItem('handicap-chess-username');
-    username = usernameInputElement.value;
+    setUsername();
 }
 
 gameIdInput.addEventListener('focus', function () {
@@ -330,15 +361,15 @@ function removeFriend(friend) {
 
 function showToast(message, seconds = 3) {
     if (seconds == 0) {
-        toastElement.style.visibility = 'hidden';
+        toastElement.style.display = 'none';
         return;
     }
 
     toastElement.textContent = message;
-    toastElement.style.visibility = 'visible';
+    toastElement.style.display = 'inline-block';
 
     setTimeout(function () {
-        toastElement.style.visibility = 'hidden';
+        toastElement.style.display = 'none';
     }, seconds * 1000);
 }
 
@@ -394,7 +425,7 @@ function getHandicap() {
 }
 
 function newGame(toast = true) {
-    gameResultElement.style.visibility = 'hidden';
+    gameResultElement.style.display = 'none';
     fetchWrapper(URL + 'new_game', newGameBody(), 'POST')
         .then((response) => response.json())
         .then((data) => {
@@ -405,7 +436,7 @@ function newGame(toast = true) {
             setGameId(data['gameId']);
             setOrientation(data['color']);
             getHandicap();
-            toast && showToast('Successfully created game', 3);
+            toast && showToast('Successfully created game', 5);
             updateState();
             firstMove = true;
         });
@@ -422,7 +453,7 @@ function loadGame(game = null) {
         return;
     }
     closeModal();
-    gameResultElement.style.visibility = 'hidden';
+    gameResultElement.style.display = 'none';
     fetchWrapper(URL + 'join_game', { 'gameId': game }, 'GET')
         .then((response) => response.json())
         .then((data) => {
@@ -466,18 +497,17 @@ function handleKeyDown(event) {
     if (k == 'c') {
         copyGameId();
     }
-
     if (k == 'escape') {
         closeModal();
     } if (k == 'enter' && newGameModal.style.display == 'flex') {
         event.preventDefault();
         createGameButton.click();
     } if (k == 'd') {
-        promotionSelector.style.visibility = 'visible';
+        promotionSelector.style.visibility = promotionSelector.style.visibility == 'hidden' ? 'visible' : 'hidden';
     } if (k == 'f') {
-        activeGamesWrapper.style.visibility = activeGamesWrapper.style.visibility == 'hidden' ? 'visible' : 'hidden';  
+        activeGamesWrapper.style.visibility = activeGamesWrapper.style.visibility == 'hidden' ? 'visible' : 'hidden';
     } if (k == 'a') {
-        ignoreOtherPlayerCheck = true;
+        toggleOtherPlayerCheck();
     } if (k == 'n') {
         newGameButton.click();
     }
@@ -487,11 +517,7 @@ function handleKeyUp(event) {
     k = event.key.toLowerCase();
     if (event.key == 'Shift') {
         shiftKeyIsDown = false;
-    } if (k == 'd') {
-        promotionSelector.style.visibility = 'hidden';
-    } if (k == 'a') {
-        ignoreOtherPlayerCheck = false;
-    }
+    } 
 }
 
 document.addEventListener("click", function (event) {
@@ -551,7 +577,6 @@ function imgUrl(piece) {
     return `https://chessboardjs.com/img/chesspieces/wikipedia/${piece}.png`
 }
 
-/* Initialize the board with a configuration object */
 function initBoard() {
     var config = {
         draggable: true,
@@ -721,7 +746,7 @@ function displayActiveGames(activeGames) {
     activeGamesWrapper.innerHTML = '<h4> Friends </h4>';
     activeGames.forEach(game => {
         id = game['gameId'];
-        display_username = game['username'].length > 9 ? game['username'].slice(0, 9) + '...' : game['username'];   
+        display_username = game['username'].length > 9 ? game['username'].slice(0, 9) + '...' : game['username'];
         if (id) {
             content = `<button class="active-game-button" onclick="loadGame('${id}')">Challenge ${display_username}</button>`;
         } else {
@@ -741,21 +766,6 @@ function displayActiveGames(activeGames) {
 if (localStorage.getItem('hchess-testing-mode')) {
     whiteKingElement.click();
 }
-
-const socket = io.connect('http://' + document.domain + ':' + location.port);
-
-socket.on('connect', () => {
-    console.log('Connected to server');
-});
-
-socket.on('message', (message) => {
-    console.log(message);
-});
-
-socket.on('update', (data) => {
-    firstMove = false;
-    data['color'] === color && updateState();
-});
 
 setInterval(() => {
     if (currentWidth != window.innerWidth || currentHeight != window.innerHeight) {

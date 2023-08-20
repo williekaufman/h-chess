@@ -270,7 +270,8 @@ def befriend():
     if not username or not friend:
         return {'success': False, 'error': 'No username or friend provided'}
     if username == friend:
-        return {'success': False, 'error': 'Befriending yourself is just sad'}
+        return {'success': False, 'error': 'Befriending yourself is just sad'} 
+    socketio.emit('message', f'{username} added you as a friend', room=friend)
     add_friend(username, friend)
     return {'success': True}
 
@@ -290,7 +291,6 @@ def unfriend():
 @socketio.on('connect')
 def example():
     print('connected', request.sid)
-    emit('message', 'ping', broadcast=True)
 
 
 @socketio.on('join')
