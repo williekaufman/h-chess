@@ -211,6 +211,7 @@
 .game-button {
   width: 80%;
   white-space: nowrap;
+  overflow: hidden;
 }
 
 .game-button.active:hover {
