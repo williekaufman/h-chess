@@ -474,6 +474,8 @@ function handleKeyDown(event) {
         createGameButton.click();
     } if (k == 'd') {
         promotionSelector.style.visibility = 'visible';
+    } if (k == 'f') {
+        activeGamesWrapper.style.visibility = activeGamesWrapper.style.visibility == 'hidden' ? 'visible' : 'hidden';  
     } if (k == 'a') {
         ignoreOtherPlayerCheck = true;
     } if (k == 'n') {
@@ -716,7 +718,7 @@ activeGamesWrapper.id = 'active-games-wrapper';
 activeGamesWrapper.classList.add('active-games-wrapper');
 
 function displayActiveGames(activeGames) {
-    activeGamesWrapper.innerHTML = '';
+    activeGamesWrapper.innerHTML = '<h4> Friends </h4>';
     activeGames.forEach(game => {
         id = game['gameId'];
         display_username = game['username'].length > 9 ? game['username'].slice(0, 9) + '...' : game['username'];   
