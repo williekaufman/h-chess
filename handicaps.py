@@ -35,6 +35,7 @@ def lose_if_no_queen(board, start, stop, history):
 
 
 def skittish(board, start, stop, history):
+    # Use board.cache
     history = history.history
     if history:
         print(history[-1].check)
@@ -42,7 +43,7 @@ def skittish(board, start, stop, history):
 
 
 def bongcloud(board, start, stop, history):
-    king_pos = board.loc(ColoredPiece(history.whose_turn(), Piece.KING))
+    king_pos = board.cache.kings[history.whose_turn()]
     if not king_pos:
         # You should probably have a king but idk not my problem if you don't
         return True
@@ -60,6 +61,11 @@ def cant_move_to_opponents_side_of_board(board, start, stop, history):
         ranks = [rank.flip() for rank in ranks]
     return not stop.rank() in ranks
 
+def cant_move_to_half_of_squares_at_random(board, start, stop, history):
+    random.seed(board.cache.rand)
+    squares = random.sample(list(Square), 32)
+    return stop in squares
+
 
 # number is how bad the handicap is, 1-10
 handicaps = {
@@ -71,6 +77,7 @@ handicaps = {
     "While in check, you must move your king": (skittish, 2),
     "When your king is on the back rank, you can only move pawns and kings": (bongcloud, 2),
     "Can't move to opponent's side of board": (cant_move_to_opponents_side_of_board, 5),
+    "Can't move to half of squares, re-randomized every move": (cant_move_to_half_of_squares_at_random, 5)
 }
 
 descriptions = {v[0]: k for k, v in handicaps.items()}
@@ -82,5 +89,5 @@ def get_handicaps(x, y):
     # So I can't forget to undo anything weird
     if not LOCAL:
         return random.sample(handicaps.keys(), 2)
-    return descriptions[die_after_moving_pawn], descriptions[lose_if_no_queen]
+    return descriptions[cant_move_to_half_of_squares_at_random], descriptions[lose_if_no_queen]
     # return descriptions[cant_move_to_opponents_side_of_board], descriptions[cant_move_to_opponents_side_of_board]

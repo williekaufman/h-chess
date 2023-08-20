@@ -123,7 +123,7 @@ def new_game():
     if rget('board', game_id=game_id):
         return {'success': False, 'error': 'Game already exists'}
     handicaps = get_handicaps(0, 0)
-    rset('board', starting_board.to_string(), game_id=game_id)
+    starting_board().write_to_redis(game_id)
     rset('history', History().to_string(), game_id=game_id)
     rset('turn', f'{Color.WHITE.value}', game_id=game_id)
     for color, handicap in zip(Color, handicaps):
@@ -230,7 +230,7 @@ def move():
         handicap = handicaps[rget(
             f'{whose_turn.value}_handicap', game_id=game_id)][0]
         rset('history', history.to_string(), game_id=game_id)
-        rset('board', board.to_string(), game_id=game_id)
+        board.write_to_redis()
         rset('turn', whose_turn.value, game_id=game_id)
         winner = winner_on_time or board.winner(whose_turn, history, handicap)
         ret = {'success': True, 'extra': extra, 'whoseTurn': whose_turn.value}

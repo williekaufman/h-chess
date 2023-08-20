@@ -1,6 +1,9 @@
-from redis_utils import rget
+from redis_utils import rget, rset
+import random
 from enum import Enum
 from squares import Square
+import json
+
 
 class Piece(Enum):
     PAWN = 'P'
@@ -15,12 +18,12 @@ class Color(Enum):
     WHITE = 'White'
     BLACK = 'Black'
 
-
     def other(self):
         return Color.WHITE if self == Color.BLACK else Color.BLACK
-    
+
     def whose_turn(game_id):
         return Color.WHITE if rget('turn', game_id=game_id) == 'White' else Color.BLACK
+
 
 class ColoredPiece():
     def __init__(self, color, piece):
@@ -72,7 +75,7 @@ class Move():
             return False
         if board.get(self.stop) and board.get(self.start).color == board.get(self.stop).color:
             return False
-        if self.stop.value not in board.legal_moves(self.start, history, whose_turn, handicap): 
+        if self.stop.value not in board.legal_moves(self.start, history, whose_turn, handicap):
             return False
         return True
 
@@ -83,6 +86,7 @@ class Move():
         return Move(ColoredPiece.of_string(s[0]), s[1:3], s[3:5], s[5], s[6], s[7], s[8])
 
 # All this actual logic is untested. It'll be easier to test once we get a UI set up so I'm just gonna wait on that.
+
 
 def get_castling_rights(history):
     ret = {'K': True, 'Q': True, 'k': True, 'q': True}
@@ -108,24 +112,29 @@ def enPassant(history):
             return [most_recent_move.stop.shift(dir, 0)]
     return []
 
+
 def kingEnPassant(history):
     if history:
         most_recent_move = history[-1]
         if most_recent_move.castle in ['k', 'q']:
-            ret = [most_recent_move.stop.shift(0, 1 if most_recent_move.stop.to_coordinates()[1] == 2 else -1)]
+            ret = [most_recent_move.stop.shift(
+                0, 1 if most_recent_move.stop.to_coordinates()[1] == 2 else -1)]
             return ret
     return []
 
 # Ranks and files go from 0 to 7, not 1 to 8. Don't get tricked.
 
+
 def filter_candidates(candidates, board, color):
     return [c for c in candidates if c and (not board.get(c) or board.get(c).color != color)]
+
 
 def pawn_captures(board, square, color, history):
     enPassantSquares = enPassant(history)
     dir = 1 if color == Color.WHITE else -1
     candidates = [square.shift(dir, -1), square.shift(dir, 1)]
     return [c for c in candidates if c and (board.get(c) and board.get(c).color != color) or c in enPassantSquares]
+
 
 def pawn_moves(board, square, color):
     rank, file = square.to_coordinates()
@@ -139,10 +148,12 @@ def pawn_moves(board, square, color):
         return [one, two]
     return [one]
 
+
 def knight_moves(board, square, color):
     candidates = [square.shift(dr, df) for dr, df in [(
         2, 1), (2, -1), (-2, 1), (-2, -1), (1, 2), (-1, 2), (1, -2), (-1, -2)]]
     return filter_candidates(candidates, board, color)
+
 
 def bishop_moves(board, square, color):
     candidates = []
@@ -157,6 +168,7 @@ def bishop_moves(board, square, color):
                     break
                 candidates.append(candidate)
     return filter_candidates(candidates, board, color)
+
 
 def rook_moves(board, square, color):
     candidates = []
@@ -180,8 +192,10 @@ def rook_moves(board, square, color):
             candidates.append(candidate)
     return filter_candidates(candidates, board, color)
 
+
 def queen_moves(board, square, color):
     return bishop_moves(board, square, color) + rook_moves(board, square, color)
+
 
 def king_moves(board, square, color, history):
     candidates = []
@@ -210,13 +224,59 @@ def king_moves(board, square, color, history):
             candidates.append(candidate)
     return filter_candidates(candidates, board, color)
 
+# Any values that we want to cache for calculating handicaps
+# Values should only change on a move
+
+# It's probably not actually worth caching the king positions
+# but just doing it as a test
+
+# If we want to remember something forever, it should be in Move, but if
+# we just might use it many times to check handicaps in a single move, it should be here
+class Cache():
+    def __init__(self, kings, rand):
+        self.kings = kings
+        self.rand = rand
+
+    def dict(self):
+        return {
+            'kings': {k.value: v and v.value for k, v in self.kings.items()},
+            'rand': self.rand
+        }
+    
+    def of_string(s):
+        try:
+            cache = json.loads(s)
+            cache['kings'] = {Color(k): v and Square(v) for k, v in cache['kings'].items()}
+            return Cache(**cache)
+        except:
+            return None
 
 class Board():
-    def __init__(self, s):
+    def __init__(self, s, game_id, cache):
+        self.cache = cache
+        self.game_id = game_id
         self.board = [[None] * 8 for _ in range(8)]
         for i in range(8):
             for j in range(8):
                 self.board[i][j] = piece_or_none(s[i*8+j])
+
+    def loc(self, piece):
+        return [square for square in Square if self.get(square) and self.get(square).equals(piece)]
+
+    def loc_singleton(self, piece):
+        loc = self.loc(piece)
+        if len(loc) != 1:
+            return None
+        return loc[0]
+
+    def make_cache(self, history):
+        kings = {c : self.loc_singleton(ColoredPiece(c, Piece.KING)) for c in Color}
+        # Random is a function of the game_id plus number of moves
+        # so you get the same number if you call legal_moves again
+        # This could theoretically collide but it never will
+        random.seed(int(self.game_id, 16) + len(history.history))
+        self.cache = Cache(kings, random.random())
+        print(self.cache.dict())
 
     def get(self, square):
         rank, file = square.to_coordinates()
@@ -251,7 +311,7 @@ class Board():
         promotion = promote_to.upper() or 'Q' if piece and piece.piece == Piece.PAWN and stop.to_coordinates()[
             0] in [0, 7] else 'x'
         move = Move(piece, start, stop, capture, check, castle, promotion)
-        # if this validates, then the move will actually happen 
+        # if this validates, then the move will actually happen
         if not move.validate(self, history, whose_turn, handicap):
             return None, None, 'invalid move'
         if castle == 'k':
@@ -275,8 +335,10 @@ class Board():
                 extra.append(('A8', ''))
                 extra.append(('D8', 'bR'))
         if capture == 'e':
-            self.set(stop.shift(-1 if piece.color == Color.WHITE else 1, 0), None)
-            extra.append((stop.shift(-1 if piece.color == Color.WHITE else 1, 0).value, ''))
+            self.set(stop.shift(-1 if piece.color ==
+                     Color.WHITE else 1, 0), None)
+            extra.append(
+                (stop.shift(-1 if piece.color == Color.WHITE else 1, 0).value, ''))
         if capture == 'k':
             self.set(history.history[-1].stop, None)
             extra.append((history.history[-1].stop.value, ''))
@@ -284,11 +346,12 @@ class Board():
         self.set(stop, piece)
         if promotion != 'x':
             self.set(stop, ColoredPiece(piece.color, Piece(promotion)))
-            extra.append((stop.value, f'{piece.color.value.lower()}{promotion}'))
-        
+            extra.append(
+                (stop.value, f'{piece.color.value.lower()}{promotion}'))
         # TODO -- check = 't' if the king is in check at the end of the move
         check = 'f'
-        
+        # This sets all the values that only change on a move
+        self.make_cache(history)
         return move, extra, None
 
     def legal_moves(self, start, history, whose_turn, handicap=None):
@@ -345,23 +408,31 @@ class Board():
         return d
 
     def of_game_id(game_id):
+        cache = Cache.of_string(rget('cache', game_id=game_id))
         if (board := rget('board', game_id=game_id)):
-            return Board(board)
+            return Board(board, game_id, cache)
         return None
 
-    def loc(self, piece):
-        return [square for square in Square if self.get(square) and self.get(square).equals(piece)]
+    def write_to_redis(self, game_id=None):
+        game_id = game_id or self.game_id
+        rset('board', self.to_string(), game_id=game_id)
+        rset('cache', json.dumps(self.cache.dict()), game_id=game_id)
+
 
 empty_rank = ' ' * 8
 
-starting_board = Board(
-    'RNBQKBNR' +
-    'PPPPPPPP' +
-    empty_rank * 4 +
-    'pppppppp' +
-    'rnbqkbnr'
-)
+def starting_cache():
+    return Cache({Color.WHITE: Square('E1'), Color.BLACK: Square('E8')}, random.random())
 
+def starting_board():
+    return Board(
+        'RNBQKBNR' +
+        'PPPPPPPP' +
+        empty_rank * 4 +
+        'pppppppp' +
+        'rnbqkbnr',
+        '0', starting_cache()
+    )
 
 class History():
     def __init__(self, s=''):
@@ -381,6 +452,6 @@ class History():
 
     def of_game_id(game_id):
         return History(rget('history', game_id=game_id))
-    
+
     def to_list(self):
         return [move.to_string() for move in self.history]
