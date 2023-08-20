@@ -4,6 +4,13 @@
   margin-top: 10px;
 }
 
+.one-char-button {
+  display: inline-block;
+  min-width: 30px;
+  text-align: center;
+  margin-right: 5px;
+}
+
 .username {
   position: fixed;
   top: 10px;
@@ -271,7 +278,6 @@
   height: 75%;
 }
 
-/* This is slightly off-center which is annoying but I'm too lazy to figure it out */
 .modal {
   display: none;
   position: absolute;
@@ -279,11 +285,12 @@
   justify-content: space-around;
   align-items: center;
   z-index: 1;
-  left: 40%;
-  top: 40%;
-  width: 30%;
-  height: 20%;
-  transform: translate(-15%, -10%);
+  left: 50%;
+  top: 50%;
+  width: 100%;
+  max-width: 600px;
+  transform: translate(-50%, -50%);
+  height: 200px;
   overflow: auto;
   padding: 20px;
   border-radius: 10px;

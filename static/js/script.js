@@ -12,11 +12,14 @@ addFriendInputElement = document.getElementById('addFriendInput');
 addFriendButton = document.getElementById('addFriendButton');
 
 shiftKeyIsDown = false;
-newGameButton = document.getElementById('newGameButton');
 newGameModal = document.getElementById('newGameModal');
 newGameModalOverlay = document.getElementById('newGameModalOverlay');
-createGameButton = document.getElementById('createGameButton');
+
+newGameButton = document.getElementById('newGameButton');
 copyGameIdButton = document.getElementById('copyGameIdButton');
+displayFriendsListButton = document.getElementById('displayFriendsListButton');
+displayPromotionOptionsButton = document.getElementById('displayPromotionOptionsButton');
+ignoreOtherPlayerCheckButton = document.getElementById('ignoreOtherPlayerCheckButton');
 
 holdingPiece = false;
 
@@ -500,7 +503,7 @@ function handleKeyDown(event) {
         shiftKeyIsDown = true;
     }
     if (k == 'c') {
-        copyGameId();
+        copyGameIdButton.click();
     }
     if (k == 'escape') {
         closeModal();
@@ -508,11 +511,11 @@ function handleKeyDown(event) {
         event.preventDefault();
         createGameButton.click();
     } if (k == 'd') {
-        flipVisibility(promotionSelector);
+        displayPromotionOptionsButton.click();
     } if (k == 'f') {
-        flipVisibility(activeGamesWrapper);
+        displayFriendsListButton.click();
     } if (k == 'a') {
-        toggleOtherPlayerCheck();
+        ignoreOtherPlayerCheckButton.click();
     } if (k == 'n') {
         newGameButton.click();
     }
@@ -558,6 +561,18 @@ function copyGameId() {
 
 copyGameIdButton.addEventListener('click', () => {
     copyGameId();
+});
+
+displayFriendsListButton.addEventListener('click', () => {
+    flipVisibility(activeGamesWrapper);
+});
+
+displayPromotionOptionsButton.addEventListener('click', () => {
+    flipVisibility(promotionSelector);
+});
+
+ignoreOtherPlayerCheckButton.addEventListener('click', () => {
+    toggleOtherPlayerCheck();
 });
 
 function setSquare(square, piece) {
