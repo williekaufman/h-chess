@@ -47,7 +47,7 @@ def bongcloud(board, start, stop, history):
     if not king_pos:
         # You should probably have a king but idk not my problem if you don't
         return True
-    if king_pos[0].rank() == (Rank.First if history.whose_turn() == Color.WHITE else Rank.Eighth):
+    if king_pos.rank() == (Rank.First if history.whose_turn() == Color.WHITE else Rank.Eighth):
         # piece should never be None but idk
         piece = board.get(start) and board.get(start).piece
         return piece in [Piece.PAWN, Piece.KING]
