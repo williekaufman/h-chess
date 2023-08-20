@@ -771,11 +771,8 @@ function displayActiveGames(activeGames) {
     activeGames.forEach(game => {
         id = game['gameId'];
         display_username = game['username'].length > 9 ? game['username'].slice(0, 9) + '...' : game['username'];
-        if (id) {
-            content = `<button class="active-game-button" onclick="loadGame('${id}')">Challenge ${display_username}</button>`;
-        } else {
-            content = `<button class="dead-button">Challenge ${display_username}</button>`;
-        }
+        f = id ? `loadGame('${id}')` : '';
+        content = `<button class="game-button ${id ? "active" : "dead"} " onclick="${f}">Challenge ${display_username}</button>`
         activeGamesWrapper.innerHTML += `
                 <div class="friend">
                     ${content}
