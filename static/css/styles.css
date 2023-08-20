@@ -76,6 +76,9 @@
   grid-gap: 10px;
   left: 20px;
   bottom: 20px;
+  max-height: 400px;
+  height: 30%;
+  overflow-y: auto;
 }
 
 .container {
