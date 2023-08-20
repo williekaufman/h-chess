@@ -779,7 +779,9 @@ function displayActiveGames(activeGames) {
         activeGamesWrapper.innerHTML += `
                 <div class="friend">
                     ${content}
-                    <button class="remove-friend-button" onClick="removeFriend('${game['username']}')">Remove friend</button>
+                    <button class="remove-friend-button" onClick="removeFriend('${game['username']}')">
+                        X
+                    </button>
                 </div>
             `;
     });
