@@ -181,7 +181,6 @@
   position: fixed;
   right: 50px;
   bottom: 20px;
-  visibility: hidden;
   flex-direction: column;
   text-align: center;
   z-index: 1;
@@ -237,7 +236,6 @@
 }
 
 .promotion-container {
-  visibility: hidden;
   display: flex;
   flex-direction: row;
   justify-content: space-around;

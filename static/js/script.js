@@ -489,6 +489,11 @@ function closeModal() {
     newGameModalOverlay.style.display = 'none';
 }
 
+function flipVisibility(element) {
+    console.log(element);
+    element.style.visibility = element.style.visibility == 'hidden' ? 'visible' : 'hidden';
+}
+
 function handleKeyDown(event) {
     k = event.key.toLowerCase();
     if (event.shiftKey) {
@@ -503,9 +508,9 @@ function handleKeyDown(event) {
         event.preventDefault();
         createGameButton.click();
     } if (k == 'd') {
-        promotionSelector.style.visibility = promotionSelector.style.visibility == 'hidden' ? 'visible' : 'hidden';
+        flipVisibility(promotionSelector);
     } if (k == 'f') {
-        activeGamesWrapper.style.visibility = activeGamesWrapper.style.visibility == 'hidden' ? 'visible' : 'hidden';
+        flipVisibility(activeGamesWrapper);
     } if (k == 'a') {
         toggleOtherPlayerCheck();
     } if (k == 'n') {
@@ -742,6 +747,10 @@ activeGamesWrapper.id = 'active-games-wrapper';
 
 activeGamesWrapper.classList.add('active-games-wrapper');
 
+activeGamesWrapper.style.visibility = 'hidden';
+
+document.body.appendChild(activeGamesWrapper);
+
 function displayActiveGames(activeGames) {
     activeGamesWrapper.innerHTML = '<h4> Friends </h4>';
     activeGames.forEach(game => {
@@ -759,8 +768,6 @@ function displayActiveGames(activeGames) {
                 </div>
             `;
     });
-
-    document.body.appendChild(activeGamesWrapper);
 }
 
 if (localStorage.getItem('hchess-testing-mode')) {
