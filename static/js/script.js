@@ -199,17 +199,13 @@ setInterval(() => {
 }, 1000);
 
 
-// I thought we might want to display this information, but it's not really necessary
-// Too lazy to refactor
 function setGameId(id) {
     gameId && socket.emit('leave', { room: gameId })
     gameId = id;
     socket.emit('join', { room: id });
 }
 
-// Used to be used to populate a textbox with whose turn it was, but 
-// no longer necessary since the time controls stuff handles that. 
-// Too lazy to refactor
+// No longer necessary but too lazy to refactor
 function setWhoseTurn(turn) {
     whoseTurn = turn;
 }
@@ -244,6 +240,7 @@ function setOrientation(orientation) {
     color = orientation;
     board.orientation(orientation.toLowerCase());
     promotionElements.forEach(element => {
+        // Sets the image to the correct color
         element.src = element.src.replace(/.(.)\.png/, `${orientation.charAt(0).toLowerCase()}$1.png`);
     });
 }
