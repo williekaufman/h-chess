@@ -161,6 +161,9 @@ handicaps = {
     "When your king is on the back rank, you can only move pawns and kings": (bongcloud, 2),
     "Can't move to opponent's side of board": (cant_move_to_opponents_side_of_board, 5),
     "Can't move to half of squares, re-randomized every move": (cant_move_to_half_of_squares_at_random, 5),
+}
+
+untested_handicaps = {
     # These haven't been tested yet
     "Can't move pieces that are directly behind one of your pawns": (peons_first, 2),
     "You cannot capture your opponent's queen": (true_gentleman, 2),
@@ -180,6 +183,7 @@ handicaps = {
 }
 
 descriptions = {v[0]: k for k, v in handicaps.items()}
+descriptions.update({v[0]: k for k, v in untested_handicaps.items()})
 
 # theoretical args for some kind of config, e.g. difficulties, elos, idk
 
