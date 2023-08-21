@@ -165,8 +165,9 @@ handicaps = {
     "Can't move to half of squares, re-randomized every move": (cant_move_to_half_of_squares_at_random, 5),
 }
 
+# Stuff in here won't randomly get assigned but you can interact with it by changing get_handicaps 
+# So you can push new handicaps without worrying about breaking the game
 untested_handicaps = {
-    # These haven't been tested yet
     "Can't move pieces that are directly behind one of your pawns": (peons_first, 2),
     "You cannot capture your opponent's queen": (true_gentleman, 2),
     "Your pieces cannot move backwards": (forward_march, 3),
