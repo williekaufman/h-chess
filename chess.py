@@ -226,6 +226,15 @@ class Board():
         rank, file = square.to_coordinates()
         self.board[rank][file] = piece
 
+    # tells you whether the given square is attacked by the player of the given color
+    def is_attacked(self, given_square, given_color):
+        for square in Square:
+            piece = self.get(square)
+            if piece.color != given_color and given_square in self.legal_moves(square, self.history, []):
+                return True
+        return False
+
+
     def move(self, start, stop, whose_turn, handicap, history=None, promote_to=None):
         piece = self.get(start)
         extra = []
@@ -287,6 +296,8 @@ class Board():
             extra.append((stop.value, f'{piece.color.value.lower()}{promotion}'))
         
         # TODO -- check = 't' if the king is in check at the end of the move
+        # self.in_check[Color.WHITE] = self.calculate_check apking = self.loc(ColoredPiece(whose_turn, Piece.KING))
+        # napking = self.loc(ColoredPiece(whose_turn), Piece.KING)
         check = 'f'
         
         return move, extra, None
