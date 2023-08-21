@@ -674,7 +674,7 @@ function sendMove(from, to) {
                     if (piece == '') {
                         clearSquare(square);
                     } else {
-                        setSquare(square, piece);
+                        setSquare(square, piece.charAt(0).toLowerCase() + piece.charAt(piece.length - 1));
                     }
                 });
             }
