@@ -32,8 +32,6 @@ def lose_if_no_queen(board, start, stop, history):
     return board.loc(ColoredPiece(history.whose_turn(), Piece.QUEEN))
 
 # This doesn't work b/c check isn't implemented
-
-
 def skittish(board, start, stop, history):
     # Use board.cache
     history = history.history
@@ -66,6 +64,91 @@ def cant_move_to_half_of_squares_at_random(board, start, stop, history):
     squares = random.sample(list(Square), 32)
     return stop in squares
 
+def peons_first(board, start, stop, history):
+    piece = board.get(start).piece
+    pr, f = start.to_coordinates()
+    above_rank = pr + 1 if piece.color == Color.WHITE else pr - 1
+    if above_rank >= 0 and above_rank < 8:
+        above_sq = board.board[above_rank, start.file()]
+        if board.get(above_sq) and board.get(above_sq).piece.piece == Piece.PAWN:
+            return False
+    return True
+
+def true_gentleman(board, start, stop, history):
+    ss = board.get(stop)
+    if ss and ss.piece:
+        return ss.piece.piece == Piece.QUEEN and ss.piece.color != history.whose_turn()   
+    return True
+
+def forward_march(board, start, stop, history):
+    start_r, f = start.to_coordinates()
+    stop_r, sf = stop.to_coordinates()
+    if history.whose_turn() == Color.WHITE:
+        return stop_r < start_r
+    else:
+        return stop_r >= start_r
+
+def hipster(board, start, stop, history):
+    history = history.history
+    if len(history) < 1:
+        return True
+    last_move = history[-1]
+    p = board.get(start) and board.get(start).piece.piece
+    lp = board.get(last_move.start()) and board.get(last_move.start()).piece.piece
+    return p != lp
+
+def stoic(board, start, stop, history):
+    p = board.get(start) and board.get(start).piece.piece
+    return p != Piece.KING
+
+def conscientious_objectors(board, start, stop, history):
+    p = board.get(start) and board.get(start).piece.piece
+    stop_p = board.get(stop) and board.get(stop).piece
+    if p and stop_p:
+        return stop_p.color != history.whose_turn() and p == Piece.PAWN
+    else:
+        return True
+
+def outflanked(board, start, stop, history):
+    stop_r, stop_f = board.stop
+    return not ((board.get(stop).file() == File.A or File.H) and (board.get(stop).piece) and board.get(stop).piece.color != history.whose_turn())
+
+def no_shuffling(board, start, stop, history):
+    piece = board.get(start)
+    return not (piece and piece.piece.piece == Piece.ROOK and start.rank() == stop.rank()) 
+
+def horse_tranquilizer(board, start, stop, history):
+    start_p = board.get(start)
+    stop_p = board.get(stop)
+    return not (start_p.piece and stop_p.piece and start_p.piece.piece == Piece.KNIGHT and stop_p.piece.color != history.whose_turn())
+
+def rushing_river(board, start, stop, history):
+    return not (board.get(start).piece and board.get(start).piece.piece != Piece.PAWN and stop.rank() == Rank.Fourth or Rank.Fifth)
+
+def pawn_battle(board, start, stop, history):
+    player_pawns = board.loc(ColoredPiece(history.whose_turn(), Piece.PAWN))
+    opp_pawns = board.loc(ColoredPiece(history.whose_turn().other(), Piece.PAWN))
+    return len(player_pawns >= len(opp_pawns))
+
+def horse_eats_first(board, start, stop, history):
+    knights = board.loc(ColoredPiece(history.whose_turn(), Piece.KNIGHT))
+    return not (knights and board.get(start).piece and board.get(start).piece == Piece.KNIGHT)
+
+def royal_berth(board, start, stop, history):
+    king_pos = board.cache.kings[history.whose_turn()]
+    if not king_pos:
+        return True
+    return abs(king_pos.rank().to_index() - stop.rank().to_index()) > 1 or abs(king_pos.file().to_index() - stop.file().to_index()) > 1
+
+def protected_pawns(board, start, stop, history):
+    return board.get(start).piece.piece != Piece.PAWN or board.is_attacked(stop, history.whose_turn().other())
+
+# Not finished
+def far_right_leader(board, start, stop, history):
+    pawn_sqs = board.loc(ColoredPiece(history.whose_turn(), Piece.PAWN))
+    pawn_coords = [p.to_coordinates() for p in pawn_sqs]
+
+    return True
 
 # number is how bad the handicap is, 1-10
 handicaps = {
@@ -77,7 +160,23 @@ handicaps = {
     "While in check, you must move your king": (skittish, 2),
     "When your king is on the back rank, you can only move pawns and kings": (bongcloud, 2),
     "Can't move to opponent's side of board": (cant_move_to_opponents_side_of_board, 5),
-    "Can't move to half of squares, re-randomized every move": (cant_move_to_half_of_squares_at_random, 5)
+    "Can't move to half of squares, re-randomized every move": (cant_move_to_half_of_squares_at_random, 5),
+    # These haven't been tested yet
+    "Can't move pieces that are directly behind one of your pawns": (peons_first, 2),
+    "You cannot capture your opponent's queen": (true_gentleman, 2),
+    "Your pieces cannot move backwards": (forward_march, 3),
+    "You can't move a piece of the same type your opponent just moved": (hipster, 2),
+    "You can't move your king": (stoic, 2),
+    "Your pawns can't capture": (conscientious_objectors, 3),
+    "You can't capture on the A or the H file": (outflanked, 2), 
+    "Your rooks can't move sideways": (no_shuffling, 2), 
+    "Your knights can't capture": (horse_tranquilizer, 1), 
+    "You can't move non-pawns onto the fourth or fifth ranks": (rushing_river, 3),
+    "You can never have fewer pawns than your opponent": (pawn_battle, 3),
+    "As long as you have a knight, you can only capture with knights": (horse_eats_first, 3), 
+    "You can't move anything next to your king": (royal_berth, 3),
+    "Your pawns can only move to defended squares": (protected_pawns, 2), 
+    "Your rightmost pawn must be your most-advanced pawn at all times": (far_right_leader, 3)
 }
 
 descriptions = {v[0]: k for k, v in handicaps.items()}
