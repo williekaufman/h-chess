@@ -26,59 +26,89 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 
-<div style="margin-top: 5px">
-    <button id="newGameButton" style="margin-right:5px">New Game</button>
-    <button id="loadGameButton" style="margin-right:5px">Load Game</button>
-    <button id="copyGameIdButton">Copy Game Id</button>
-    <div style="position: absolute; right: 20px; top: 5px">
-        <input id="usernameInput" type="text" placeholder="username" size="15">
-        <div style="margin-top: 5px">
-            <input id="addFriendInput" type="text" placeholder="add friend" size="15">
-            <button id="addFriendButton" style="margin-left:5px">Add</button>
+<div class="header">
+    <div>
+        <span style="min-width: 60px; display: inline-block"> Hotkeys </span>
+        <button class="one-char-button" id="newGameButton">n</button>
+        <button class="one-char-button" id="copyGameIdButton">c</button>
+        <div class="username">
+            <input id="usernameInput" type="text" placeholder="username" size="15">
+            <div style="margin-top: 5px">
+                <input id="addFriendInput" type="text" placeholder="add friend" size="15">
+                <button id="addFriendButton" style="margin-left:5px">Add</button>
+            </div>
         </div>
-
+    </div>
+    <div style="margin-top: 5px">
+        <span style="min-width: 60px; display: inline-block"> Toggles </span>
+        <button class="one-char-button" id="displayFriendsListButton">f</button>
+        <button class="one-char-button" id="displayPromotionOptionsButton">d</button>
+        <button class="one-char-button" id="ignoreOtherPlayerCheckButton">a</button>
+    </div>
+    <div> <span class="toast" id="toast"> </span> </div>
+    <div> <span class="state-toast" id="stateToast"> </span> </div>
+    <div> <span class="result-toast" id="gameResult"></span> </div>
+</div>
+<div class="chess">
+    <span class="handicap-info" id="handicapInfo"> </span>
+    <div class="color-info" id="opponentInfo" style="margin-top: 5px">
+        <div class="name" id="opponentName"></div> <!-- currently unused -->
+        <div class="time" id="opponentTime">No time controls</div>
+    </div>
+    <div class="board" id="board"></div>
+    <div class="color-info" id="yourInfo" style="margin-top: 5px">
+        <div class="name" id="yourName"></div> <!-- currently unused -->
+        <div class="time" id="yourTime">No time controls</div>
+    </div>
+    <div class="promotion-container" id="promotionSelector" style="visibility: hidden">
+        <img class="promotion-piece" src="https://chessboardjs.com/img/chesspieces/wikipedia/wQ.png" piece="Q">
+        <img class="promotion-piece" src="https://chessboardjs.com/img/chesspieces/wikipedia/wR.png" piece="R">
+        <img class="promotion-piece" src="https://chessboardjs.com/img/chesspieces/wikipedia/wB.png" piece="B">
+        <img class="promotion-piece" src="https://chessboardjs.com/img/chesspieces/wikipedia/wN.png" piece="N">
     </div>
 </div>
-<div style="margin-top: 5px">
-    <span> New game params </span>
-    <select id="colorSelector">
-        <option value="random" selected disabled>Color</option>
-        <option value="random">Random</option>
-        <option value="White">White</option>
-        <option value="Black">Black</option>
-    </select>
-    <select id="timeControlSelector">
-        <option value="" selected disabled>Time control</option>
-        <option value="">Unlimited</option>
-        <option value="1">1s</option>
-        <option value="180">3m</option>
-        <option value="300">5m</option>
-        <option value="900">15m</option>
-    </select>
+<div id="newGameModalOverlay" class="modal-overlay">
+    <div id="newGameModal" class="modal">
+        <div class="grid">
+            <div class="label-container">
+                <div class="grid-container" id="colorSelection">
+                    <img class="piece-image" id="whiteKing"
+                        src="https://chessboardjs.com/img/chesspieces/wikipedia/wK.png">
+                    <img class="piece-image" id="blackKing"
+                        src="https://chessboardjs.com/img/chesspieces/wikipedia/bK.png">
+                </div>
+            </div>
+            <div class="label-container">
+                <div id="timeSelector" class="grid-container">
+                    <button class="time-selection" seconds="5"> 5s </button>
+                    <button class="time-selection" seconds="180"> 3m </button>
+                    <button class="time-selection" seconds="300"> 5m </button>
+                    <button class="time-selection" seconds="900"> 15m </button>
+                </div>
+            </div>
+            <div class="label-container">
+                <div class="grid-container" style="grid-template-columns: repeat(2, 1fr)">
+                    <button id="createGameButton" class="create-game-button">New Game</button>
+                    <button id="joinGameButton" class="create-game-button">Join Game</button>
+                </div>
+            </div>
+        </div>
+        <div> <input type="text" class="game-id-box" id="gameIdInput" placeholder="game id" size="30"> </div>
+    </div>
 </div>
-<div style="margin-top: 5px">
-    <input type="text" id="gameIdInput" placeholder="custom game id" size="30">
+<div class="hotkeys">
+    <div> Hotkeys </div>
+    <div> <b> n </b> - new game </div>
+    <div> <b> c </b> - copy game id </div>
+    <div> Toggle </div>
+    <div> <b> f </b> - display friends list </div>
+    <div> <b> d </b> - display promotion options </div>
+    <div> <b> a </b> - allow moving opponent's pieces / pieces in a one player game </div>
+    <div> Hold down </div>
+    <div> <b> Shift </b> - skip new game dialog, use defaults </div>
 </div>
-<div style="margin-top: 5px">
-    <select id="promotionSelector">
-        <option value="q" selected disabled>Promote to</option>
-        <option value="q">Queen</option>
-        <option value="r">Rook</option>
-        <option value="b">Bishop</option>
-        <option value="n">Knight</option>
-    </select>
 </div>
-<div style="margin-top: 5px"> 
-    <input type="checkbox" id="ignoreOtherPlayerCheck">
-    <label for="ignoreOtherPlayerCheck">Allow moving opponent's pieces and pieces without an opponent</label> 
-</div>
-<div id="handicapInfo" style="margin-top: 5px"> </div>
-<div id="whoseTurn" style="margin-top: 5px"> </div>
-<div id="times" style="margin-top: 5px"></div>
-<div class="board">
-    <div id="board"></div>
-    <h1 id="game-result"></h1>
-</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.3/socket.io.js"></script>
 <script src="{{ url_for('static', filename='js/config.js') }}"></script>
 <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 
