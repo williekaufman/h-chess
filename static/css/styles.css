@@ -74,7 +74,6 @@
   position: fixed;
   display: grid;
   grid-template-columns: repeat(1, 1fr);
-  grid-gap: 10px;
   left: 20px;
   bottom: 20px;
   max-height: 400px;
