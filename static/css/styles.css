@@ -241,8 +241,7 @@
 }
 
 .piece-image {
-  width: 50px;
-  height: 50px;
+  height: 100px;
   box-sizing: border-box;
   cursor: pointer;
 }
@@ -293,15 +292,14 @@
   display: none;
   position: absolute;
   flex-direction: column;
-  justify-content: space-around;
   align-items: center;
   z-index: 1;
   left: 50%;
   top: 50%;
   width: 100%;
-  max-width: 600px;
+  max-width: 900px;
   transform: translate(-50%, -50%);
-  height: 200px;
+  height: 300px;
   overflow: auto;
   padding: 20px;
   border-radius: 10px;
