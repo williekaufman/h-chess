@@ -3,6 +3,7 @@ import random
 from enum import Enum
 from squares import Square
 import json
+import math
 
 
 class Piece(Enum):
@@ -12,6 +13,10 @@ class Piece(Enum):
     BISHOP = 'B'
     QUEEN = 'Q'
     KING = 'K'
+
+    def points(self):
+        pt_dict = {'P': 1, 'N': 3, 'B': 3, 'R': 5, 'Q': 9, 'K': math.inf}
+        return pt_dict[self.value]
 
 
 class Color(Enum):
@@ -44,6 +49,9 @@ class ColoredPiece():
 
     def __str__(self):
         return self.to_string()
+    
+    def points(self):
+        return self.piece.points()
 
 
 def piece_or_none(s):
