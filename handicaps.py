@@ -195,9 +195,11 @@ def eye_for_an_eye(board, start, stop, history):
     else:
         return True
 
-def no_recapture(board, start, stop, history):
+def turn_other_cheek(board, start, stop, history):
     if len(history.history) > 0:
-        
+        last_move = history.history[-1]
+        if last_move.capture:
+            return last_move.stop != stop
     return True
 
 # Not finished
@@ -247,7 +249,7 @@ handicaps = {
 untested_handicaps = {
     "Your rightmost pawn must be your most-advanced pawn at all times": (far_right_leader, 3),
     "If your knight can hop over a non-pawn piece, it must": (horsey_hops, 2), 
-    "You cannot recapture": (no_recapture, 4)
+    "You cannot recapture": (turn_other_cheek, 4)
 }
 
 descriptions = {v[0]: k for k, v in handicaps.items()}
