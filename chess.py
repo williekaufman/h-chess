@@ -250,6 +250,28 @@ class Cache():
             return Cache(**cache)
         except:
             return None
+        
+class History():
+    def __init__(self, s=''):
+        if not s:
+            self.history = []
+        else:
+            self.history = [Move.of_string(move) for move in s.split('|')]
+
+    def whose_turn(self):
+        return Color.WHITE if len(self.history) % 2 == 0 else Color.BLACK
+
+    def add(self, move):
+        self.history.append(move)
+
+    def to_string(self):
+        return '|'.join([move.to_string() for move in self.history])
+
+    def of_game_id(game_id):
+        return History(rget('history', game_id=game_id))
+
+    def to_list(self):
+        return [move.to_string() for move in self.history]
 
 class Board():
     def __init__(self, s, game_id, cache):
@@ -259,6 +281,9 @@ class Board():
         for i in range(8):
             for j in range(8):
                 self.board[i][j] = piece_or_none(s[i*8+j])
+
+    def copy(self):
+        return Board(self.to_string(), self.game_id, self.cache)
 
     def loc(self, piece):
         return [square for square in Square if self.get(square) and self.get(square).equals(piece)]
@@ -286,15 +311,17 @@ class Board():
         self.board[rank][file] = piece
 
     # tells you whether the given square is attacked by the player of the given color
-    def is_attacked(self, given_square, given_color):
+    # creates a phantom piece of the opposite color in the square to make self.legal_moves work right
+    def is_attacked(self, given_square, given_color, history):
+        new_board = self.copy()
+        new_board.set(given_square, ColoredPiece(given_color.other(), Piece.QUEEN))
         for square in Square:
             piece = self.get(square)
-            if piece.color != given_color and given_square in self.legal_moves(square, self.history, []):
+            if piece and piece.color == given_color and given_square.value in new_board.legal_moves(square, history, given_color):
                 return True
         return False
 
-
-    def move(self, start, stop, whose_turn, handicap, history=None, promote_to=None):
+    def move(self, start, stop, whose_turn, handicap, history=History(), promote_to=None):
         piece = self.get(start)
         extra = []
         if not piece:
@@ -384,6 +411,7 @@ class Board():
             moves += queen_moves(self, start, whose_turn)
         elif piece.piece == Piece.KING:
             moves += king_moves(self, start, whose_turn, history.history)
+        
         handicap = handicap or (lambda board, start, stop, history: True)
         return [square.value for square in moves if square and handicap(self, start, square, history)]
 
@@ -444,24 +472,3 @@ def starting_board():
         '0', starting_cache()
     )
 
-class History():
-    def __init__(self, s=''):
-        if not s:
-            self.history = []
-        else:
-            self.history = [Move.of_string(move) for move in s.split('|')]
-
-    def whose_turn(self):
-        return Color.WHITE if len(self.history) % 2 == 0 else Color.BLACK
-
-    def add(self, move):
-        self.history.append(move)
-
-    def to_string(self):
-        return '|'.join([move.to_string() for move in self.history])
-
-    def of_game_id(game_id):
-        return History(rget('history', game_id=game_id))
-
-    def to_list(self):
-        return [move.to_string() for move in self.history]
