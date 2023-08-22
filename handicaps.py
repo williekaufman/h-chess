@@ -9,6 +9,16 @@ def try_move(board, start, stop, history):
     new_board.move(start, stop, history.whose_turn(), None, history)
     return new_board
 
+def get_adjacent_squares(board, square):
+    r = square.rank().to_index()
+    f = square.file().to_index()
+    adj_sqs = []
+    for i in range(3):
+        for j in range(3):
+            if 0 <= r + i - 1 <= 7 and 0 <= f + j - 1 <= 7 and not (i == 1 and j == 1):
+                adj_sqs.append(square.shift(i - 1, j - 1))
+    return adj_sqs
+
 def no_handicap(board, start, stop, history):
     return True
 
@@ -159,12 +169,46 @@ def protected_pawns(board, start, stop, history):
     new_board = try_move(board, start, stop, history)
     return new_board.is_attacked(stop, history.whose_turn(), history)
 
+def pack_mentality(board, start, stop, history):
+    sqs = get_adjacent_squares(board, stop)
+    adj_pcs = [sq for sq in sqs if board.get(sq) and board.get(sq).color == history.whose_turn() and sq != start]
+    return len(adj_pcs) > 0 
+
+def spice_of_life(board, start, stop, history):
+    history = history.history
+    if len(history) < 2:
+        return True
+    last_move = history[-2]
+    return not (board.get(start) and board.get(start).piece == last_move.piece.piece)
+
+def jumpy(board, start, stop, history):
+    c = history.whose_turn()
+    for square in Square:
+        if  board.get(square) and board.get(square).color == c and \
+            board.is_attacked(square, c.other(), history) and board.legal_moves(square, history, c):
+            return board.is_attacked(start, c.other(), history)
+    return True
+
+def eye_for_an_eye(board, start, stop, history):
+    if len(history.history) > 0 and history.history[-1].capture:
+        return board.get(stop) 
+    else:
+        return True
+
+def no_recapture(board, start, stop, history):
+    if len(history.history) > 0:
+        
+    return True
 
 # Not finished
 def far_right_leader(board, start, stop, history):
     pawn_sqs = board.loc(ColoredPiece(history.whose_turn(), Piece.PAWN))
     pawn_coords = [p.to_coordinates() for p in pawn_sqs]
+    return True
 
+
+# Not finished
+def horsey_hops(board, start, stop, history):
     return True
 
 # number is how bad the handicap is, 1-10
@@ -180,7 +224,7 @@ handicaps = {
     "Can't move to half of squares, re-randomized every move": (cant_move_to_half_of_squares_at_random, 5),
     "Can't move pieces that are directly behind one of your pawns": (peons_first, 2),
     "You cannot capture your opponent's queen": (true_gentleman, 2),
-    "Your pieces cannot move backwards": (forward_march, 3),
+    "Your pieces cannot move backwards": (forward_march, 4),
     "You can't move a piece of the same type your opponent just moved": (hipster, 2),
     "You can't move your king": (stoic, 2),
     "Your pawns can't capture": (conscientious_objectors, 3),
@@ -192,12 +236,18 @@ handicaps = {
     "As long as you have a knight, you can only capture with knights": (horse_eats_first, 3), 
     "You can't move anything next to your king": (royal_berth, 3),
     "Your pawns can only move to defended squares": (protected_pawns, 2), 
+    "Your pieces must move to squares adjacent to another one of your piece": (pack_mentality, 4),
+    "You can't move the same piece type twice in a row (Spice of Life)": (spice_of_life, 3), 
+    "When possible, you must move a piece that is being attacked": (jumpy, 4), 
+    "If your opponent captures something, you must capture something in response (or lose)": (eye_for_an_eye, 5), 
 }
 
 # Stuff in here won't randomly get assigned but you can interact with it by changing get_handicaps 
 # So you can push new handicaps without worrying about breaking the game
 untested_handicaps = {
-    "Your rightmost pawn must be your most-advanced pawn at all times": (far_right_leader, 3)
+    "Your rightmost pawn must be your most-advanced pawn at all times": (far_right_leader, 3),
+    "If your knight can hop over a non-pawn piece, it must": (horsey_hops, 2), 
+    "You cannot recapture": (no_recapture, 4)
 }
 
 descriptions = {v[0]: k for k, v in handicaps.items()}
@@ -213,6 +263,6 @@ def get_handicaps(x, y):
     else:
         # This is Gabe's line. For Gabe's use only. Keep out. No girls allowed. 
         handicaps.update(untested_handicaps)
-        return descriptions[protected_pawns], descriptions[protected_pawns] 
+        return descriptions[eye_for_an_eye], descriptions[eye_for_an_eye] 
     # return descriptions[cant_move_to_half_of_squares_at_random], descriptions[lose_if_no_queen]
     # return descriptions[cant_move_to_opponents_side_of_board], descriptions[cant_move_to_opponents_side_of_board]

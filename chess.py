@@ -65,7 +65,7 @@ class Move():
         self.piece = piece
         self.start = Square(start)
         self.stop = Square(stop)
-        self.capture = capture.lower() == 't'
+        self.capture = capture.lower() in ['t', 'k', 'e']
         self.check = check.lower() == 't'
         self.castle = castle
         self.promotion = promotion
