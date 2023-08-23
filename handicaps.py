@@ -103,7 +103,7 @@ def true_gentleman(start, stop, inputs):
     return board.capture(start, stop, history) != Piece.QUEEN
 
 def forward_march(start, stop, inputs):
-    return stop.rank().more_agg_or_equal(start.rank(), inputs.history.whose_turn())
+    return stop.rank().more_agg_than_or_equal(start.rank(), inputs.history.whose_turn())
 
 def hipster(start, stop, inputs):
     board, history = inputs.board, inputs.history.history
@@ -326,10 +326,10 @@ def inside_the_lines(start, stop, inputs):
     return not stop.file() in [File.A, File.H] 
 
 def left_for_dead(start, stop, inputs):
-    start_ind = start.file().to_index()
-    stop_ind = stop.file().to_index()
-    left = start_ind > stop_ind if inputs.history.whose_turn() == Color.WHITE else start_ind < stop_ind
-    return left or (not inputs.board.get(stop))
+    board, history = inputs.board, inputs.history
+    if board.capture(start, stop, history):
+        return stop.file().more_left_than_or_equal(start.file(), inputs.history.whose_turn())
+    return True
 
 def taking_turns(start, stop, inputs):
     h = inputs.history.history
@@ -424,6 +424,6 @@ def get_handicaps(x, y):
     else:
         # This is Gabe's line. For Gabe's use only. Keep out. No girls allowed. 
         handicaps.update(untested_handicaps)
-        return descriptions[no_captures], descriptions[no_handicap] 
+        return descriptions[left_for_dead], descriptions[left_for_dead] 
     # return descriptions[cant_move_to_half_of_squares_at_random], descriptions[lose_if_no_queen]
     # return descriptions[cant_move_to_opponents_side_of_board], descriptions[cant_move_to_opponents_side_of_board]

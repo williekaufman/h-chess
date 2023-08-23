@@ -35,13 +35,13 @@ class Rank(Enum):
     def equals(self, rank):
         return self.to_index() == rank.to_index()
 
-    def more_agg_or_equal(self, rank, color):
+    def more_agg_than_or_equal(self, rank, color):
         return self.more_agg_than(rank, color) or self.equals(rank)
 
     def less_agg_than(self, rank, color):
         return not self.more_agg_or_equal(rank, color)
     
-    def less_agg_or_equal(self, rank, color):
+    def less_agg_than_or_equal(self, rank, color):
         return not self.more_agg_than(rank, color)
 
 class File(Enum):
@@ -65,7 +65,24 @@ class File(Enum):
 
     def shift(self, shift):
         return File.of_index(self.to_index() + shift)
-    
+
+    def more_left_than(self, file, color):
+        if color.value == 'White':
+            return self.to_index() < file.to_index()
+        else:
+            return self.to_index() > file.to_index()
+
+    def equals(self, file):
+        return self.to_index() == file.to_index()
+
+    def more_left_than_or_equal(self, file, color):
+        return self.more_left_than(file, color) or self.equals(file)
+
+    def less_left_than(self, file, color):
+        return not self.more_left_or_equal(file, color)
+
+    def less_left_than_or_equal(self, file, color):
+        return not self.more_left_than(file, color) 
 
 class Square(Enum):
     A1 = 'A1'
