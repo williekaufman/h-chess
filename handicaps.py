@@ -348,15 +348,12 @@ def taking_turns(start, stop, inputs):
 # number is how bad the handicap is, 1-10
 # capture-based handicaps are maybe all broken with enpassant(s)
 handicaps = {
-    'No handicap': (no_handicap, 0),
-    "Can't move pawns": (cant_move_pawns, 7),
-    "Can't move pawn and then rook": (cant_move_pawn_and_then_rook, 3),
-    "Die after moving pawn": (die_after_moving_pawn, 7),
-    "Lose if you have no queen": (lose_if_no_queen, 7),
-    "While in check, you must move your king": (skittish, 2),
-    "When your king is on the back rank, you can only move pawns and kings": (bongcloud, 2),
-    "Can't move to opponent's side of board": (cant_move_to_opponents_side_of_board, 5),
-    "Can't move to half of squares, re-randomized every move": (cant_move_to_half_of_squares_at_random, 5),
+    "Peasant Rebellion: Can't move pawns": (cant_move_pawns, 7),
+    "Simp: Lose if you have no queen": (lose_if_no_queen, 7),
+    "Skittish: While in check, you must move your king": (skittish, 2),
+    "Bongcloud: When your king is on the back rank, you can only move pawns and kings": (bongcloud, 2),
+    "Home Base: Can't move to opponent's side of board": (cant_move_to_opponents_side_of_board, 5),
+    "Unlucky: Can't move to half of squares, re-randomized every move": (cant_move_to_half_of_squares_at_random, 5),
     "Peons First: Can't move pieces that are directly behind one of your pawns": (peons_first, 2),
     "True Gentleman: You cannot capture your opponent's queen": (true_gentleman, 2),
     "Forward March: Your pieces cannot move backwards": (forward_march, 4),
@@ -395,7 +392,8 @@ handicaps = {
 
 # Stuff in here won't randomly get assigned but you can interact with it by changing get_handicaps 
 # So you can push new handicaps without worrying about breaking the game
-untested_handicaps = {
+untested_handicaps = { 
+    'No handicap': (no_handicap, 0),
     "Left for Dead: You can only capture to the left": (left_for_dead, 6),
 }
 
