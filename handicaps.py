@@ -301,8 +301,7 @@ def closed_book(start, stop, inputs):
     board, history = inputs.board, inputs.history
     def helper(b):
         for file in list(File):
-            sqs = Square.of_file(file)
-            pawns = [p for p in Square.of_file(file) if (b.get(p) and b.get(p).piece == Piece.PAWN)]
+            pawns = [p for p in file.squares() if (b.get(p) and b.get(p).piece == Piece.PAWN)]
             if not pawns:
                 return False
         return True
@@ -397,19 +396,24 @@ def ego_clash(start, stop, inputs):
     c = inputs.history.whose_turn()
     new_board = try_move(board, start, stop, inputs.history)
     for file in File:
-        pcs = [s for s in file.squares() if new_board.get(s) and new_board.get(s).color == c and new_board.get(s).piece != Piece.PAWN]
-        if len(pcs) > 1:
+        if [s for s in file.squares() if new_board.get(s) and new_board.get(s).color == c and new_board.get(s).piece != Piece.PAWN]:
             return False
     return True
 
 def in_mourning(start, stop, inputs):
     return inputs.board.get(start).piece not in inputs.history.pieces_captured()
 
+def cowering_in_fear(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    if (pieces_captured := history.pieces_captured(history.whose_turn().other())):
+        return board.get(start).piece.points() >= max([piece.points() for piece in pieces_captured.keys()])
+    return True
+
 def yin_and_yang(start, stop, inputs):
     if inputs.board.capture(start, stop, inputs.history):
-        return stop.color() == 'B'
+        return stop.color() == Color.BLACK
     else:
-        return stop.color() == 'W' 
+        return stop.color() == Color.WHITE
 
 def color_swap(start, stop, inputs):
     return start.color() != stop.color()
@@ -447,8 +451,8 @@ def x_marks_the_spot(start, stop, inputs):
 
 def flight_over_fight(start, stop, inputs):
     board, history = inputs.board, inputs.history
-    if len(history.history) > 0:
-        return stop.rank().less_adv_than(start.rank(), history.whose_turn()) or not history.history[-1].capture
+    if history.last_move() and history.last_move().capture:
+        return stop.rank().less_adv_than(start.rank(), history.whose_turn())
     else:
         return True
 
@@ -505,10 +509,11 @@ def xray_defense(start, stop, inputs):
     c = history.whose_turn()
     king_sq = board.loc_singleton(ColoredPiece(c, Piece.KING))
     for s in Square:
-        new_board = empty_board()
-        new_board.set(s, board.get(s))
-        if new_board.is_attacked(king_sq, c.other(), history):
-            return False
+        if board.get(s) and board.get(s).color == c.other():
+            new_board = empty_board()
+            new_board.set(s, board.get(s))
+            if new_board.is_attacked(king_sq, c.other(), history):
+                return False
     return True
 
 def final_countdown(start, stop, inputs):
@@ -566,7 +571,8 @@ tested_handicaps = {
     "Element of Surprise: Only capture each piece type once": (only_capture_each_piece_type_once, 5),
     "Your Own Size: Pieces can only take pieces of the same type (anything can take King)": (your_own_size, 7),
     "Ego Clash: You can never have two non-pawns on the same file": (ego_clash, 7),
-    "In Mourning: You cannot move pieces of the same type as one that you have captured": (in_mourning, 8), 
+    "In Mourning: You cannot move pieces of the same type as one that you have captured": (in_mourning, 8),
+    "Cowering in Fear: You cannot move a piece of less value than one your opponent has taken": (cowering_in_fear, 8), 
     "Yin and Yang: Capturing moves must occur on black squares. Non-capturing moves must occur on white squares": (yin_and_yang, 9),
     "Color swap: When you move a piece, the destination square and starting square must be different colors": (color_swap, 9),
     "Eat your vegetables: You must take all your opponent's pawns before taking any non-pawn piece": (eat_your_vegetables, 8),
@@ -610,7 +616,7 @@ descriptions = {v[0]: k for k, v in handicaps.items()}
 def test_all_handicaps():
     inputs = HandicapInputs(starting_board(), History())
     for v in handicaps.values():
-        s1 = random.choice(Square.of_rank(Rank.Second) + [Square('B1'), Square('G1')])
+        s1 = random.choice(Rank.Second.squares() + [Square('B1'), Square('G1')])
         s2 = Square(random.choice(inputs.board.legal_moves(s1, inputs.history, Color.WHITE)))
         v[0](s1, s2, inputs)
 
@@ -623,7 +629,7 @@ def get_handicaps(x, y):
         # This is Gabe's line. For Gabe's use only. Keep out. No girls allowed. 
         handicaps.update(untested_handicaps)
         # return random.sample(handicaps.keys(), 2)
-        return descriptions[xray_defense], descriptions[final_countdown] 
+        return descriptions[cowering_in_fear], descriptions[no_handicap] 
         return descriptions[only_capture_each_piece_type_once], descriptions[no_handicap] 
     # return descriptions[cant_move_to_half_of_squares_at_random], descriptions[lose_if_no_queen]
     # return descriptions[cant_move_to_opponents_side_of_board], descriptions[cant_move_to_opponents_side_of_board]

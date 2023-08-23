@@ -97,6 +97,9 @@ socket.on('update', (data) => {
     data['color'] === color && updateState();
 });
 
+function admin() {
+    return localStorage.getItem('hchess-testing-mode');
+}
 
 function toggleOtherPlayerCheck() {
     ignoreOtherPlayerCheck = !ignoreOtherPlayerCheck;
@@ -507,7 +510,7 @@ function handleKeyDown(event) {
         }
     }
     else if (k == 'c') {
-        if (localStorage.getItem('hchess-testing-mode') && event.ctrlKey) {
+        if (admin() && event.ctrlKey) {
             showOpponentsHandicap();
         } else {
             copyGameIdButton.click();
@@ -811,9 +814,7 @@ function displayActiveGames(activeGames) {
     });
 }
 
-if (localStorage.getItem('hchess-testing-mode')) {
-    whiteKingElement.click();
-}
+admin() && (whiteKingElement.click() || toggleOtherPlayerCheck());
 
 setInterval(() => {
     if (currentWidth != window.innerWidth || currentHeight != window.innerHeight) {

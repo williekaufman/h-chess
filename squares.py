@@ -171,12 +171,6 @@ class Square(Enum):
         except:
             return None
 
-    def of_rank(rank):
-        return [square for square in Square if square.name[1] == rank.name]
-
-    def of_file(file):
-        return [square for square in Square if square.name[0] == file.name]
-
     def rank(self):
         return Rank(self.name[1])
     
@@ -195,11 +189,5 @@ class Square(Enum):
             and abs(self.file().to_index() - other_square.file().to_index()) <= 1 \
             and self != other_square
 
-    # Returns a string and not a color object because there's a circular import if we reference Color here
     def color(self):
-        r, f = self.to_coordinates()
-        if (r + f) % 2 == 0:
-            return 'B'
-        else:
-            return 'W'
-        
+        return Color.BLACK if self.rank().to_index() % 2 == self.file().to_index() % 2 else Color.WHITE
