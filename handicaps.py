@@ -103,7 +103,7 @@ def true_gentleman(start, stop, inputs):
     return board.capture(start, stop, history) != Piece.QUEEN
 
 def forward_march(start, stop, inputs):
-    return stop.rank().more_agg_than_or_equal(start.rank(), inputs.history.whose_turn())
+    return stop.rank().more_adv_than_or_equal(start.rank(), inputs.history.whose_turn())
 
 def hipster(start, stop, inputs):
     board, history = inputs.board, inputs.history.history
@@ -328,7 +328,7 @@ def inside_the_lines(start, stop, inputs):
 def left_for_dead(start, stop, inputs):
     board, history = inputs.board, inputs.history
     if board.capture(start, stop, history):
-        return stop.file().more_left_than_or_equal(start.file(), inputs.history.whose_turn())
+        return stop.file().more_left_than(start.file(), inputs.history.whose_turn())
     return True
 
 def taking_turns(start, stop, inputs):
@@ -342,18 +342,55 @@ def taking_turns(start, stop, inputs):
     piece_counter[inputs.board.get(start).piece] += 1
     return max(piece_counter.values()) - min(piece_counter.values()) <= 1
 
-# Not implemented yet
 def follow_the_shadow(start, stop, inputs):
     h = inputs.history.history
+    board = inputs.board
+    c = inputs.history.whose_turn()
     if len(h) > 0:
+        target_sq = h[-1].start
         # To do 
-        return True
-    else:
-        return True
+        for square in Square:
+            if board.get(square) and board.get(square).color == c and \
+            target_sq.value in board.legal_moves(square, inputs.history, c):
+                return stop == target_sq
+    
+    return True
     
 def no_captures(start, stop, inputs):
     board, history = inputs.board, inputs.history
     return not board.capture(start, stop, history)
+
+def out_in_front(start, stop, inputs):
+    board = inputs.board
+    c = inputs.history.whose_turn()
+    return not [sq for sq in Square if sq.file() == start.file() and board.get(sq) and board.get(sq).color == c and sq.rank().more_adv_than(start.rank(), c)]
+
+def abstinence(start, stop, inputs):
+    board = inputs.board
+    opp = inputs.history.whose_turn().other()
+    for sq in Square:
+        if board.get(sq) and board.get(sq).color == opp and board.get(sq).piece != Piece.PAWN:
+            p = board.get(sq).piece
+            for adj_sq in get_adjacent_squares(sq):
+                if board.get(adj_sq) and board.get(adj_sq).color == opp and board.get(adj_sq).piece == p:
+                    return False
+    return True
+
+def loneliest_number(start, stop, inputs):
+    h = inputs.history.history
+    player_moves = h[::2] if inputs.history.whose_turn() == Color.WHITE else h[1:][::2]
+    for move in player_moves:
+        if move.piece.piece == Piece.PAWN:
+            return inputs.board.get(start).piece != Piece.PAWN
+    return True
+
+def flanking_attack(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    return start.file() in [File.A, File.H] or not board.capture(start, stop, history)
+
+# Unfinished
+def your_own_size(start, stop, inputs):
+    return True
 
 # number is how bad the handicap is, 1-10
 # capture-based handicaps are maybe all broken with enpassant(s)
@@ -398,6 +435,12 @@ tested_handicaps = {
     "Cage the King: If your opponent's king leaves its starting rank, you lose": (cage_the_king, 5),
     "Inside the Lines: You cannot move onto the edge of the board": (inside_the_lines, 4),
     "Taking Turns: All of your piece types have to have moved an amount of times that are within 1 of each other": (taking_turns, 5),
+    "Left for Dead: You can only capture to the left": (left_for_dead, 6),
+    "Follow the shadow: When your opponent moves from square A to square B, you must move to square A if possible": (follow_the_shadow, 7), 
+    "Out in Front: You can only move the most advanced piece in every file": (out_in_front, 6), 
+    "Abstinence: If your opponent ever has two non-pawn pieces of the same type adjacent to each other, you lose": (abstinence, 6),
+    "The Loneliest Number: You can only make 1 pawn move": (loneliest_number, 6), 
+    "Flanking attack: You can only capture from the A or H files": (flanking_attack, 6)
 }
 
 # Stuff in here won't randomly get assigned but you can interact with it by changing get_handicaps 
@@ -407,8 +450,7 @@ tested_handicaps = {
 untested_handicaps = { 
     'No handicap': (no_handicap, 0),
     "No capturing!" : (no_captures, 5),
-    "Left for Dead: You can only capture to the left": (left_for_dead, 6),
-    "Follow the shadow: When your opponent moves from square A to square B, you must move to square A if possible": (follow_the_shadow, 6)
+    "Your Own Size: Pieces can only take pieces of the same type (anything can take King)": (your_own_size, 7)
 }
 
 handicaps = dict(tested_handicaps, **untested_handicaps)
@@ -436,7 +478,7 @@ def get_handicaps(x, y):
         # This is Gabe's line. For Gabe's use only. Keep out. No girls allowed. 
         handicaps.update(untested_handicaps)
         # return random.sample(handicaps.keys(), 2)
-        return descriptions[turn_other_cheek], descriptions[left_for_dead] 
+        return descriptions[flanking_attack], descriptions[flanking_attack] 
         return descriptions[left_for_dead], descriptions[left_for_dead] 
     # return descriptions[cant_move_to_half_of_squares_at_random], descriptions[lose_if_no_queen]
     # return descriptions[cant_move_to_opponents_side_of_board], descriptions[cant_move_to_opponents_side_of_board]
