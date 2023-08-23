@@ -425,7 +425,9 @@ descriptions = {v[0]: k for k, v in handicaps.items()}
 def test_all_handicaps():
     inputs = HandicapInputs(starting_board(), History())
     for v in handicaps.values():
-        v[0](Square.A1, Square.A2, inputs)
+        s1 = random.choice(Square.of_rank(Rank.Second) + [Square('B1'), Square('G1')])
+        s2 = Square(random.choice(inputs.board.legal_moves(s1, inputs.history, Color.WHITE)))
+        v[0](s1, s2, inputs)
 
 
 def get_handicaps(x, y):
