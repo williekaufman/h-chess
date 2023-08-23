@@ -163,3 +163,15 @@ class Square(Enum):
     def shift(self, rank_shift, file_shift):
         rank, file = self.to_coordinates()
         return Square.of_coordinates(file + file_shift, rank + rank_shift)
+    
+    def distance(self, other_square):
+        return abs(self.rank().to_index() - other_square.rank().to_index()) + abs(self.file().to_index() - other_square.file().to_index())
+    
+    # Returns a string and not a color object because there's a circular import if we reference Color here
+    def color(self):
+        r, f = self.to_coordinates()
+        if (r + f) % 2 == 0:
+            return 'B'
+        else:
+            return 'W'
+        
