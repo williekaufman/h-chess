@@ -100,10 +100,7 @@ def peons_first(start, stop, inputs):
 
 def true_gentleman(start, stop, inputs):
     board, history = inputs.board, inputs.history
-    ss = board.get(stop)
-    if ss and ss.piece:
-        return not (ss.piece == Piece.QUEEN and ss.color != history.whose_turn())
-    return True
+    return board.capture(start, stop, history) != Piece.QUEEN
 
 def forward_march(start, stop, inputs):
     return stop.rank().more_agg_or_equal(start.rank(), inputs.history.whose_turn())
@@ -205,9 +202,9 @@ def jumpy(start, stop, inputs):
     return True
 
 def eye_for_an_eye(start, stop, inputs):
-    board, history = inputs.board, inputs.history.history
-    if history and history[-1].capture:
-        return board.get(stop) 
+    board, history = inputs.board, inputs.history
+    if history.last_move() and history.last_move().capture:
+        return board.capture(start, stop, history)
     else:
         return True
 
@@ -256,7 +253,7 @@ def human_shield(start, stop, inputs):
         above_rank += col_sign
 
     # If there's no pawn above, then this is legal iff it's a capture
-    return board.get(stop) or piece.piece == Piece.PAWN
+    return board.capture(start, stop, history) or piece.piece == Piece.PAWN
 
 def simon_says(start, stop, inputs):
     if (last_move := inputs.history.last_move()):
@@ -351,19 +348,20 @@ def follow_the_shadow(start, stop, inputs):
         return True
     else:
         return True
+    
+def no_captures(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    return not board.capture(start, stop, history)
 
 # number is how bad the handicap is, 1-10
 # capture-based handicaps are maybe all broken with enpassant(s)
 handicaps = {
-    'No handicap': (no_handicap, 0),
-    "Can't move pawns": (cant_move_pawns, 7),
-    "Can't move pawn and then rook": (cant_move_pawn_and_then_rook, 3),
-    "Die after moving pawn": (die_after_moving_pawn, 7),
-    "Lose if you have no queen": (lose_if_no_queen, 7),
-    "While in check, you must move your king": (skittish, 2),
-    "When your king is on the back rank, you can only move pawns and kings": (bongcloud, 2),
-    "Can't move to opponent's side of board": (cant_move_to_opponents_side_of_board, 5),
-    "Can't move to half of squares, re-randomized every move": (cant_move_to_half_of_squares_at_random, 5),
+    "Peasant Rebellion: Can't move pawns": (cant_move_pawns, 7),
+    "Simp: Lose if you have no queen": (lose_if_no_queen, 7),
+    "Skittish: While in check, you must move your king": (skittish, 2),
+    "Bongcloud: When your king is on the back rank, you can only move pawns and kings": (bongcloud, 2),
+    "Home Base: Can't move to opponent's side of board": (cant_move_to_opponents_side_of_board, 5),
+    "Unlucky: Can't move to half of squares, re-randomized every move": (cant_move_to_half_of_squares_at_random, 5),
     "Peons First: Can't move pieces that are directly behind one of your pawns": (peons_first, 2),
     "True Gentleman: You cannot capture your opponent's queen": (true_gentleman, 2),
     "Forward March: Your pieces cannot move backwards": (forward_march, 4),
@@ -397,12 +395,16 @@ handicaps = {
     "Closed book: You lose if there is ever an open file": (closed_book, 7),
     "Cage the King: If your opponent's king leaves its starting rank, you lose": (cage_the_king, 5),
     "Inside the Lines: You cannot move onto the edge of the board": (inside_the_lines, 4),
-    "Taking Turns: All of your piece types have to have moved an amount of times that are within 1 of each other": (taking_turns, 5)
+    "Taking Turns: All of your piece types have to have moved an amount of times that are within 1 of each other": (taking_turns, 5),
 }
 
 # Stuff in here won't randomly get assigned but you can interact with it by changing get_handicaps 
 # So you can push new handicaps without worrying about breaking the game
-untested_handicaps = {
+
+# Also for things that are only for testing, e.g. no handicap
+untested_handicaps = { 
+    'No handicap': (no_handicap, 0),
+    "No capturing!" : (no_captures, 5),
     "Left for Dead: You can only capture to the left": (left_for_dead, 6),
     "Follow the shadow: When your opponent moves from square A to square B, you must move to square A if possible": (follow_the_shadow, 6)
 }

@@ -67,7 +67,7 @@ class Move():
         self.piece = piece
         self.start = Square(start)
         self.stop = Square(stop)
-        self.capture = capture.lower() in ['t', 'k', 'e']
+        self.capture = capture.lower() == 't'
         self.check = check.lower() == 't'
         self.castle = castle
         self.promotion = promotion
@@ -333,6 +333,21 @@ class Board():
                 return True
         return False
 
+    def capture_outer(self, start, stop, history):
+        piece = self.get(start)
+        if self.get(stop):
+            return self.get(stop).piece, 't'
+        enPassantSquares = enPassant(history.history)
+        kingEnPassantSquares = kingEnPassant(history.history)
+        if piece.piece == Piece.PAWN and stop in enPassantSquares:
+            return Piece.PAWN, 'e'
+        if stop in kingEnPassantSquares:
+            return Piece.KING, 'k'
+        return None, 'f'
+
+    def capture(self, start, stop, history):
+        return self.capture_outer(start, stop, history)[0]
+
     def move(self, start, stop, whose_turn, handicap, history=History(), promote_to=None):
         piece = self.get(start)
         extra = []
@@ -340,13 +355,7 @@ class Board():
             return None, None, 'no piece'
         if piece.color != whose_turn:
             return None, None, 'wrong color'
-        capture = 't' if self.get(stop) else 'f'
-        enPassantSquares = enPassant(history.history)
-        kingEnPassantSquares = kingEnPassant(history.history)
-        if piece.piece == Piece.PAWN and stop in enPassantSquares:
-            capture = 'e'
-        if stop in kingEnPassantSquares:
-            capture = 'k'
+        capture = self.capture_outer(start, stop, history)[1]
         # TODO: implement check
         check = 'f'
         castle = 'f'
