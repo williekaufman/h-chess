@@ -5,12 +5,12 @@
 }
 
 body {
-  background-color: #07001f;
+  background: radial-gradient(circle, #373737, #222222);;
   color: #e0e0e0;
 }
 
 .light-mode {
-  background-color: #f8d6bf;
+  background: radial-gradient(circle, #fadecb, #f8b88e);
   color: #121212;
 }
 

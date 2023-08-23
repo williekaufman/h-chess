@@ -342,9 +342,11 @@ def taking_turns(start, stop, inputs):
     piece_counter[inputs.board.get(start).piece] += 1
     return max(piece_counter.values()) - min(piece_counter.values()) <= 1
 
+# Not implemented yet
 def follow_the_shadow(start, stop, inputs):
     h = inputs.history.history
     if len(h) > 0:
+        # To do 
         return True
     else:
         return True
