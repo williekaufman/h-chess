@@ -350,7 +350,15 @@ def follow_the_shadow(start, stop, inputs):
         return True
     else:
         return True
-    
+
+# This works it's just not a super interesting handicap so leaving it in untested,
+# just wanted to the test the history.pieces_moved() logic
+def only_move_pawn_once(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    if board.get(start).piece == Piece.PAWN:
+        return Piece.PAWN not in history.pieces_moved()
+    return True
+
 def no_captures(start, stop, inputs):
     board, history = inputs.board, inputs.history
     return not board.capture(start, stop, history)
@@ -408,7 +416,8 @@ untested_handicaps = {
     'No handicap': (no_handicap, 0),
     "No capturing!" : (no_captures, 5),
     "Left for Dead: You can only capture to the left": (left_for_dead, 6),
-    "Follow the shadow: When your opponent moves from square A to square B, you must move to square A if possible": (follow_the_shadow, 6)
+    "Follow the shadow: When your opponent moves from square A to square B, you must move to square A if possible": (follow_the_shadow, 6),
+    "Only move pawn once: You can only move a pawn once": (only_move_pawn_once, 6),
 }
 
 handicaps = dict(tested_handicaps, **untested_handicaps)
@@ -438,7 +447,7 @@ def get_handicaps(x, y):
         # This is Gabe's line. For Gabe's use only. Keep out. No girls allowed. 
         handicaps.update(untested_handicaps)
         # return random.sample(handicaps.keys(), 2)
-        return descriptions[turn_other_cheek], descriptions[left_for_dead] 
+        return descriptions[only_move_pawn_once], descriptions[left_for_dead] 
         return descriptions[left_for_dead], descriptions[left_for_dead] 
     # return descriptions[cant_move_to_half_of_squares_at_random], descriptions[lose_if_no_queen]
     # return descriptions[cant_move_to_opponents_side_of_board], descriptions[cant_move_to_opponents_side_of_board]
