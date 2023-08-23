@@ -357,7 +357,7 @@ def no_captures(start, stop, inputs):
 
 # number is how bad the handicap is, 1-10
 # capture-based handicaps are maybe all broken with enpassant(s)
-handicaps = {
+tested_handicaps = {
     "Peasant Rebellion: Can't move pawns": (cant_move_pawns, 7),
     "Simp: Lose if you have no queen": (lose_if_no_queen, 7),
     "Skittish: While in check, you must move your king": (skittish, 2),
@@ -411,8 +411,9 @@ untested_handicaps = {
     "Follow the shadow: When your opponent moves from square A to square B, you must move to square A if possible": (follow_the_shadow, 6)
 }
 
+handicaps = dict(tested_handicaps, **untested_handicaps)
+
 descriptions = {v[0]: k for k, v in handicaps.items()}
-descriptions.update({v[0]: k for k, v in untested_handicaps.items()})
 
 # theoretical args for some kind of config, e.g. difficulties, elos, idk
 
@@ -430,7 +431,7 @@ def test_all_handicaps():
 def get_handicaps(x, y):
     # So I can't forget to undo anything weird
     if not LOCAL:
-        return random.sample(handicaps.keys(), 2)
+        return random.sample(tested_handicaps.keys(), 2)
     else:
         # This is Gabe's line. For Gabe's use only. Keep out. No girls allowed. 
         handicaps.update(untested_handicaps)

@@ -24,6 +24,18 @@ body.dark {
   color: white;
 }
 
+.dark .board-b72b1 {
+  border-color: white;
+}
+
+.dark .white-1e1d7 {
+  background-color: lightblue;
+}
+
+.dark .black-3c85d {
+  background-color: green;
+}
+
 .one-char-button {
   display: inline-block;
   min-width: 30px;
@@ -231,13 +243,22 @@ body.dark {
   align-items: center;
 }
 
+.dark .recent-move {
+  border: 5px solid purple;
+}
+
 .highlight {
-  background-color: lightblue;
+  background-color: green;
   box-sizing: border-box;
   border: 5px solid red;
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.dark .highlight {
+  background-color: purple;
+  border: 5px solid darkred;
 }
 
 .active-games-wrapper {
@@ -437,3 +458,4 @@ body.dark {
 .game-id-box::placeholder {
   text-align: center;
 }
+
