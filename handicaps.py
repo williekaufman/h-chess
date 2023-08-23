@@ -382,7 +382,7 @@ def flanking_attack(start, stop, inputs):
 
 def your_own_size(start, stop, inputs):
     board = inputs.board
-    captured_piece, capture_type = board.capture_outer(start, stop, inputs.history)
+    captured_piece = board.capture(start, stop, inputs.history)
     return (not captured_piece) or captured_piece.piece in [board.get(start).piece, Piece.KING] 
 
 def ego_clash(start, stop, inputs):
@@ -414,9 +414,9 @@ def color_swap(start, stop, inputs):
 
 def eat_your_vegetables(start, stop, inputs):
     board, history = inputs.board, inputs.history
-    opp_pawns = [s for s in Square if board.get(s) and board.get(s).piece == Piece.PAWN and board.get(s).color != history.whose_turn()]
-    p, t = board.capture_outer(start, stop, history)
-    return (not p) or p.piece == Piece.PAWN or not opp_pawns
+    if (captured_piece := board.capture(start, stop, history)):
+        return captured_piece.piece == Piece.PAWN or not board.loc(ColoredPiece(history.whose_turn().other(), Piece.PAWN))
+    return True
 
 def chain_of_command(start, stop, inputs):
     board, history = inputs.board, inputs.history
@@ -526,6 +526,12 @@ def knight_errant(start, stop, inputs):
     board = inputs.board
     return board.get(start).piece == Piece.KNIGHT or [sq for sq in get_adjacent_squares(start) if board.get(sq) and board.get(sq).piece == Piece.KNIGHT]
 
+def slippery(start, stop, inputs):
+    board = inputs.board
+    max_distance = max([sq.distance(start) for sq in Square if sq.value in board.legal_moves(start, inputs.history, inputs.history.whose_turn())])
+    return start.distance(stop) == max_distance
+
+
 # number is how bad the handicap is, 1-10
 # capture-based handicaps are maybe all broken with enpassant(s)
 tested_handicaps = {
@@ -599,6 +605,7 @@ tested_handicaps = {
     "Final Countdown: At the start of move 10, you lose the game": (final_countdown, 8),
     "Lead by example: You can't move a non-pawn, non-king piece to a rank ahead of your king": (lead_by_example, 8),
     "Knight errant: You can only move knights and pieces adjacent to knights": (knight_errant, 7),
+    "Slippery: You can't move a piece less far than it could move": (slippery, 7),
 }
 
 # Stuff in here won't randomly get assigned but you can interact with it by changing get_handicaps 
@@ -638,7 +645,7 @@ def get_handicaps(x, y):
         # This is Gabe's line. For Gabe's use only. Keep out. No girls allowed. 
         handicaps.update(untested_handicaps)
         # return random.sample(handicaps.keys(), 2)
-        return descriptions[knight_errant], descriptions[no_handicap] 
+        return descriptions[slippery], descriptions[no_handicap] 
         return descriptions[only_capture_each_piece_type_once], descriptions[no_handicap] 
     # return descriptions[cant_move_to_half_of_squares_at_random], descriptions[lose_if_no_queen]
     # return descriptions[cant_move_to_opponents_side_of_board], descriptions[cant_move_to_opponents_side_of_board]
