@@ -205,8 +205,8 @@ def jumpy(start, stop, inputs):
     return True
 
 def eye_for_an_eye(start, stop, inputs):
-    board, history = inputs.board, inputs.history.history
-    if history and history[-1].capture:
+    board, history = inputs.board, inputs.history
+    if history.last_move() and history.last_move().capture:
         return board.capture(start, stop, history)[0]
     else:
         return True
@@ -422,6 +422,6 @@ def get_handicaps(x, y):
     else:
         # This is Gabe's line. For Gabe's use only. Keep out. No girls allowed. 
         handicaps.update(untested_handicaps)
-        return descriptions[taking_turns], descriptions[taking_turns] 
+        return descriptions[eye_for_an_eye], descriptions[no_handicap] 
     # return descriptions[cant_move_to_half_of_squares_at_random], descriptions[lose_if_no_queen]
     # return descriptions[cant_move_to_opponents_side_of_board], descriptions[cant_move_to_opponents_side_of_board]
