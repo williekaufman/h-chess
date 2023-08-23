@@ -339,15 +339,16 @@ class Board():
 
     def capture_outer(self, start, stop, history):
         piece = self.get(start)
+        ret = None, 'f'
         if self.get(stop):
-            return self.get(stop), 't'
+            ret = self.get(stop), 't'
         enPassantSquares = enPassant(history.history)
         kingEnPassantSquares = kingEnPassant(history.history)
         if piece.piece == Piece.PAWN and stop in enPassantSquares:
             return ColoredPiece(piece.color.other(), Piece.PAWN), 'e'
         if stop in kingEnPassantSquares:
             return ColoredPiece(piece.color.other(), Piece.KING), 'k'
-        return None, 'f'
+        return ret
 
     def capture(self, start, stop, history):
         return self.capture_outer(start, stop, history)[0]
