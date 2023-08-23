@@ -514,6 +514,17 @@ def outcast(start, stop, inputs):
 def final_countdown(start, stop, inputs):
     return len(inputs.history.history) < 18
 
+def lead_by_example(start, stop, inputs):
+    board = inputs.board
+    c = inputs.history.whose_turn()
+    king_pos = board.cache.kings[c]
+    if board.get(start).piece in [Piece.KING, Piece.PAWN]:
+        return True
+    return stop.rank().less_adv_than_or_equal(king_pos.rank(), c)
+
+def knight_errant(start, stop, inputs):
+    board = inputs.board
+    return board.get(start).piece == Piece.KNIGHT or [sq for sq in get_adjacent_squares(start) if board.get(sq) and board.get(sq).piece == Piece.KNIGHT]
 
 # number is how bad the handicap is, 1-10
 # capture-based handicaps are maybe all broken with enpassant(s)
@@ -586,6 +597,8 @@ tested_handicaps = {
     "X-ray defense: If an opposing piece would be attacking your king on an otherwise empty board, you lose": (xray_defense, 7),
     "Outcast: You can't move into the middle two ranks and files": (outcast, 7),
     "Final Countdown: At the start of move 10, you lose the game": (final_countdown, 8),
+    "Lead by example: You can't move a non-pawn, non-king piece to a rank ahead of your king": (lead_by_example, 8),
+    "Knight errant: You can only move knights and pieces adjacent to knights": (knight_errant, 7),
 }
 
 # Stuff in here won't randomly get assigned but you can interact with it by changing get_handicaps 
@@ -625,7 +638,7 @@ def get_handicaps(x, y):
         # This is Gabe's line. For Gabe's use only. Keep out. No girls allowed. 
         handicaps.update(untested_handicaps)
         # return random.sample(handicaps.keys(), 2)
-        return descriptions[taking_turns], descriptions[no_handicap] 
+        return descriptions[knight_errant], descriptions[no_handicap] 
         return descriptions[only_capture_each_piece_type_once], descriptions[no_handicap] 
     # return descriptions[cant_move_to_half_of_squares_at_random], descriptions[lose_if_no_queen]
     # return descriptions[cant_move_to_opponents_side_of_board], descriptions[cant_move_to_opponents_side_of_board]
