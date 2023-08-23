@@ -538,7 +538,7 @@ document.addEventListener("click", function (event) {
 });
 
 newGameButton.addEventListener('click', () => {
-    shiftKeyIsDown ? newGame() : openModal();
+    shiftKeyIsDown ? newGame() && closeModal() : openModal();
 });
 
 toggleThemeButton.addEventListener('click', () => {
