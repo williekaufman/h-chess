@@ -445,7 +445,7 @@ function newGame(toast = true) {
             updateState();
             firstMove = true;
         });
-
+    closeModal();
     setWhoseTurn('White');
     gameIsOver = false;
     initBoard();
@@ -502,6 +502,9 @@ function handleKeyDown(event) {
     k = event.key.toLowerCase();
     if (event.shiftKey) {
         shiftKeyIsDown = true;
+        if (event.key == 'N') {
+            newGame();
+        }
     }
     else if (k == 'c') {
         if (localStorage.getItem('hchess-testing-mode') && event.ctrlKey) {
@@ -541,7 +544,7 @@ document.addEventListener("click", function (event) {
 });
 
 newGameButton.addEventListener('click', () => {
-    shiftKeyIsDown ? newGame() && closeModal() : openModal();
+    shiftKeyIsDown ? newGame() : openModal();
 });
 
 toggleThemeButton.addEventListener('click', () => {
@@ -550,7 +553,6 @@ toggleThemeButton.addEventListener('click', () => {
 
 createGameButton.addEventListener('click', () => {
     newGame();
-    closeModal();
 });
 
 joinGameButton.addEventListener('click', () => loadGame());
