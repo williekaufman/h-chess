@@ -342,6 +342,10 @@ def taking_turns(start, stop, inputs):
     piece_counter[inputs.board.get(start).piece] += 1
     return max(piece_counter.values()) - min(piece_counter.values()) <= 1
 
+def no_captures(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    return not board.capture(start, stop, history)
+
 # number is how bad the handicap is, 1-10
 # capture-based handicaps are maybe all broken with enpassant(s)
 handicaps = {
@@ -384,13 +388,16 @@ handicaps = {
     "Closed book: You lose if there is ever an open file": (closed_book, 7),
     "Cage the King: If your opponent's king leaves its starting rank, you lose": (cage_the_king, 5),
     "Inside the Lines: You cannot move onto the edge of the board": (inside_the_lines, 4),
-    "Taking Turns: All of your piece types have to have moved an amount of times that are within 1 of each other": (taking_turns, 5)
+    "Taking Turns: All of your piece types have to have moved an amount of times that are within 1 of each other": (taking_turns, 5),
 }
 
 # Stuff in here won't randomly get assigned but you can interact with it by changing get_handicaps 
 # So you can push new handicaps without worrying about breaking the game
+
+# Also for things that are only for testing, e.g. no handicap
 untested_handicaps = { 
     'No handicap': (no_handicap, 0),
+    "No capturing!" : (no_captures, 5),
     "Left for Dead: You can only capture to the left": (left_for_dead, 6),
 }
 
@@ -417,6 +424,6 @@ def get_handicaps(x, y):
     else:
         # This is Gabe's line. For Gabe's use only. Keep out. No girls allowed. 
         handicaps.update(untested_handicaps)
-        return descriptions[true_gentleman], descriptions[no_handicap] 
+        return descriptions[no_captures], descriptions[no_handicap] 
     # return descriptions[cant_move_to_half_of_squares_at_random], descriptions[lose_if_no_queen]
     # return descriptions[cant_move_to_opponents_side_of_board], descriptions[cant_move_to_opponents_side_of_board]
