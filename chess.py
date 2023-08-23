@@ -333,7 +333,7 @@ class Board():
                 return True
         return False
 
-    def capture(self, start, stop, history):
+    def capture_outer(self, start, stop, history):
         piece = self.get(start)
         if self.get(stop):
             return self.get(stop).piece, 't'
@@ -345,6 +345,9 @@ class Board():
             return Piece.KING, 'k'
         return None, 'f'
 
+    def capture(self, start, stop, history):
+        return self.capture_outer(start, stop, history)[0]
+
     def move(self, start, stop, whose_turn, handicap, history=History(), promote_to=None):
         piece = self.get(start)
         extra = []
@@ -352,7 +355,7 @@ class Board():
             return None, None, 'no piece'
         if piece.color != whose_turn:
             return None, None, 'wrong color'
-        capture = self.capture(start, stop, history)[1]
+        capture = self.capture_outer(start, stop, history)[1]
         # TODO: implement check
         check = 'f'
         castle = 'f'

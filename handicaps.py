@@ -100,10 +100,7 @@ def peons_first(start, stop, inputs):
 
 def true_gentleman(start, stop, inputs):
     board, history = inputs.board, inputs.history
-    ss = board.get(stop)
-    if ss and ss.piece:
-        return not (ss.piece == Piece.QUEEN and ss.color != history.whose_turn())
-    return True
+    return board.capture(start, stop, history) != Piece.QUEEN
 
 def forward_march(start, stop, inputs):
     return stop.rank().more_agg_or_equal(start.rank(), inputs.history.whose_turn())
@@ -207,7 +204,7 @@ def jumpy(start, stop, inputs):
 def eye_for_an_eye(start, stop, inputs):
     board, history = inputs.board, inputs.history
     if history.last_move() and history.last_move().capture:
-        return board.capture(start, stop, history)[0]
+        return board.capture(start, stop, history)
     else:
         return True
 
@@ -256,7 +253,7 @@ def human_shield(start, stop, inputs):
         above_rank += col_sign
 
     # If there's no pawn above, then this is legal iff it's a capture
-    return board.capture(start, stop, history)[0] or piece.piece == Piece.PAWN
+    return board.capture(start, stop, history) or piece.piece == Piece.PAWN
 
 def simon_says(start, stop, inputs):
     if (last_move := inputs.history.last_move()):
@@ -420,6 +417,6 @@ def get_handicaps(x, y):
     else:
         # This is Gabe's line. For Gabe's use only. Keep out. No girls allowed. 
         handicaps.update(untested_handicaps)
-        return descriptions[eye_for_an_eye], descriptions[no_handicap] 
+        return descriptions[true_gentleman], descriptions[no_handicap] 
     # return descriptions[cant_move_to_half_of_squares_at_random], descriptions[lose_if_no_queen]
     # return descriptions[cant_move_to_opponents_side_of_board], descriptions[cant_move_to_opponents_side_of_board]
