@@ -572,6 +572,20 @@ ignoreOtherPlayerCheckButton.addEventListener('click', () => {
     toggleOtherPlayerCheck();
 });
 
+const themeToggle = document.getElementById("themeToggle");
+
+themeToggle.addEventListener("click", () => {
+    const body = document.body;
+
+    if (body.classList.contains("light-mode")) {
+        body.classList.remove("light-mode");
+        themeToggle.innerText = "Switch to Light Mode";
+    } else {
+        body.classList.add("light-mode");
+        themeToggle.innerText = "Switch to Dark Mode";
+    }
+});
+
 function setSquare(square, piece) {
     board.position({
         ...board.position(),

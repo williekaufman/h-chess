@@ -345,6 +345,13 @@ def taking_turns(start, stop, inputs):
     piece_counter[inputs.board.get(start).piece] += 1
     return max(piece_counter.values()) - min(piece_counter.values()) <= 1
 
+def follow_the_shadow(start, stop, inputs):
+    h = inputs.history.history
+    if len(h) > 0:
+        return True
+    else:
+        return True
+
 # number is how bad the handicap is, 1-10
 # capture-based handicaps are maybe all broken with enpassant(s)
 handicaps = {
@@ -397,6 +404,7 @@ handicaps = {
 # So you can push new handicaps without worrying about breaking the game
 untested_handicaps = {
     "Left for Dead: You can only capture to the left": (left_for_dead, 6),
+    "Follow the shadow: When your opponent moves from square A to square B, you must move to square A if possible": (follow_the_shadow, 6)
 }
 
 descriptions = {v[0]: k for k, v in handicaps.items()}
@@ -422,6 +430,7 @@ def get_handicaps(x, y):
     else:
         # This is Gabe's line. For Gabe's use only. Keep out. No girls allowed. 
         handicaps.update(untested_handicaps)
+        return random.sample(handicaps.keys(), 2)
         return descriptions[taking_turns], descriptions[taking_turns] 
     # return descriptions[cant_move_to_half_of_squares_at_random], descriptions[lose_if_no_queen]
     # return descriptions[cant_move_to_opponents_side_of_board], descriptions[cant_move_to_opponents_side_of_board]

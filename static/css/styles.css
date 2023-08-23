@@ -4,6 +4,16 @@
   margin-top: 10px;
 }
 
+body {
+  background-color: #373737;
+  color: #e0e0e0;
+}
+
+.light-mode {
+  background-color: #b9b9b9;
+  color: #121212;
+}
+
 .one-char-button {
   display: inline-block;
   min-width: 30px;
@@ -82,6 +92,13 @@
   width: 25%;
   overflow-y: auto;
   overflow-x: auto;
+}
+
+/* this is hard-coded and hacky */
+#themeToggle {
+  position: fixed;
+  left: 20px;
+  bottom: calc(90% - 20px); /* 100% - 18% (height of .hotkeys) - 20px (distance of .hotkeys from bottom) */
 }
 
 .container {
