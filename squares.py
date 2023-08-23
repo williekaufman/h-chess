@@ -26,6 +26,9 @@ class Rank(Enum):
     def flip(self):
         return Rank.of_index(7 - self.to_index())
 
+    def squares(self):
+        return [s for s in Square if s.rank() == self]
+    
     def more_adv_than(self, rank, color):
         if color.value == 'White':
             return self.to_index() > rank.to_index()
@@ -39,7 +42,7 @@ class Rank(Enum):
         return self.more_adv_than(rank, color) or self.equals(rank)
 
     def less_adv_than(self, rank, color):
-        return not self.more_adv_or_equal(rank, color)
+        return not self.more_adv_than_or_equal(rank, color)
     
     def less_adv_than_or_equal(self, rank, color):
         return not self.more_adv_than(rank, color)
@@ -62,6 +65,9 @@ class File(Enum):
             return File(chr(index + 65))
         except:
             return None
+        
+    def squares(self):
+        return [s for s in Square if s.file() == self]
 
     def shift(self, shift):
         return File.of_index(self.to_index() + shift)
@@ -184,6 +190,11 @@ class Square(Enum):
     def distance(self, other_square):
         return abs(self.rank().to_index() - other_square.rank().to_index()) + abs(self.file().to_index() - other_square.file().to_index())
     
+    def is_adjacent(self, other_square):
+        return  abs(self.rank().to_index() - other_square.rank().to_index()) <= 1 \
+            and abs(self.file().to_index() - other_square.file().to_index()) <= 1 \
+            and self != other_square
+
     # Returns a string and not a color object because there's a circular import if we reference Color here
     def color(self):
         r, f = self.to_coordinates()

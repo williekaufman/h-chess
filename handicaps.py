@@ -394,8 +394,113 @@ def flanking_attack(start, stop, inputs):
     board, history = inputs.board, inputs.history
     return start.file() in [File.A, File.H] or not board.capture(start, stop, history)
 
-# Unfinished
 def your_own_size(start, stop, inputs):
+    board = inputs.board
+    captured_piece, capture_type = board.capture_outer(start, stop, inputs.history)
+    return (not captured_piece) or captured_piece.piece in [board.get(start).piece, Piece.KING] 
+
+def ego_clash(start, stop, inputs):
+    board = inputs.board
+    c = inputs.history.whose_turn()
+    new_board = try_move(board, start, stop, inputs.history)
+    for file in File:
+        pcs = [s for s in file.squares() if new_board.get(s) and new_board.get(s).color == c and new_board.get(s).piece != Piece.PAWN]
+        if len(pcs) > 1:
+            return False
+    return True
+
+def in_mourning(start, stop, inputs):
+    return inputs.board.get(start).piece not in inputs.history.pieces_captured()
+
+def yin_and_yang(start, stop, inputs):
+    if inputs.board.capture(start, stop, inputs.history):
+        return stop.color() == 'B'
+    else:
+        return stop.color() == 'W' 
+
+def color_swap(start, stop, inputs):
+    return start.color() != stop.color()
+
+def eat_your_vegetables(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    opp_pawns = [s for s in Square if board.get(s) and board.get(s).piece == Piece.PAWN and board.get(s).color != history.whose_turn()]
+    p, t = board.capture_outer(start, stop, history)
+    return (not p) or p.piece == Piece.PAWN or not opp_pawns
+
+def chain_of_command(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    if len(history.history) > 1:
+        last_piece = history.history[-2].piece.piece
+        return last_piece == Piece.KING or last_piece.points() <= board.get(start).points()
+    else:
+        return True
+
+def pioneer(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    return not [s for s in stop.rank().squares() if board.get(s) and board.get(s).color == history.whose_turn()]
+
+# This is slightly wrong, needs to use try move instead of getting rid of the piece
+def friendly_fire(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    new_board = board.copy()
+    new_board.set(start, None)
+    return new_board.is_attacked(stop, history.whose_turn(), history)
+
+def x_marks_the_spot(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    return \
+        (board.get(start).piece == Piece.PAWN) or \
+        board.capture(start, stop, history) or \
+        stop.rank().to_index() == stop.file().to_index() or \
+        stop.rank().flip().to_index() == stop.file().to_index()
+
+def flight_over_fight(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    if len(history.history) > 0:
+        return stop.rank().less_adv_than(start.rank(), history.whose_turn()) or not history.history[-1].capture
+    else:
+        return True
+
+def helicopter_parent(start, stop, inputs):
+    return sum(inputs.history.pieces_captured(inputs.history.whose_turn().other()).values()) < 3
+
+def deer_in_the_headlights(start, stop, inputs):
+    return not inputs.board.is_attacked(start, inputs.history.whose_turn().other(), inputs.history)
+
+def impulsive(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    c = history.whose_turn()
+    for s in Square:
+        if board.get(s) and board.get(s).color == c:
+            mvs = [Square(x) for x in board.legal_moves(s, history, c)]
+            if [m for m in mvs if board.capture(s, m, history)]:
+                return board.capture(start, stop, history) 
+    return True
+
+def spread_out(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    sqs = get_adjacent_squares(stop)
+    adj_pcs = [sq for sq in sqs if board.get(sq) and board.get(sq).color == history.whose_turn() and sq != start]
+    return len(adj_pcs) == 0 
+
+def left_to_right(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    c = history.whose_turn()
+    if len(history.history) > 1:
+        last_file = history.history[-2].stop.file()
+        if last_file == File.H and c == Color.WHITE \
+        or last_file == File.A and c == Color.BLACK:
+            return True
+        else:
+            return last_file.more_left_than(stop.file(), c)
+    else:
+        return True
+    
+def leaps_and_bounds(start, stop, inputs):
+    return not start.is_adjacent(stop)
+
+# Not finished
+def hold_them_back(start, stop, inputs):
     return True
 
 # number is how bad the handicap is, 1-10
@@ -447,6 +552,22 @@ tested_handicaps = {
     "Abstinence: If your opponent ever has two non-pawn pieces of the same type adjacent to each other, you lose": (abstinence, 6),
     "Flanking attack: You can only capture from the A or H files": (flanking_attack, 6),
     "Element of Surprise: Only capture each piece type once": (only_capture_each_piece_type_once, 5),
+    "Your Own Size: Pieces can only take pieces of the same type (anything can take King)": (your_own_size, 7),
+    "Ego Clash: You can never have two non-pawns on the same file": (ego_clash, 7),
+    "In Mourning: You cannot move pieces of the same type as one that you have captured": (in_mourning, 8), 
+    "Yin and Yang: Capturing moves must occur on black squares. Non-capturing moves must occur on white squares": (yin_and_yang, 9),
+    "Color swap: When you move a piece, the destination square and starting square must be different colors": (color_swap, 9),
+    "Eat your vegetables: You must take all your opponent's pawns before taking any non-pawn piece": (eat_your_vegetables, 8),
+    "Chain of command: Unless you just moved your king, you cannot move a less valuable piece than last move": (chain_of_command, 7), 
+    "Pioneer: You cannot move onto a rank that you already occupy": (pioneer, 9),
+    "X Marks the Spot: Any non-pawn, non-capture moves must be to one of the long diagonals": (x_marks_the_spot, 8),
+    "Flight over Flight: When your opponent captures, you must move backwards": (flight_over_fight, 9), 
+    "Helicopeter parent: You lose if your opponents capture 3 of your pieces": (helicopter_parent, 8),
+    "Deer in the headlights: Your pieces under attack can't move": (deer_in_the_headlights, 8),
+    "Impulsive: If you can capture something, you must": (impulsive, 7),
+    "Spread Out: You cannot move a pieces next to another one of your pieces": (spread_out, 8), 
+    "Left to Right: Unless you just moved to the rightmost file, you must move further to the right than where you last moved": (left_to_right, 7), 
+    "Leaps and Bounds: You cannot move a pieces adjacent to where it was": (leaps_and_bounds, 8), 
 }
 
 # Stuff in here won't randomly get assigned but you can interact with it by changing get_handicaps 
@@ -456,8 +577,9 @@ tested_handicaps = {
 untested_handicaps = { 
     'No handicap': (no_handicap, 0),
     "No capturing!" : (no_captures, 5),
-    "Your Own Size: Pieces can only take pieces of the same type (anything can take King)": (your_own_size, 7),
     "The Loneliest Number: You can only move a pawn once": (loneliest_number, 6),
+    "Hold them Back: If your opponent moves a pawn onto your side of the board, you lose": (hold_them_back, 8),
+    "Friendly Fire: You can only move onto squares defended by another one of your pieces": (friendly_fire, 7)
 }
 
 handicaps = dict(tested_handicaps, **untested_handicaps)
@@ -487,8 +609,7 @@ def get_handicaps(x, y):
         # This is Gabe's line. For Gabe's use only. Keep out. No girls allowed. 
         handicaps.update(untested_handicaps)
         # return random.sample(handicaps.keys(), 2)
-        return descriptions[flanking_attack], descriptions[flanking_attack] 
+        return descriptions[leaps_and_bounds], descriptions[friendly_fire] 
         return descriptions[only_capture_each_piece_type_once], descriptions[no_handicap] 
-        return descriptions[left_for_dead], descriptions[left_for_dead] 
     # return descriptions[cant_move_to_half_of_squares_at_random], descriptions[lose_if_no_queen]
     # return descriptions[cant_move_to_opponents_side_of_board], descriptions[cant_move_to_opponents_side_of_board]
