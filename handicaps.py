@@ -535,7 +535,6 @@ def slippery(start, stop, inputs):
 # number is how bad the handicap is, 1-10
 # capture-based handicaps are maybe all broken with enpassant(s)
 tested_handicaps = {
-    "Peasant Rebellion: Can't move pawns": (cant_move_pawns, 7),
     "Simp: Lose if you have no queen": (lose_if_no_queen, 7),
     "Skittish: While in check, you must move your king": (skittish, 2),
     "Bongcloud: When your king is on the back rank, you can only move pawns and kings": (bongcloud, 2),
@@ -615,6 +614,7 @@ tested_handicaps = {
 untested_handicaps = { 
     'No handicap': (no_handicap, 0),
     "No capturing!" : (no_captures, 5),
+    "Peasant Rebellion: Can't move pawns": (cant_move_pawns, 7),
     "The Loneliest Number: You can only move a pawn once": (loneliest_number, 6),
 }
 
@@ -645,7 +645,7 @@ def get_handicaps(x, y):
         # This is Gabe's line. For Gabe's use only. Keep out. No girls allowed. 
         handicaps.update(untested_handicaps)
         # return random.sample(handicaps.keys(), 2)
-        return descriptions[slippery], descriptions[no_handicap] 
+        return descriptions[no_handicap], descriptions[no_handicap] 
         return descriptions[only_capture_each_piece_type_once], descriptions[no_handicap] 
     # return descriptions[cant_move_to_half_of_squares_at_random], descriptions[lose_if_no_queen]
     # return descriptions[cant_move_to_opponents_side_of_board], descriptions[cant_move_to_opponents_side_of_board]

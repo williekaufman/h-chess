@@ -59,7 +59,7 @@ def bool_to_char(b):
     return 't' if b else 'f'
 
 class Move():
-    def __init__(self, piece, start, stop, capture, check, castle, promotion):
+    def __init__(self, piece, start, stop, capture, check, castle, promotion, capture_type):
         self.piece = piece
         self.start = Square(start)
         self.stop = Square(stop)
@@ -67,6 +67,7 @@ class Move():
         self.check = check.lower() == 't'
         self.castle = castle
         self.promotion = promotion
+        self.capture_type = CaptureType(capture_type)
 
     def validate(self, board, history, whose_turn, handicap):
         if self.piece is None:
@@ -78,10 +79,10 @@ class Move():
         return True
 
     def to_string(self):
-        return f'{self.piece}{self.start.value}{self.stop.value}{self.capture if self.capture else "f"}{bool_to_char(self.check)}{self.castle}{self.promotion}'
+        return f'{self.piece}{self.start.value}{self.stop.value}{self.capture if self.capture else "f"}{bool_to_char(self.check)}{self.castle}{self.promotion}{self.capture_type.value}'
 
     def of_string(s):
-        return Move(ColoredPiece.of_string(s[0]), s[1:3], s[3:5], None if s[5] == 'f' else ColoredPiece.of_string(s[5]), s[6], s[7], s[8])
+        return Move(ColoredPiece.of_string(s[0]), s[1:3], s[3:5], None if s[5] == 'f' else ColoredPiece.of_string(s[5]), s[6], s[7], s[8], s[9])
 
 # All this actual logic is untested. It'll be easier to test once we get a UI set up so I'm just gonna wait on that.
 
@@ -291,10 +292,16 @@ class History():
     def to_list(self):
         return [move.to_string() for move in self.history]
 
-class HandicapInputs:
+class HandicapInputs():
     def __init__(self, board, history):
         self.board = board
         self.history = history
+
+class CaptureType(Enum):
+    NOT = 'f'
+    NORMAL = 't'
+    EN_PASSANT = 'e'
+    KING_EN_PASSANT = 'k'
 
 class Board():
     def __init__(self, s, game_id, cache):
@@ -346,16 +353,16 @@ class Board():
 
     def capture_outer(self, start, stop, history):
         piece = self.get(start)
-        ret = None, 'f'
+        ret = None, CaptureType.NOT
         if self.get(stop):
-            ret = self.get(stop), 't'
+            ret = self.get(stop), CaptureType.NORMAL
         enPassantSquares = enPassant(history.history)
         kingEnPassantSquares = kingEnPassant(history.history)
         if piece.piece == Piece.PAWN and stop in enPassantSquares:
-            return ColoredPiece(piece.color.other(), Piece.PAWN), 'e'
+            return ColoredPiece(piece.color.other(), Piece.PAWN), CaptureType.EN_PASSANT
         if stop in kingEnPassantSquares:
             # King en passant always captures a rook
-            return ColoredPiece(piece.color.other(), Piece.ROOK), 'k'
+            return ColoredPiece(piece.color.other(), Piece.ROOK), CaptureType.KING_EN_PASSANT
         return ret
 
     def capture(self, start, stop, history):
@@ -379,7 +386,7 @@ class Board():
                 castle = 'k'
         promotion = promote_to.upper() or 'Q' if piece and piece.piece == Piece.PAWN and stop.to_coordinates()[
             0] in [0, 7] else 'x'
-        move = Move(piece, start, stop, captured_piece, check, castle, promotion)
+        move = Move(piece, start, stop, captured_piece, check, castle, promotion, capture_type)
         # if this validates, then the move will actually happen
         if not move.validate(self, history, whose_turn, handicap):
             return None, None, 'invalid move'
@@ -403,12 +410,12 @@ class Board():
             else:
                 extra.append(('A8', ''))
                 extra.append(('D8', 'bR'))
-        if capture_type == 'e':
+        if capture_type == CaptureType.EN_PASSANT:
             self.set(stop.shift(-1 if piece.color ==
                      Color.WHITE else 1, 0), None)
             extra.append(
                 (stop.shift(-1 if piece.color == Color.WHITE else 1, 0).value, ''))
-        if capture_type == 'k':
+        if capture_type == CaptureType.KING_EN_PASSANT:
             self.set(history.history[-1].stop, None)
             extra.append((history.history[-1].stop.value, ''))
         self.set(start, None)
