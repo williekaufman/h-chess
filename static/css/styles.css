@@ -294,7 +294,7 @@ body.dark {
 }
 
 .dark .game-button.dead {
-  background-color: darkred;
+  background-color: black;
 }
 
 .friend {
