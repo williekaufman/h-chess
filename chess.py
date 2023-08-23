@@ -498,3 +498,8 @@ def starting_board():
         '0', starting_cache()
     )
 
+def empty_board():
+    return Board(
+        empty_rank * 8,
+        '0', starting_cache()
+    )

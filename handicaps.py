@@ -1,5 +1,5 @@
 from squares import Square, Rank, File
-from chess import Color, Piece, ColoredPiece, HandicapInputs, starting_board, History
+from chess import Color, Piece, ColoredPiece, HandicapInputs, starting_board, empty_board, History
 from settings import LOCAL
 from collections import defaultdict
 import random
@@ -212,13 +212,6 @@ def turn_other_cheek(start, stop, inputs):
     history = inputs.history.history
     if history and history[-1].capture:
         return history[-1].stop != stop
-    return True
-
-# Not finished
-def far_right_leader(start, stop, inputs):
-    board, history = inputs.board, inputs.history
-    pawn_sqs = board.loc(ColoredPiece(history.whose_turn(), Piece.PAWN))
-    pawn_coords = [p.to_coordinates() for p in pawn_sqs]
     return True
 
 def hedonic_treadmill(start, stop, inputs):
@@ -439,11 +432,9 @@ def pioneer(start, stop, inputs):
     board, history = inputs.board, inputs.history
     return not [s for s in stop.rank().squares() if board.get(s) and board.get(s).color == history.whose_turn()]
 
-# This is slightly wrong, needs to use try move instead of getting rid of the piece
 def friendly_fire(start, stop, inputs):
     board, history = inputs.board, inputs.history
-    new_board = board.copy()
-    new_board.set(start, None)
+    new_board = try_move(board, start, stop, history)
     return new_board.is_attacked(stop, history.whose_turn(), history)
 
 def x_marks_the_spot(start, stop, inputs):
@@ -501,7 +492,28 @@ def leaps_and_bounds(start, stop, inputs):
 
 # Not finished
 def hold_them_back(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    c = history.whose_turn()
+    if c == Color.WHITE:
+        our_side = [s for s in Square if s.rank().less_adv_than(Rank.Fifth, c)]
+    else:
+        our_side = [s for s in Square if s.rank().less_adv_than(Rank.Fourth, c)]
+    return not [s for s in our_side if board.get(s) and board.get(s).piece == Piece.PAWN and board.get(s).color != c]
+
+def xray_defense(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    c = history.whose_turn()
+    king_sq = board.loc_singleton(ColoredPiece(c, Piece.KING))
+    for s in Square:
+        new_board = empty_board()
+        new_board.set(s, board.get(s))
+        if new_board.is_attacked(king_sq, c.other(), history):
+            return False
     return True
+
+def final_countdown(start, stop, inputs):
+    return len(inputs.history.history) < 18
+
 
 # number is how bad the handicap is, 1-10
 # capture-based handicaps are maybe all broken with enpassant(s)
@@ -518,7 +530,7 @@ tested_handicaps = {
     "Hipster: You can't move a piece of the same type your opponent just moved": (hipster, 2),
     "Stoic: You can't move your king": (stoic, 2),
     "Conscientious Objectors: Your pawns can't capture": (conscientious_objectors, 3),
-    "Outflanked: You can't capture on the A or the H file": (outflanked, 1), 
+    "Outflanked: You can't capture on the rim": (outflanked, 1), 
     "No Shuffling: Your rooks can't move sideways": (no_shuffling, 2), 
     "Horse Tranquilizer: Your knights can't capture": (horse_tranquilizer, 1), 
     "Rushing River: You can't move non-pawns onto the fourth or fifth ranks": (rushing_river, 3),
@@ -550,7 +562,7 @@ tested_handicaps = {
     "Follow the shadow: When your opponent moves from square A to square B, you must move to square A if possible": (follow_the_shadow, 7), 
     "Out in Front: You can only move the most advanced piece in every file": (out_in_front, 6), 
     "Abstinence: If your opponent ever has two non-pawn pieces of the same type adjacent to each other, you lose": (abstinence, 6),
-    "Flanking attack: You can only capture from the A or H files": (flanking_attack, 6),
+    "Flanking attack: You can only capture from rim": (flanking_attack, 6),
     "Element of Surprise: Only capture each piece type once": (only_capture_each_piece_type_once, 5),
     "Your Own Size: Pieces can only take pieces of the same type (anything can take King)": (your_own_size, 7),
     "Ego Clash: You can never have two non-pawns on the same file": (ego_clash, 7),
@@ -568,6 +580,10 @@ tested_handicaps = {
     "Spread Out: You cannot move a pieces next to another one of your pieces": (spread_out, 8), 
     "Left to Right: Unless you just moved to the rightmost file, you must move further to the right than where you last moved": (left_to_right, 7), 
     "Leaps and Bounds: You cannot move a pieces adjacent to where it was": (leaps_and_bounds, 8), 
+    "Friendly Fire: You can only move onto squares defended by another one of your pieces": (friendly_fire, 7),
+    "Hold them Back: If your opponent moves a pawn onto your side of the board, you lose": (hold_them_back, 8),
+    "X-ray defense: If an opposing piece would be attacking your king on an otherwise empty board, you lose": (xray_defense, 7),
+    "Final Countdown: At the start of move 10, you lose the game": (final_countdown, 8),
 }
 
 # Stuff in here won't randomly get assigned but you can interact with it by changing get_handicaps 
@@ -578,8 +594,6 @@ untested_handicaps = {
     'No handicap': (no_handicap, 0),
     "No capturing!" : (no_captures, 5),
     "The Loneliest Number: You can only move a pawn once": (loneliest_number, 6),
-    "Hold them Back: If your opponent moves a pawn onto your side of the board, you lose": (hold_them_back, 8),
-    "Friendly Fire: You can only move onto squares defended by another one of your pieces": (friendly_fire, 7)
 }
 
 handicaps = dict(tested_handicaps, **untested_handicaps)
@@ -609,7 +623,7 @@ def get_handicaps(x, y):
         # This is Gabe's line. For Gabe's use only. Keep out. No girls allowed. 
         handicaps.update(untested_handicaps)
         # return random.sample(handicaps.keys(), 2)
-        return descriptions[leaps_and_bounds], descriptions[friendly_fire] 
+        return descriptions[xray_defense], descriptions[final_countdown] 
         return descriptions[only_capture_each_piece_type_once], descriptions[no_handicap] 
     # return descriptions[cant_move_to_half_of_squares_at_random], descriptions[lose_if_no_queen]
     # return descriptions[cant_move_to_opponents_side_of_board], descriptions[cant_move_to_opponents_side_of_board]
