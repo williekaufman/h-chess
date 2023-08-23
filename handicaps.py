@@ -206,7 +206,7 @@ def jumpy(start, stop, inputs):
 def eye_for_an_eye(start, stop, inputs):
     board, history = inputs.board, inputs.history.history
     if history and history[-1].capture:
-        return board.get(stop) 
+        return board.capture(start, stop, history)[0]
     else:
         return True
 
@@ -255,7 +255,7 @@ def human_shield(start, stop, inputs):
         above_rank += col_sign
 
     # If there's no pawn above, then this is legal iff it's a capture
-    return board.get(stop) or piece.piece == Piece.PAWN
+    return board.capture(start, stop, history)[0] or piece.piece == Piece.PAWN
 
 def simon_says(start, stop, inputs):
     if (last_move := inputs.history.last_move()):
