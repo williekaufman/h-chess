@@ -114,6 +114,7 @@ body.dark {
   display: grid;
   grid-template-columns: repeat(1, 1fr);
   grid-gap: 8px;
+  overflow: auto;
   left: 20px;
   bottom: 20px;
 }
@@ -451,4 +452,10 @@ body.dark {
 
 .game-id-box::placeholder {
   text-align: center;
+}
+
+@media (max-width: 1000px) {
+  .hotkeys {
+    width: 200px;
+  }
 }
