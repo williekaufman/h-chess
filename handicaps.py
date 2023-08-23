@@ -269,7 +269,7 @@ def drag(start, stop, inputs):
     board, history = inputs.board, inputs.history
     if not board.loc(ColoredPiece(history.whose_turn(), Piece.QUEEN)):
         return False
-    return (not (board.get(start).piece == Piece.QUEEN) or stop in get_adjacent_squares(board, start))
+    return (not (board.get(start).piece == Piece.QUEEN) or stop in get_adjacent_squares(start))
 
 def chasm(start, stop, inputs):
     return not stop.rank() in [Rank.Fourth, Rank.Fifth]
