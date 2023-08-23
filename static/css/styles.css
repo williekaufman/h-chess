@@ -69,6 +69,11 @@ body {
   font-size: 20px;
 }
 
+.time.dark {
+  background-color: darkblue;
+  color: #fff;
+}
+
 .time.bold {
   font-weight: bold;
   letter-spacing: -0.02em; /* So bolding doesn't grow the box */

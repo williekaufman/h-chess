@@ -57,17 +57,12 @@ def piece_or_none(s):
 def bool_to_char(b):
     return 't' if b else 'f'
 
-
-def char_to_bool(c):
-    return c.lower() == 't'
-
-
 class Move():
     def __init__(self, piece, start, stop, capture, check, castle, promotion):
         self.piece = piece
         self.start = Square(start)
         self.stop = Square(stop)
-        self.capture = capture.lower() == 't'
+        self.capture = capture
         self.check = check.lower() == 't'
         self.castle = castle
         self.promotion = promotion
@@ -82,10 +77,10 @@ class Move():
         return True
 
     def to_string(self):
-        return f'{self.piece}{self.start.value}{self.stop.value}{bool_to_char(self.capture)}{bool_to_char(self.check)}{self.castle}{self.promotion}'
+        return f'{self.piece}{self.start.value}{self.stop.value}{self.capture if self.capture else "f"}{bool_to_char(self.check)}{self.castle}{self.promotion}'
 
     def of_string(s):
-        return Move(ColoredPiece.of_string(s[0]), s[1:3], s[3:5], s[5], s[6], s[7], s[8])
+        return Move(ColoredPiece.of_string(s[0]), s[1:3], s[3:5], None if s[5] == 'f' else ColoredPiece.of_string(s[5]), s[6], s[7], s[8])
 
 # All this actual logic is untested. It'll be easier to test once we get a UI set up so I'm just gonna wait on that.
 
@@ -336,13 +331,13 @@ class Board():
     def capture_outer(self, start, stop, history):
         piece = self.get(start)
         if self.get(stop):
-            return self.get(stop).piece, 't'
+            return self.get(stop), 't'
         enPassantSquares = enPassant(history.history)
         kingEnPassantSquares = kingEnPassant(history.history)
         if piece.piece == Piece.PAWN and stop in enPassantSquares:
-            return Piece.PAWN, 'e'
+            return ColoredPiece(piece.color.other(), Piece.PAWN), 'e'
         if stop in kingEnPassantSquares:
-            return Piece.KING, 'k'
+            return ColoredPiece(piece.color.other(), Piece.KING), 'k'
         return None, 'f'
 
     def capture(self, start, stop, history):
@@ -355,7 +350,7 @@ class Board():
             return None, None, 'no piece'
         if piece.color != whose_turn:
             return None, None, 'wrong color'
-        capture = self.capture_outer(start, stop, history)[1]
+        captured_piece, capture_type = self.capture_outer(start, stop, history)
         # TODO: implement check
         check = 'f'
         castle = 'f'
@@ -366,7 +361,7 @@ class Board():
                 castle = 'k'
         promotion = promote_to.upper() or 'Q' if piece and piece.piece == Piece.PAWN and stop.to_coordinates()[
             0] in [0, 7] else 'x'
-        move = Move(piece, start, stop, capture, check, castle, promotion)
+        move = Move(piece, start, stop, captured_piece, check, castle, promotion)
         # if this validates, then the move will actually happen
         if not move.validate(self, history, whose_turn, handicap):
             return None, None, 'invalid move'
@@ -390,12 +385,12 @@ class Board():
             else:
                 extra.append(('A8', ''))
                 extra.append(('D8', 'bR'))
-        if capture == 'e':
+        if capture_type == 'e':
             self.set(stop.shift(-1 if piece.color ==
                      Color.WHITE else 1, 0), None)
             extra.append(
                 (stop.shift(-1 if piece.color == Color.WHITE else 1, 0).value, ''))
-        if capture == 'k':
+        if capture_type == 'k':
             self.set(history.history[-1].stop, None)
             extra.append((history.history[-1].stop.value, ''))
         self.set(start, None)
