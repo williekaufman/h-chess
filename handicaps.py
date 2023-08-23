@@ -324,13 +324,7 @@ def left_for_dead(start, stop, inputs):
     return True
 
 def taking_turns(start, stop, inputs):
-    h = inputs.history.history
-    player_moves = h[::2] if inputs.history.whose_turn() == Color.WHITE else h[1:][::2]
-    piece_counter = dict()
-    for piece in Piece:
-        piece_counter[piece] = 0
-    for move in player_moves:
-        piece_counter[move.piece.piece] += 1
+    piece_counter = inputs.history.pieces_moved(include_zero=True)
     piece_counter[inputs.board.get(start).piece] += 1
     return max(piece_counter.values()) - min(piece_counter.values()) <= 1
 
@@ -474,9 +468,7 @@ def impulsive(start, stop, inputs):
 
 def spread_out(start, stop, inputs):
     board, history = inputs.board, inputs.history
-    sqs = get_adjacent_squares(stop)
-    adj_pcs = [sq for sq in sqs if board.get(sq) and board.get(sq).color == history.whose_turn() and sq != start]
-    return len(adj_pcs) == 0 
+    return not [sq for sq in get_adjacent_squares(stop) if board.get(sq) and board.get(sq).color == history.whose_turn() and sq != start]
 
 def left_to_right(start, stop, inputs):
     board, history = inputs.board, inputs.history
@@ -515,6 +507,9 @@ def xray_defense(start, stop, inputs):
             if new_board.is_attacked(king_sq, c.other(), history):
                 return False
     return True
+
+def outcast(start, stop, inputs):
+    return stop.rank() not in [Rank.Fourth, Rank.Fifth] and stop.file() not in [File.D, File.E]
 
 def final_countdown(start, stop, inputs):
     return len(inputs.history.history) < 18
@@ -572,7 +567,7 @@ tested_handicaps = {
     "Your Own Size: Pieces can only take pieces of the same type (anything can take King)": (your_own_size, 7),
     "Ego Clash: You can never have two non-pawns on the same file": (ego_clash, 7),
     "In Mourning: You cannot move pieces of the same type as one that you have captured": (in_mourning, 8),
-    "Cowering in Fear: You cannot move a piece of less value than one your opponent has taken": (cowering_in_fear, 8), 
+    "Cowering in Fear: You cannot move a piece of less value than one your opponent has taken": (cowering_in_fear, 7), 
     "Yin and Yang: Capturing moves must occur on black squares. Non-capturing moves must occur on white squares": (yin_and_yang, 9),
     "Color swap: When you move a piece, the destination square and starting square must be different colors": (color_swap, 9),
     "Eat your vegetables: You must take all your opponent's pawns before taking any non-pawn piece": (eat_your_vegetables, 8),
@@ -589,6 +584,7 @@ tested_handicaps = {
     "Friendly Fire: You can only move onto squares defended by another one of your pieces": (friendly_fire, 7),
     "Hold them Back: If your opponent moves a pawn onto your side of the board, you lose": (hold_them_back, 8),
     "X-ray defense: If an opposing piece would be attacking your king on an otherwise empty board, you lose": (xray_defense, 7),
+    "Outcast: You can't move into the middle two ranks and files": (outcast, 7),
     "Final Countdown: At the start of move 10, you lose the game": (final_countdown, 8),
 }
 
@@ -629,7 +625,7 @@ def get_handicaps(x, y):
         # This is Gabe's line. For Gabe's use only. Keep out. No girls allowed. 
         handicaps.update(untested_handicaps)
         # return random.sample(handicaps.keys(), 2)
-        return descriptions[cowering_in_fear], descriptions[no_handicap] 
+        return descriptions[taking_turns], descriptions[no_handicap] 
         return descriptions[only_capture_each_piece_type_once], descriptions[no_handicap] 
     # return descriptions[cant_move_to_half_of_squares_at_random], descriptions[lose_if_no_queen]
     # return descriptions[cant_move_to_opponents_side_of_board], descriptions[cant_move_to_opponents_side_of_board]

@@ -264,13 +264,20 @@ class History():
             return self.history[-2] if len(self.history) > 1 else None
         return self.history[-1] if self.history else None
 
-    def pieces_moved(self, color=None):
+    def player_moves(self, color):
+        return [move for move in self.history if move.piece.color == color]
+    
+    def pieces_moved(self, color=None, include_zero=False):
         color = color or self.whose_turn()
-        return Counter([move.piece.piece for move in self.history if move.piece.color == color])
+        ret = { p : 0 for p in Piece } if include_zero else {}
+        ret.update(Counter([move.piece.piece for move in self.history if move.piece.color == color]))
+        return ret
 
-    def pieces_captured(self, color=None):
+    def pieces_captured(self, color=None, include_zero=False):
         color = color or self.whose_turn() 
-        return Counter([move.capture.piece for move in self.history if move.capture and move.piece.color == color])
+        ret = { p : 0 for p in Piece } if include_zero else {}
+        ret.update(Counter([move.capture.piece for move in self.history if move.capture and move.piece.color == color]))
+        return ret
 
     def add(self, move):
         self.history.append(move)

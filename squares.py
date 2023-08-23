@@ -28,7 +28,10 @@ class Rank(Enum):
 
     def squares(self):
         return [s for s in Square if s.rank() == self]
-    
+
+    def home(color):
+        return Rank.First if color == Color.WHITE else Rank.Eighth
+
     def more_adv_than(self, rank, color):
         if color.value == 'White':
             return self.to_index() > rank.to_index()
@@ -73,7 +76,7 @@ class File(Enum):
         return File.of_index(self.to_index() + shift)
 
     def more_left_than(self, file, color):
-        if color.value == 'White':
+        if color == Color.WHITE:
             return self.to_index() < file.to_index()
         else:
             return self.to_index() > file.to_index()
