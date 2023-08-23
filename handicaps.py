@@ -359,6 +359,12 @@ def only_move_pawn_once(start, stop, inputs):
         return Piece.PAWN not in history.pieces_moved()
     return True
 
+def only_capture_each_piece_type_once(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    if (captured_piece := board.capture(start, stop, history)):
+        return captured_piece.piece not in history.pieces_captured()
+    return True
+
 def no_captures(start, stop, inputs):
     board, history = inputs.board, inputs.history
     return not board.capture(start, stop, history)
@@ -406,6 +412,7 @@ tested_handicaps = {
     "Cage the King: If your opponent's king leaves its starting rank, you lose": (cage_the_king, 5),
     "Inside the Lines: You cannot move onto the edge of the board": (inside_the_lines, 4),
     "Taking Turns: All of your piece types have to have moved an amount of times that are within 1 of each other": (taking_turns, 5),
+    "Element of Surprise: Only capture each piece type once": (only_capture_each_piece_type_once, 5),
 }
 
 # Stuff in here won't randomly get assigned but you can interact with it by changing get_handicaps 
@@ -447,7 +454,7 @@ def get_handicaps(x, y):
         # This is Gabe's line. For Gabe's use only. Keep out. No girls allowed. 
         handicaps.update(untested_handicaps)
         # return random.sample(handicaps.keys(), 2)
-        return descriptions[only_move_pawn_once], descriptions[left_for_dead] 
+        return descriptions[only_capture_each_piece_type_once], descriptions[no_handicap] 
         return descriptions[left_for_dead], descriptions[left_for_dead] 
     # return descriptions[cant_move_to_half_of_squares_at_random], descriptions[lose_if_no_queen]
     # return descriptions[cant_move_to_opponents_side_of_board], descriptions[cant_move_to_opponents_side_of_board]
