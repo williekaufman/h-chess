@@ -13,9 +13,8 @@ def get_adjacent_squares(square):
     adj_sqs = []
     for i in range(3):
         for j in range(3):
-            if not (i == j == 1):
-                adj_sqs.append(square.shift(i - 1, j - 1))
-    return [sq for sq in adj_sqs if sq]
+            adj_sqs.append(square.shift(i - 1, j - 1))
+    return [sq for sq in adj_sqs if sq and sq != square]
 
 def get_orthogonally_adjacent_squares(square):
     return [sq for sq in get_adjacent_squares(square) if sq.distance(square) == 1]
