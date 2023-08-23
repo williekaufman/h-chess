@@ -17,11 +17,13 @@ body.dark {
 .dark button {
   background-color: black;
   color: white;
+  border-color: white;
 }
 
 .dark input {
   background-color: black;
   color: white;
+  border-color: white;
 }
 
 .dark .board-b72b1 {
