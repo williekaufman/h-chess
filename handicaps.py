@@ -17,6 +17,12 @@ def get_adjacent_squares(square):
                 adj_sqs.append(square.shift(i - 1, j - 1))
     return [sq for sq in adj_sqs if sq]
 
+def get_orthogonally_adjacent_squares(square):
+    return [sq for sq in get_adjacent_squares(square) if sq.distance(square) == 1]
+
+def get_diagonally_adjacent_squares(square):
+    return [sq for sq in get_adjacent_squares(square) if sq.distance(square) == 2]
+
 def no_handicap(start, stop, inputs):
     return True
 
