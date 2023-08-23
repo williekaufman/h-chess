@@ -32,6 +32,11 @@ input {
   border-color: black;
 }
 
+/* works well for light and dark mode */
+input::placeholder {
+ color: darkgray;
+}
+
 .dark input {
   background-color: black;
   color: white;
