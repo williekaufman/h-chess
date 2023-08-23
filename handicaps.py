@@ -352,7 +352,7 @@ handicaps = {
     "Boastful: You can never have fewer pieces than your opponent": (boastful, 7), 
     "Closed book: You lose if there is ever an open file": (closed_book, 7),
     "Hedonic Treadmill: You must move a piece at least as valuable as your opponent’s last moved piece": (hedonic_treadmill, 6), 
-    "Spice of Life: You can't move the same piece type twice in a row (Spice of Life)": (spice_of_life, 3), 
+    "Spice of Life: You can't move the same piece type twice in a row": (spice_of_life, 3), 
     "Simon Says: You must move onto the same color square as your opponent's last move": (simon_says, 5),
     "Hopscotch: You must alternate moving to white and black squares": (hopscotch, 5),
     "Going the Distance: You must move as least as far (manhattan distance) as your opponent's last move": (going_the_distance, 5), 
