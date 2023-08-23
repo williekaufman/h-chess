@@ -101,7 +101,7 @@ socket.on('update', (data) => {
 function toggleOtherPlayerCheck() {
     ignoreOtherPlayerCheck = !ignoreOtherPlayerCheck;
     if (ignoreOtherPlayerCheck) {
-        stateToastElement.textContent = `Moving your opponent's pieces enabled`;
+        stateToastElement.textContent = `Can move opponent's pieces`;
         stateToastElement.style.display = 'inline-block';
     } else {
         stateToastElement.style.display = 'none';
@@ -563,7 +563,7 @@ function copyToClipboard(text) {
 
 function copyGameId() {
     copyToClipboard(gameId);
-    showToast(`Copied ${gameId} to clipboard`);
+    showToast(`Copied game id to clipboard`);
 }
 
 copyGameIdButton.addEventListener('click', () => {

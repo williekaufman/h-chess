@@ -126,7 +126,7 @@ body.dark {
 .toast {
   display: none;
   padding: 10px;
-  width: 200px;
+  max-width: 200px;
   margin-top: 10px;
   background-color: lightblue;
   color: black;
@@ -143,7 +143,7 @@ body.dark {
 .state-toast {
   display: none;
   padding: 10px;
-  width: 200px;
+  max-width: 200px;
   margin-top: 10px;
   background-color: lightpink;
   color: black;
@@ -160,7 +160,7 @@ body.dark {
 .result-toast {
   display: none;
   font-size: 30px;
-  width: 200px;
+  max-width: 200px;
   font-weight: bold;
   padding: 10px;
   margin-top: 10px;
