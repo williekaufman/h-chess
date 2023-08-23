@@ -503,23 +503,26 @@ function handleKeyDown(event) {
     if (event.shiftKey) {
         shiftKeyIsDown = true;
     }
-    if (k == 'c') {
-        copyGameIdButton.click();
-    }
-    if (k == 'escape') {
+    else if (k == 'c') {
+        if (localStorage.getItem('hchess-testing-mode') && event.ctrlKey) {
+            showOpponentsHandicap();
+        } else {
+            copyGameIdButton.click();
+        }
+    } else if (k == 'escape') {
         closeModal();
-    } if (k == 'enter' && newGameModal.style.display == 'flex') {
+    } else if (k == 'enter' && newGameModal.style.display == 'flex') {
         event.preventDefault();
         createGameButton.click();
-    } if (k == 'd') {
+    } else if (k == 'd') {
         displayPromotionOptionsButton.click();
-        } if (k == 'f') {
+    } else if (k == 'f') {
         displayFriendsListButton.click();
-    } if (k == 'a') {
+    } else if (k == 'a') {
         ignoreOtherPlayerCheckButton.click();
-    } if (k == 'n') {
+    } else if (k == 'n') {
         newGameButton.click();
-    } if (k == 't') {
+    } else if (k == 't') {
         toggleThemeButton.click();
     }
 }
@@ -559,6 +562,14 @@ function copyToClipboard(text) {
     textarea.select();
     document.execCommand("copy");
     document.body.removeChild(textarea);
+}
+
+function showOpponentsHandicap() {
+    fetchWrapper(URL + 'handicap', { 'gameId': gameId, 'color': color == 'White' ? 'Black' : 'White' }, 'GET')
+        .then((response) => response.json())
+        .then((data) => {
+            showToast(data['handicap'], 10);
+        });
 }
 
 function copyGameId() {

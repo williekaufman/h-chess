@@ -436,7 +436,7 @@ def get_handicaps(x, y):
         # This is Gabe's line. For Gabe's use only. Keep out. No girls allowed. 
         handicaps.update(untested_handicaps)
         # return random.sample(handicaps.keys(), 2)
-        return descriptions[turn_other_cheek], descriptions[no_handicap] 
+        return descriptions[turn_other_cheek], descriptions[left_for_dead] 
         return descriptions[left_for_dead], descriptions[left_for_dead] 
     # return descriptions[cant_move_to_half_of_squares_at_random], descriptions[lose_if_no_queen]
     # return descriptions[cant_move_to_opponents_side_of_board], descriptions[cant_move_to_opponents_side_of_board]
