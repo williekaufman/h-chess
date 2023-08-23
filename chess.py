@@ -3,6 +3,7 @@ import random
 from enum import Enum
 from color import Color
 from squares import Square
+from collections import Counter
 import json
 import math
 
@@ -262,6 +263,14 @@ class History():
         if color and color == self.whose_turn():
             return self.history[-2] if len(self.history) > 1 else None
         return self.history[-1] if self.history else None
+
+    def pieces_moved(self, color=None):
+        color = color or self.whose_turn()
+        return Counter([move.piece.piece for move in self.history if move.piece.color == color])
+
+    def pieces_captured(self, color=None):
+        color = color or self.whose_turn() 
+        return Counter([move.capture.piece for move in self.history if move.capture and move.piece.color == color])
 
     def add(self, move):
         self.history.append(move)

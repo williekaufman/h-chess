@@ -26,7 +26,7 @@ class Rank(Enum):
     def flip(self):
         return Rank.of_index(7 - self.to_index())
 
-    def more_agg_than(self, rank, color):
+    def more_adv_than(self, rank, color):
         if color.value == 'White':
             return self.to_index() > rank.to_index()
         else:
@@ -35,14 +35,14 @@ class Rank(Enum):
     def equals(self, rank):
         return self.to_index() == rank.to_index()
 
-    def more_agg_than_or_equal(self, rank, color):
-        return self.more_agg_than(rank, color) or self.equals(rank)
+    def more_adv_than_or_equal(self, rank, color):
+        return self.more_adv_than(rank, color) or self.equals(rank)
 
-    def less_agg_than(self, rank, color):
-        return not self.more_agg_or_equal(rank, color)
+    def less_adv_than(self, rank, color):
+        return not self.more_adv_or_equal(rank, color)
     
-    def less_agg_than_or_equal(self, rank, color):
-        return not self.more_agg_than(rank, color)
+    def less_adv_than_or_equal(self, rank, color):
+        return not self.more_adv_than(rank, color)
 
 class File(Enum):
     A = 'A'

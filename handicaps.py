@@ -355,7 +355,21 @@ def follow_the_shadow(start, stop, inputs):
                 return stop == target_sq
     
     return True
-    
+
+# This works it's just not a super interesting handicap so leaving it in untested,
+# just wanted to the test the history.pieces_moved() logic
+def loneliest_number(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    if board.get(start).piece == Piece.PAWN:
+        return Piece.PAWN not in history.pieces_moved()
+    return True
+
+def only_capture_each_piece_type_once(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    if (captured_piece := board.capture(start, stop, history)):
+        return captured_piece.piece not in history.pieces_captured()
+    return True
+
 def no_captures(start, stop, inputs):
     board, history = inputs.board, inputs.history
     return not board.capture(start, stop, history)
@@ -374,14 +388,6 @@ def abstinence(start, stop, inputs):
             for adj_sq in get_adjacent_squares(sq):
                 if board.get(adj_sq) and board.get(adj_sq).color == opp and board.get(adj_sq).piece == p:
                     return False
-    return True
-
-def loneliest_number(start, stop, inputs):
-    h = inputs.history.history
-    player_moves = h[::2] if inputs.history.whose_turn() == Color.WHITE else h[1:][::2]
-    for move in player_moves:
-        if move.piece.piece == Piece.PAWN:
-            return inputs.board.get(start).piece != Piece.PAWN
     return True
 
 def flanking_attack(start, stop, inputs):
@@ -439,8 +445,8 @@ tested_handicaps = {
     "Follow the shadow: When your opponent moves from square A to square B, you must move to square A if possible": (follow_the_shadow, 7), 
     "Out in Front: You can only move the most advanced piece in every file": (out_in_front, 6), 
     "Abstinence: If your opponent ever has two non-pawn pieces of the same type adjacent to each other, you lose": (abstinence, 6),
-    "The Loneliest Number: You can only make 1 pawn move": (loneliest_number, 6), 
-    "Flanking attack: You can only capture from the A or H files": (flanking_attack, 6)
+    "Flanking attack: You can only capture from the A or H files": (flanking_attack, 6),
+    "Element of Surprise: Only capture each piece type once": (only_capture_each_piece_type_once, 5),
 }
 
 # Stuff in here won't randomly get assigned but you can interact with it by changing get_handicaps 
@@ -450,7 +456,8 @@ tested_handicaps = {
 untested_handicaps = { 
     'No handicap': (no_handicap, 0),
     "No capturing!" : (no_captures, 5),
-    "Your Own Size: Pieces can only take pieces of the same type (anything can take King)": (your_own_size, 7)
+    "Your Own Size: Pieces can only take pieces of the same type (anything can take King)": (your_own_size, 7),
+    "The Loneliest Number: You can only move a pawn once": (loneliest_number, 6),
 }
 
 handicaps = dict(tested_handicaps, **untested_handicaps)
@@ -467,7 +474,9 @@ descriptions = {v[0]: k for k, v in handicaps.items()}
 def test_all_handicaps():
     inputs = HandicapInputs(starting_board(), History())
     for v in handicaps.values():
-        v[0](Square.A1, Square.A2, inputs)
+        s1 = random.choice(Square.of_rank(Rank.Second) + [Square('B1'), Square('G1')])
+        s2 = Square(random.choice(inputs.board.legal_moves(s1, inputs.history, Color.WHITE)))
+        v[0](s1, s2, inputs)
 
 
 def get_handicaps(x, y):
@@ -479,6 +488,7 @@ def get_handicaps(x, y):
         handicaps.update(untested_handicaps)
         # return random.sample(handicaps.keys(), 2)
         return descriptions[flanking_attack], descriptions[flanking_attack] 
+        return descriptions[only_capture_each_piece_type_once], descriptions[no_handicap] 
         return descriptions[left_for_dead], descriptions[left_for_dead] 
     # return descriptions[cant_move_to_half_of_squares_at_random], descriptions[lose_if_no_queen]
     # return descriptions[cant_move_to_opponents_side_of_board], descriptions[cant_move_to_opponents_side_of_board]
