@@ -5,13 +5,23 @@
 }
 
 body {
-  background: radial-gradient(circle, #373737, #222222);;
+  background: radial-gradient(circle, #fadecb, #f8b88e);
+  color: #121212;
+}
+
+body.dark {
+  background: radial-gradient(circle, #373737, #222222);
   color: #e0e0e0;
 }
 
-.light-mode {
-  background: radial-gradient(circle, #fadecb, #f8b88e);
-  color: #121212;
+.dark button {
+  background-color: black;
+  color: white;
+}
+
+.dark input {
+  background-color: black;
+  color: white;
 }
 
 .one-char-button {
@@ -69,9 +79,9 @@ body {
   font-size: 20px;
 }
 
-.time.dark {
+.dark .time {
   background-color: darkblue;
-  color: #fff;
+  color: white;
 }
 
 .time.bold {
@@ -116,11 +126,16 @@ body {
   padding: 10px;
   width: 200px;
   margin-top: 10px;
-  background-color: blue;
-  color: #fff;
+  background-color: lightblue;
+  color: black;
   border-radius: 5px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
   z-index: 9999;
+}
+
+.dark .toast {
+  background-color: darkblue;
+  color: white;
 }
 
 .state-toast {
@@ -128,11 +143,16 @@ body {
   padding: 10px;
   width: 200px;
   margin-top: 10px;
-  background-color: magenta;
-  color: #fff;
+  background-color: lightpink;
+  color: black;
   border-radius: 5px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
   z-index: 9999;
+}
+
+.dark .state-toast {
+  background-color: darkred;
+  color: white;
 }
 
 .result-toast {
@@ -143,10 +163,15 @@ body {
   padding: 10px;
   margin-top: 10px;
   background-color: lightgreen;
-  color: #fff;
+  color: black;
   border-radius: 5px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
   z-index: 9999;
+}
+
+.dark .result-toast {
+  background-color: darkgreen;
+  color: white;
 }
 
 .how-to-play {
@@ -232,19 +257,36 @@ body {
   box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
 }
 
+.dark .active-games-wrapper {
+  background-color: darkslategray;
+}
+
 .game-button {
   width: 80%;
   white-space: nowrap;
   overflow: hidden;
 }
 
+.dark .game-button {
+  background-color: darkred;
+  color: white;
+}
+
 .game-button.active:hover {
   background-color: lightblue;
+}
+
+.dark .game-button.active:hover {
+  background-color: darkblue;
 }
 
 .game-button.dead {
   background-color: lightpink;
   outline: none;
+}
+
+.dark .game-button.dead {
+  background-color: darkred;
 }
 
 .friend {
@@ -261,8 +303,17 @@ body {
   color: red;
 }
 
+.dark .remove-friend-button {
+  color: lightpink;
+  background-color: darkred;
+}
+
 .remove-friend-button:hover {
   background-color: lightblue;
+}
+
+.dark .remove-friend-button:hover {
+  background-color: darkblue;
 }
 
 .piece-image {
@@ -354,6 +405,10 @@ body {
   border-radius: 10px;
   background-color: lightpink;
   box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+}
+
+.dark .grid-container {
+  background-color: darkred;
 }
 
 .label-container {

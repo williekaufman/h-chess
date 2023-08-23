@@ -5,11 +5,15 @@ toastElement = document.getElementById('toast');
 
 gameId = null;
 
+currentThemeIsDark = document.body.classList.contains('dark');
+
 usernameInputElement = document.getElementById('usernameInput');
 username = null;
 
 addFriendInputElement = document.getElementById('addFriendInput');
 addFriendButton = document.getElementById('addFriendButton');
+
+activeGamesWrapper = document.getElementById('activeGamesWrapper');
 
 shiftKeyIsDown = false;
 newGameModal = document.getElementById('newGameModal');
@@ -17,6 +21,7 @@ newGameModalOverlay = document.getElementById('newGameModalOverlay');
 
 newGameButton = document.getElementById('newGameButton');
 copyGameIdButton = document.getElementById('copyGameIdButton');
+toggleThemeButton = document.getElementById('toggleThemeButton');
 displayFriendsListButton = document.getElementById('displayFriendsListButton');
 displayPromotionOptionsButton = document.getElementById('displayPromotionOptionsButton');
 ignoreOtherPlayerCheckButton = document.getElementById('ignoreOtherPlayerCheckButton');
@@ -44,10 +49,10 @@ howToPlayBtnText = document.getElementById('how-to-play-btn-text');
 whoseTurn = null;
 whoseTurnElement = document.getElementById('whoseTurn');
 
-stateToast = document.getElementById('stateToast');
+stateToastElement = document.getElementById('stateToast');
 
 gameIsOver = false;
-gameResultElement = document.getElementById('gameResult');
+gameResultToastElement = document.getElementById('gameResult');
 
 colorSelection = 'random';
 whiteKingElement = document.getElementById('whiteKing');
@@ -96,10 +101,10 @@ socket.on('update', (data) => {
 function toggleOtherPlayerCheck() {
     ignoreOtherPlayerCheck = !ignoreOtherPlayerCheck;
     if (ignoreOtherPlayerCheck) {
-        stateToast.textContent = `Moving your opponent's pieces enabled`;
-        stateToast.style.display = 'inline-block';
+        stateToastElement.textContent = `Moving your opponent's pieces enabled`;
+        stateToastElement.style.display = 'inline-block';
     } else {
-        stateToast.style.display = 'none';
+        stateToastElement.style.display = 'none';
     }
 }
 
@@ -132,9 +137,9 @@ function highlightMostRecentMove() {
 function processGameOver(result) {
     setWhoseTurn('');
     gameIsOver = true;
-    gameResultElement.style.display = 'inline-block';
-    gameResultElement.textContent = `${result} wins!`;
-    gameResultElement.style.backgroundColor = result === color ? 'green' : 'red';
+    gameResultToastElement.style.display = 'inline-block';
+    gameResultToastElement.textContent = `${result} wins!`;
+    gameResultToastElement.style.backgroundColor = result === color ? 'green' : 'red';
 }
 
 function unhighlightSquares() {
@@ -425,7 +430,7 @@ function getHandicap() {
 }
 
 function newGame(toast = true) {
-    gameResultElement.style.display = 'none';
+    gameResultToastElement.style.display = 'none';
     fetchWrapper(URL + 'new_game', newGameBody(), 'POST')
         .then((response) => response.json())
         .then((data) => {
@@ -453,7 +458,7 @@ function loadGame(game = null) {
         return;
     }
     closeModal();
-    gameResultElement.style.display = 'none';
+    gameResultToastElement.style.display = 'none';
     fetchWrapper(URL + 'join_game', { 'gameId': game }, 'GET')
         .then((response) => response.json())
         .then((data) => {
@@ -490,7 +495,6 @@ function closeModal() {
 }
 
 function flipVisibility(element) {
-    console.log(element);
     element.style.visibility = element.style.visibility == 'hidden' ? 'visible' : 'hidden';
 }
 
@@ -509,12 +513,14 @@ function handleKeyDown(event) {
         createGameButton.click();
     } if (k == 'd') {
         displayPromotionOptionsButton.click();
-    } if (k == 'f') {
+        } if (k == 'f') {
         displayFriendsListButton.click();
     } if (k == 'a') {
         ignoreOtherPlayerCheckButton.click();
     } if (k == 'n') {
         newGameButton.click();
+    } if (k == 't') {
+        toggleThemeButton.click();
     }
 }
 
@@ -522,7 +528,7 @@ function handleKeyUp(event) {
     k = event.key.toLowerCase();
     if (event.key == 'Shift') {
         shiftKeyIsDown = false;
-    } 
+    }
 }
 
 document.addEventListener("click", function (event) {
@@ -533,6 +539,10 @@ document.addEventListener("click", function (event) {
 
 newGameButton.addEventListener('click', () => {
     shiftKeyIsDown ? newGame() : openModal();
+});
+
+toggleThemeButton.addEventListener('click', () => {
+    toggleTheme();
 });
 
 createGameButton.addEventListener('click', () => {
@@ -572,19 +582,6 @@ ignoreOtherPlayerCheckButton.addEventListener('click', () => {
     toggleOtherPlayerCheck();
 });
 
-const themeToggle = document.getElementById("themeToggle");
-
-themeToggle.addEventListener("click", () => {
-    const body = document.body;
-
-    if (body.classList.contains("light-mode")) {
-        body.classList.remove("light-mode");
-        themeToggle.innerText = "Switch to Light Mode";
-    } else {
-        body.classList.add("light-mode");
-        themeToggle.innerText = "Switch to Dark Mode";
-    }
-});
 
 function setSquare(square, piece) {
     board.position({
@@ -768,25 +765,32 @@ setInterval(function () {
     }
 }, 10000);
 
-activeGamesWrapper = document.createElement('div');
-activeGamesWrapper.id = 'active-games-wrapper';
+function toggleGameButtons() {
+    document.querySelectorAll('.game-button').forEach(element => {
+        element.classList.toggle('dark');
+    });
+    document.querySelectorAll('.remove-friend-button').forEach(element => {
+        element.classList.toggle('dark');
+    });
+}
 
-activeGamesWrapper.classList.add('active-games-wrapper');
+function toggleTheme() {
+    document.body.classList.toggle('dark');
+    currentThemeIsDark = document.body.classList.contains('dark');
+    localStorage.setItem('hchess-dark-mode', currentThemeIsDark);
+}
 
-activeGamesWrapper.style.visibility = 'hidden';
-
-document.body.appendChild(activeGamesWrapper);
 
 function displayActiveGames(activeGames) {
     activeGamesWrapper.innerHTML = '<h4> Friends </h4>';
     activeGames.forEach(game => {
         id = game['gameId'];
         f = id ? `loadGame('${id}')` : '';
-        content = `<button class="game-button ${id ? "active" : "dead"} " onclick="${f}">Challenge ${game['username']}</button>`
+        content = `<button class="game-button ${id ? "active" : "dead"} ${currentThemeIsDark ? 'dark' : ''}" onclick="${f}">Challenge ${game['username']}</button>`
         activeGamesWrapper.innerHTML += `
                 <div class="friend">
                     ${content}
-                    <button class="remove-friend-button" onClick="removeFriend('${game['username']}')">
+                    <button class="remove-friend-button ${currentThemeIsDark ? 'dark' : ''}" onClick="removeFriend('${game['username']}')">
                         X
                     </button>
                 </div>
@@ -806,6 +810,10 @@ setInterval(() => {
         highlightMostRecentMove();
     }
 }, 100);
+
+if (localStorage.getItem('hchess-dark-mode') == 'true') {
+    toggleTheme();
+}
 
 newGame(false);
 populateFriendsList();
