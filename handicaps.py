@@ -14,9 +14,14 @@ def get_adjacent_squares(square):
     adj_sqs = []
     for i in range(3):
         for j in range(3):
-            if not (i == j == 1):
-                adj_sqs.append(square.shift(i - 1, j - 1))
-    return [sq for sq in adj_sqs if sq]
+            adj_sqs.append(square.shift(i - 1, j - 1))
+    return [sq for sq in adj_sqs if sq and sq != square]
+
+def get_orthogonally_adjacent_squares(square):
+    return [sq for sq in get_adjacent_squares(square) if sq.distance(square) == 1]
+
+def get_diagonally_adjacent_squares(square):
+    return [sq for sq in get_adjacent_squares(square) if sq.distance(square) == 2]
 
 def no_handicap(start, stop, inputs):
     return True
@@ -270,7 +275,7 @@ def drag(start, stop, inputs):
     board, history = inputs.board, inputs.history
     if not board.loc(ColoredPiece(history.whose_turn(), Piece.QUEEN)):
         return False
-    return (not (board.get(start).piece == Piece.QUEEN) or stop in get_adjacent_squares(board, start))
+    return (not (board.get(start).piece == Piece.QUEEN) or stop in get_adjacent_squares(start))
 
 def chasm(start, stop, inputs):
     return not stop.rank() in [Rank.Fourth, Rank.Fifth]
@@ -378,7 +383,7 @@ handicaps = {
     "Modest: You can never have more pieces than your opponent": (modest, 7),
     "Boastful: You can never have fewer pieces than your opponent": (boastful, 7), 
     "Hedonic Treadmill: You must move a piece at least as valuable as your opponent’s last moved piece": (hedonic_treadmill, 6), 
-    "Spice of Life: You can't move the same piece type twice in a row (Spice of Life)": (spice_of_life, 3), 
+    "Spice of Life: You can't move the same piece type twice in a row": (spice_of_life, 3), 
     "Simon Says: You must move onto the same color square as your opponent's last move": (simon_says, 5),
     "Hopscotch: You must alternate moving to white and black squares": (hopscotch, 5),
     "Going the Distance: You must move as least as far (manhattan distance) as your opponent's last move": (going_the_distance, 5), 
