@@ -184,11 +184,10 @@ def pack_mentality(start, stop, inputs):
     return len(adj_pcs) > 0 
 
 def spice_of_life(start, stop, inputs):
-    board, history = inputs.board, inputs.history.history
-    if len(history) < 2:
-        return True
-    last_move = history[-2]
-    return not (board.get(start) and board.get(start).piece == last_move.piece.piece)
+    board, history = inputs.board, inputs.history
+    if (last_move := history.last_move(history.whose_turn())):
+        return not (board.get(start) and board.get(start).piece == last_move.piece.piece)
+    return True
 
 def jumpy(start, stop, inputs):
     board, history = inputs.board, inputs.history
@@ -219,19 +218,27 @@ def far_right_leader(start, stop, inputs):
     pawn_coords = [p.to_coordinates() for p in pawn_sqs]
     return True
 
-def going_the_distance(board, start, stop, history):
-    if len(history.history) > 0:
-        last_move = history.history[-1]
+def hedonic_treadmill(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    if (last_move := history.last_move()): 
+        return board.get(start).points() >= last_move.piece.points()
+    else:
+        return True
+
+def going_the_distance(start, stop, inputs):
+    if (last_move := inputs.history.last_move()):
         return start.distance(stop) >= last_move.start.distance(last_move.stop)
     else:
         return True
 
-def social_distancing(board, start, stop, history):
-    sqs = get_adjacent_squares(board, stop)
+def social_distancing(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    sqs = get_adjacent_squares(stop)
     adj_pcs = [sq for sq in sqs if board.get(sq) and board.get(sq).color != history.whose_turn()]
     return len(adj_pcs) == 0 
 
-def human_shield(board, start, stop, history):
+def human_shield(start, stop, inputs):
+    board, history = inputs.board, inputs.history
     piece = board.get(start)
     pr, f = stop.to_coordinates()
     col_sign = 1 if piece.color == Color.WHITE else -1 
@@ -245,35 +252,37 @@ def human_shield(board, start, stop, history):
     # If there's no pawn above, then this is legal iff it's a capture
     return board.get(stop) or piece.piece == Piece.PAWN
 
-def simon_says(board, start, stop, history):
-    if len(history.history) > 0:
-        last_move = history.history[-1]
+def simon_says(start, stop, inputs):
+    if (last_move := inputs.history.last_move()):
         return last_move.stop.color() == stop.color()
     else:
         return True
     
-def hopscotch(board, start, stop, history):
-    if len(history.history) > 1:
-        last_move = history.history[-2]
+def hopscotch(start, stop, inputs):
+    history = inputs.history
+    if (last_move := history.last_move()):
         return last_move.stop.color() != stop.color()
     else:
         return True
 
-def drag(board, start, stop, history):
+def drag(start, stop, inputs):
+    board, history = inputs.board, inputs.history
     if not board.loc(ColoredPiece(history.whose_turn(), Piece.QUEEN)):
         return False
     return (not (board.get(start).piece == Piece.QUEEN) or stop in get_adjacent_squares(board, start))
 
-def chasm(board, start, stop, history):
+def chasm(start, stop, inputs):
     return not stop.rank() in [Rank.Fourth, Rank.Fifth]
 
-def pawn_of_the_hill(board, start, stop, history):
+def pawn_of_the_hill(start, stop, inputs):
+    board, history = inputs.board, inputs.history
     new_board = try_move(board, start, stop, history)
     center_pieces = [new_board.get(Square('E4')), new_board.get(Square('E5')), new_board.get(Square('D4')), new_board.get(Square('D5'))]
     p = ColoredPiece(history.whose_turn(), Piece.PAWN)
     return [cp for cp in center_pieces if cp and p.equals(cp)]
 
-def modest(board, start, stop, history):
+def modest(start, stop, inputs):
+    board, history = inputs.board, inputs.history
     def helper(b):
         pieces = [b.get(s) for s in list(Square) if b.get(s)]
         ap_ps = [p for p in pieces if p.color == history.whose_turn()]
@@ -282,7 +291,8 @@ def modest(board, start, stop, history):
     new_board = try_move(board, start, stop, history)
     return helper(board) and helper(new_board)
 
-def boastful(board, start, stop, history):
+def boastful(start, stop, inputs):
+    board, history = inputs.board, inputs.history
     def helper(b):
         pieces = [b.get(s) for s in list(Square) if b.get(s)]
         ap_ps = [p for p in pieces if p.color == history.whose_turn()]
@@ -292,7 +302,8 @@ def boastful(board, start, stop, history):
     return helper(board) and helper(new_board)
 
 # Broken somehow
-def closed_book(board, start, stop, history):
+def closed_book(start, stop, inputs):
+    board, history = inputs.board, inputs.history
     def helper(b):
         for file in list(File):
             sqs = Square.of_file(file)
@@ -329,16 +340,11 @@ handicaps = {
     "Royal Berth: You can't move anything next to your king": (royal_berth, 3),
     "Protected Pawns: Your pawns can only move to defended squares": (protected_pawns, 2), 
     "Pack Mentality: Your pieces must move to squares adjacent to another one of your pieces": (pack_mentality, 4),
-    "Spice of Life: You can't move the same piece type twice in a row (Spice of Life)": (spice_of_life, 3), 
     "Jumpy: When possible, you must move a piece that is being attacked": (jumpy, 4), 
     "Eye for an Eye: If your opponent captures something, you must capture something in response (or lose)": (eye_for_an_eye, 5), 
     "Turn the Other Cheek: You cannot recapture": (turn_other_cheek, 4),
-    "Hedonic Treadmill: You must move a piece at least as valuable as your opponent’s last moved piece": (hedonic_treadmill, 6), 
-    "Going the Distance: You must move as least as far (manhattan distance) as your opponent's last move": (going_the_distance, 5), 
     "Social Distancing: You cannot move pieces adjacent to your opponent’s pieces": (social_distancing, 6),
     "Human Shield: You can only make non-pawn, non-capturing moves to squares that are behind one of your pawns": (human_shield, 6),
-    "Simon Says: You must move onto the same color square as your opponent's last move": (simon_says, 5),
-    "Hopscotch: You must alternate moving to white and black squares": (hopscotch, 5),
     "Drag: Your queen is actually a king. It can only move like a king, and if it is taken, you lose": (drag, 5),
     "Chasm: You cannot move into the middle two ranks": (chasm, 5),
     "Pawn of the Hill: You must end your turn with a pawn in one of the four center squares": (pawn_of_the_hill, 6), 
@@ -350,6 +356,11 @@ handicaps = {
 # Stuff in here won't randomly get assigned but you can interact with it by changing get_handicaps 
 # So you can push new handicaps without worrying about breaking the game
 untested_handicaps = {
+    "Hedonic Treadmill: You must move a piece at least as valuable as your opponent’s last moved piece": (hedonic_treadmill, 6), 
+    "Spice of Life: You can't move the same piece type twice in a row (Spice of Life)": (spice_of_life, 3), 
+    "Simon Says: You must move onto the same color square as your opponent's last move": (simon_says, 5),
+    "Hopscotch: You must alternate moving to white and black squares": (hopscotch, 5),
+    "Going the Distance: You must move as least as far (manhattan distance) as your opponent's last move": (going_the_distance, 5), 
 }
 
 descriptions = {v[0]: k for k, v in handicaps.items()}
@@ -375,6 +386,6 @@ def get_handicaps(x, y):
     else:
         # This is Gabe's line. For Gabe's use only. Keep out. No girls allowed. 
         handicaps.update(untested_handicaps)
-        return descriptions[closed_book], descriptions[closed_book] 
+        return descriptions[hedonic_treadmill], descriptions[closed_book] 
     # return descriptions[cant_move_to_half_of_squares_at_random], descriptions[lose_if_no_queen]
     # return descriptions[cant_move_to_opponents_side_of_board], descriptions[cant_move_to_opponents_side_of_board]

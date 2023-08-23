@@ -420,7 +420,7 @@ function getHandicap() {
     fetchWrapper(URL + 'handicap', { 'gameId': gameId, 'color': color }, 'GET')
         .then((response) => response.json())
         .then((data) => {
-            handicapInfo.textContent = `Your handicap is: ${data['handicap']}`;
+            handicapInfo.textContent = data['handicap'];
         });
 }
 

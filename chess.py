@@ -6,7 +6,6 @@ from squares import Square
 import json
 import math
 
-
 class Piece(Enum):
     PAWN = 'P'
     ROOK = 'R'
@@ -16,9 +15,14 @@ class Piece(Enum):
     KING = 'K'
 
     def points(self):
-        pt_dict = {'P': 1, 'N': 3, 'B': 3, 'R': 5, 'Q': 9, 'K': math.inf}
-        return pt_dict[self.value]
-
+        return {
+            Piece.PAWN: 1,
+            Piece.ROOK: 5,
+            Piece.KNIGHT: 3,
+            Piece.BISHOP: 3,
+            Piece.QUEEN: 9,
+            Piece.KING: math.inf
+        }[self]
 
 class ColoredPiece():
     def __init__(self, color, piece):
@@ -27,6 +31,9 @@ class ColoredPiece():
 
     def equals(self, other):
         return self.color == other.color and self.piece == other.piece
+
+    def points(self):
+        return self.piece.points()
 
     def to_string(self):
         return self.piece.value if self.color == Color.WHITE else self.piece.value.lower()
@@ -39,9 +46,6 @@ class ColoredPiece():
 
     def __str__(self):
         return self.to_string()
-    
-    def points(self):
-        return self.piece.points()
 
 
 def piece_or_none(s):
@@ -258,6 +262,11 @@ class History():
 
     def whose_turn(self):
         return Color.WHITE if len(self.history) % 2 == 0 else Color.BLACK
+
+    def last_move(self, color=None):
+        if color and color == self.whose_turn():
+            return self.history[-2] if len(self.history) > 1 else None
+        return self.history[-1] if self.history else None
 
     def add(self, move):
         self.history.append(move)
