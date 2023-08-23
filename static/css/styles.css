@@ -109,6 +109,7 @@ body {
 .toast {
   display: none;
   padding: 10px;
+  width: 200px;
   margin-top: 10px;
   background-color: blue;
   color: #fff;
@@ -120,6 +121,7 @@ body {
 .state-toast {
   display: none;
   padding: 10px;
+  width: 200px;
   margin-top: 10px;
   background-color: magenta;
   color: #fff;
@@ -131,6 +133,7 @@ body {
 .result-toast {
   display: none;
   font-size: 30px;
+  width: 200px;
   font-weight: bold;
   padding: 10px;
   margin-top: 10px;
@@ -190,18 +193,18 @@ body {
   z-index: 2;
 }
 
-.highlight {
-  background-color: lightblue;
+.recent-move {
   box-sizing: border-box;
-  border: 5px solid red;
+  border: 5px solid green;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-.recent-move {
+.highlight {
+  background-color: lightblue;
   box-sizing: border-box;
-  border: 5px solid green;
+  border: 5px solid red;
   display: flex;
   justify-content: center;
   align-items: center;
