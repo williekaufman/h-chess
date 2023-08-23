@@ -260,7 +260,7 @@ def simon_says(start, stop, inputs):
     
 def hopscotch(start, stop, inputs):
     history = inputs.history
-    if (last_move := history.last_move()):
+    if (last_move := history.last_move(history.whose_turn())):
         return last_move.stop.color() != stop.color()
     else:
         return True
@@ -350,17 +350,18 @@ handicaps = {
     "Pawn of the Hill: You must end your turn with a pawn in one of the four center squares": (pawn_of_the_hill, 6), 
     "Modest: You can never have more pieces than your opponent": (modest, 7),
     "Boastful: You can never have fewer pieces than your opponent": (boastful, 7), 
-    "Closed book: You lose if there is ever an open file": (closed_book, 7)
-}
-
-# Stuff in here won't randomly get assigned but you can interact with it by changing get_handicaps 
-# So you can push new handicaps without worrying about breaking the game
-untested_handicaps = {
+    "Closed book: You lose if there is ever an open file": (closed_book, 7),
     "Hedonic Treadmill: You must move a piece at least as valuable as your opponent’s last moved piece": (hedonic_treadmill, 6), 
     "Spice of Life: You can't move the same piece type twice in a row (Spice of Life)": (spice_of_life, 3), 
     "Simon Says: You must move onto the same color square as your opponent's last move": (simon_says, 5),
     "Hopscotch: You must alternate moving to white and black squares": (hopscotch, 5),
     "Going the Distance: You must move as least as far (manhattan distance) as your opponent's last move": (going_the_distance, 5), 
+}
+
+# Stuff in here won't randomly get assigned but you can interact with it by changing get_handicaps 
+# So you can push new handicaps without worrying about breaking the game
+untested_handicaps = {
+
 }
 
 descriptions = {v[0]: k for k, v in handicaps.items()}
@@ -386,6 +387,6 @@ def get_handicaps(x, y):
     else:
         # This is Gabe's line. For Gabe's use only. Keep out. No girls allowed. 
         handicaps.update(untested_handicaps)
-        return descriptions[hedonic_treadmill], descriptions[closed_book] 
+        return descriptions[going_the_distance], descriptions[closed_book] 
     # return descriptions[cant_move_to_half_of_squares_at_random], descriptions[lose_if_no_queen]
     # return descriptions[cant_move_to_opponents_side_of_board], descriptions[cant_move_to_opponents_side_of_board]
