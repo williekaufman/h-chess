@@ -9,7 +9,7 @@ from settings import LOCAL
 from secrets import compare_digest, token_hex
 from chess import Color, Board, History, starting_board
 from squares import Square
-from handicaps import handicaps, get_handicaps
+from handicaps import handicaps, get_handicaps, test_all_handicaps
 import time
 import random
 import json
@@ -304,5 +304,6 @@ def on_leave(data):
 
 
 if __name__ == '__main__':
+    test_all_handicaps()
     Thread(target=socketio.run, args=[app], kwargs={
            'host': '0.0.0.0', 'port': 5001 if LOCAL else 5003}).start()

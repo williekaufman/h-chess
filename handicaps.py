@@ -1,5 +1,5 @@
 from squares import Square, Rank, File
-from chess import Color, Piece, ColoredPiece
+from chess import Color, Piece, ColoredPiece, HandicapInputs, starting_board, History
 from settings import LOCAL
 import random
 
@@ -9,52 +9,53 @@ def try_move(board, start, stop, history):
     new_board.move(start, stop, history.whose_turn(), None, history)
     return new_board
 
-def get_adjacent_squares(board, square):
-    r = square.rank().to_index()
-    f = square.file().to_index()
+def get_adjacent_squares(square):
     adj_sqs = []
     for i in range(3):
         for j in range(3):
-            if 0 <= r + i - 1 <= 7 and 0 <= f + j - 1 <= 7 and not (i == 1 and j == 1):
+            if not (i == j == 1):
                 adj_sqs.append(square.shift(i - 1, j - 1))
-    return adj_sqs
+    return [sq for sq in adj_sqs if sq]
 
-def no_handicap(board, start, stop, history):
+def no_handicap(start, stop, inputs):
     return True
 
-def cant_move_pawns(board, start, stop, history):
+def cant_move_pawns(start, stop, inputs):
+    board = inputs.board
     return not (board.get(start) and board.get(start).piece == Piece.PAWN)
 
 
-def cant_move_pawn_and_then_rook(board, start, stop, history):
-    history = history.history
+def cant_move_pawn_and_then_rook(start, stop, inputs):
+    board, history = inputs.board, inputs.history.history
     if len(history) < 2:
         return True
     last_move = history[-2]
     return not (board.get(start) and board.get(start).piece == Piece.ROOK and last_move.piece.piece == Piece.PAWN)
 
 
-def die_after_moving_pawn(board, start, stop, history):
-    history = history.history
+def die_after_moving_pawn(start, stop, inputs):
+    history = inputs.history.history
     if len(history) < 2:
         return True
     last_move = history[-2]
     return not last_move.piece.piece.value == 'P'
 
 
-def lose_if_no_queen(board, start, stop, history):
+def lose_if_no_queen(start, stop, inputs):
+    board, history = inputs.board, inputs.history
     return board.loc(ColoredPiece(history.whose_turn(), Piece.QUEEN))
 
 # This doesn't work b/c check isn't implemented
-def skittish(board, start, stop, history):
+def skittish(start, stop, inputs):
     # Use board.cache
-    history = history.history
+    board, history = inputs.board, inputs.history.history 
     if history:
         print(history[-1].check)
     return not history or not history[-1].check or board.get(start).piece == Piece.KING
 
 
-def bongcloud(board, start, stop, history):
+def bongcloud(start, stop, inputs):
+    board, history = inputs.board, inputs.history
     king_pos = board.cache.kings[history.whose_turn()]
     if not king_pos:
         # You should probably have a king but idk not my problem if you don't
@@ -66,19 +67,22 @@ def bongcloud(board, start, stop, history):
     return True
 
 
-def cant_move_to_opponents_side_of_board(board, start, stop, history):
+def cant_move_to_opponents_side_of_board(start, stop, inputs):
+    history = inputs.history
     color = history.whose_turn()
     ranks = [Rank.First, Rank.Second, Rank.Third, Rank.Fourth]
     if color == Color.WHITE:
         ranks = [rank.flip() for rank in ranks]
     return not stop.rank() in ranks
 
-def cant_move_to_half_of_squares_at_random(board, start, stop, history):
+def cant_move_to_half_of_squares_at_random(start, stop, inputs):
+    board = inputs.board
     random.seed(board.cache.rand)
     squares = random.sample(list(Square), 32)
     return stop in squares
 
-def peons_first(board, start, stop, history):
+def peons_first(start, stop, inputs):
+    board = inputs.board
     piece = board.get(start)
     pr, f = start.to_coordinates()
     above_rank = pr + 1 if piece.color == Color.WHITE else pr - 1
@@ -88,22 +92,18 @@ def peons_first(board, start, stop, history):
             return False
     return True
 
-def true_gentleman(board, start, stop, history):
+def true_gentleman(start, stop, inputs):
+    board, history = inputs.board, inputs.history
     ss = board.get(stop)
     if ss and ss.piece:
         return not (ss.piece == Piece.QUEEN and ss.color != history.whose_turn())
     return True
 
-def forward_march(board, start, stop, history):
-    start_r, f = start.to_coordinates()
-    stop_r, sf = stop.to_coordinates()
-    if history.whose_turn() == Color.WHITE:
-        return stop_r >= start_r
-    else:
-        return stop_r <= start_r
+def forward_march(start, stop, inputs):
+    return stop.rank().more_agg_or_equal(start.rank(), inputs.history.whose_turn())
 
-def hipster(board, start, stop, history):
-    history = history.history
+def hipster(start, stop, inputs):
+    board, history = inputs.board, inputs.history.history
     if len(history) < 1:
         return True
     last_move = history[-1]
@@ -111,11 +111,13 @@ def hipster(board, start, stop, history):
     lp = last_move.piece.piece
     return p != lp
 
-def stoic(board, start, stop, history):
+def stoic(start, stop, inputs):
+    board = inputs.board
     p = board.get(start) and board.get(start).piece
     return p != Piece.KING
 
-def conscientious_objectors(board, start, stop, history):
+def conscientious_objectors(start, stop, inputs):
+    board, history = inputs.board, inputs.history
     p = board.get(start)
     stop_p = board.get(stop)
     if p and stop_p:
@@ -123,16 +125,19 @@ def conscientious_objectors(board, start, stop, history):
     else:
         return True
 
-def outflanked(board, start, stop, history):
+def outflanked(start, stop, inputs):
+    board, history = inputs.board, inputs.history
     stop_piece = board.get(stop)
     return not ((stop.file() == File.A or stop.file() == File.H) and \
                 stop_piece and stop_piece.color != history.whose_turn())
 
-def no_shuffling(board, start, stop, history):
+def no_shuffling(start, stop, inputs):
+    board = inputs.board
     piece = board.get(start)
     return not (piece and piece.piece == Piece.ROOK and start.rank() == stop.rank()) 
 
-def horse_tranquilizer(board, start, stop, history):
+def horse_tranquilizer(start, stop, inputs):
+    board, history = inputs.board, inputs.history
     start_p = board.get(start)
     stop_p = board.get(stop)
     if start_p and stop_p:
@@ -140,22 +145,24 @@ def horse_tranquilizer(board, start, stop, history):
     else:
         return True
 
-def rushing_river(board, start, stop, history):
+def rushing_river(start, stop, inputs):
+    board = inputs.board
     return not (board.get(start).piece != Piece.PAWN and stop.rank() in [Rank.Fourth, Rank.Fifth])
 
-def pawn_battle(board, start, stop, history):
+def pawn_battle(start, stop, inputs):
+    board, history = inputs.board, inputs.history
     player_pawns = board.loc(ColoredPiece(history.whose_turn(), Piece.PAWN))
     opp_pawns = board.loc(ColoredPiece(history.whose_turn().other(), Piece.PAWN))
     return len(player_pawns) >= len(opp_pawns)
 
-def horse_eats_first(board, start, stop, history):
+def horse_eats_first(start, stop, inputs):
+    board, history = inputs.board, inputs.history
     knights = board.loc(ColoredPiece(history.whose_turn(), Piece.KNIGHT))
     stop_piece = board.get(stop)
-    if stop_piece:
-        print(stop_piece.color)
     return not (len(knights) > 0 and stop_piece and stop_piece.color != history.whose_turn() and board.get(start).piece != Piece.KNIGHT)
 
-def royal_berth(board, start, stop, history):
+def royal_berth(start, stop, inputs):
+    board, history = inputs.board, inputs.history
     king_pos = board.cache.kings[history.whose_turn()]
     if not king_pos:
         return True
@@ -163,25 +170,28 @@ def royal_berth(board, start, stop, history):
         abs(king_pos.rank().to_index() - stop.rank().to_index()) > 1 or \
         abs(king_pos.file().to_index() - stop.file().to_index()) > 1
 
-def protected_pawns(board, start, stop, history):
+def protected_pawns(start, stop, inputs):
+    board, history = inputs.board, inputs.history
     if board.get(start).piece != Piece.PAWN:
         return True
     new_board = try_move(board, start, stop, history)
     return new_board.is_attacked(stop, history.whose_turn(), history)
 
-def pack_mentality(board, start, stop, history):
-    sqs = get_adjacent_squares(board, stop)
+def pack_mentality(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    sqs = get_adjacent_squares(stop)
     adj_pcs = [sq for sq in sqs if board.get(sq) and board.get(sq).color == history.whose_turn() and sq != start]
     return len(adj_pcs) > 0 
 
-def spice_of_life(board, start, stop, history):
-    history = history.history
+def spice_of_life(start, stop, inputs):
+    board, history = inputs.board, inputs.history.history
     if len(history) < 2:
         return True
     last_move = history[-2]
     return not (board.get(start) and board.get(start).piece == last_move.piece.piece)
 
-def jumpy(board, start, stop, history):
+def jumpy(start, stop, inputs):
+    board, history = inputs.board, inputs.history
     c = history.whose_turn()
     for square in Square:
         if  board.get(square) and board.get(square).color == c and \
@@ -189,28 +199,29 @@ def jumpy(board, start, stop, history):
             return board.is_attacked(start, c.other(), history)
     return True
 
-def eye_for_an_eye(board, start, stop, history):
-    if len(history.history) > 0 and history.history[-1].capture:
+def eye_for_an_eye(start, stop, inputs):
+    board, history = inputs.board, inputs.history.history
+    if history and history[-1].capture:
         return board.get(stop) 
     else:
         return True
 
-def turn_other_cheek(board, start, stop, history):
-    if len(history.history) > 0:
-        last_move = history.history[-1]
-        if last_move.capture:
-            return last_move.stop != stop
+def turn_other_cheek(start, stop, inputs):
+    history = inputs.history.history
+    if history and history[-1].capture:
+        return history[-1].stop != stop
     return True
 
 # Not finished
-def far_right_leader(board, start, stop, history):
+def far_right_leader(start, stop, inputs):
+    board, history = inputs.board, inputs.history
     pawn_sqs = board.loc(ColoredPiece(history.whose_turn(), Piece.PAWN))
     pawn_coords = [p.to_coordinates() for p in pawn_sqs]
     return True
 
 
 # Not finished
-def horsey_hops(board, start, stop, history):
+def horsey_hops(start, stop, inputs):
     return True
 
 # number is how bad the handicap is, 1-10
@@ -258,6 +269,16 @@ descriptions.update({v[0]: k for k, v in untested_handicaps.items()})
 # theoretical args for some kind of config, e.g. difficulties, elos, idk
 
 
+# This just checks that none of them throw errors when called
+# Doesn't check logic or anything
+# Hopefully just catches stupid things like calling piece.piece.piece.piece 
+# when you wanted piece.piece.piece or whatever
+def test_all_handicaps():
+    inputs = HandicapInputs(starting_board(), History())
+    for v in handicaps.values():
+        v[0](Square.A1, Square.A2, inputs)
+
+
 def get_handicaps(x, y):
     # So I can't forget to undo anything weird
     if not LOCAL:
@@ -265,6 +286,6 @@ def get_handicaps(x, y):
     else:
         # This is Gabe's line. For Gabe's use only. Keep out. No girls allowed. 
         handicaps.update(untested_handicaps)
-        return descriptions[eye_for_an_eye], descriptions[eye_for_an_eye] 
+        return descriptions[forward_march], descriptions[forward_march] 
     # return descriptions[cant_move_to_half_of_squares_at_random], descriptions[lose_if_no_queen]
     # return descriptions[cant_move_to_opponents_side_of_board], descriptions[cant_move_to_opponents_side_of_board]

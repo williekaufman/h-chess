@@ -1,6 +1,7 @@
 from redis_utils import rget, rset
 import random
 from enum import Enum
+from color import Color
 from squares import Square
 import json
 
@@ -12,17 +13,6 @@ class Piece(Enum):
     BISHOP = 'B'
     QUEEN = 'Q'
     KING = 'K'
-
-
-class Color(Enum):
-    WHITE = 'White'
-    BLACK = 'Black'
-
-    def other(self):
-        return Color.WHITE if self == Color.BLACK else Color.BLACK
-
-    def whose_turn(game_id):
-        return Color.WHITE if rget('turn', game_id=game_id) == 'White' else Color.BLACK
 
 
 class ColoredPiece():
@@ -273,6 +263,11 @@ class History():
     def to_list(self):
         return [move.to_string() for move in self.history]
 
+class HandicapInputs:
+    def __init__(self, board, history):
+        self.board = board
+        self.history = history
+
 class Board():
     def __init__(self, s, game_id, cache):
         self.cache = cache
@@ -410,10 +405,10 @@ class Board():
         elif piece.piece == Piece.QUEEN:
             moves += queen_moves(self, start, whose_turn)
         elif piece.piece == Piece.KING:
-            moves += king_moves(self, start, whose_turn, history.history)
-        
-        handicap = handicap or (lambda board, start, stop, history: True)
-        return [square.value for square in moves if square and handicap(self, start, square, history)]
+            moves += king_moves(self, start, whose_turn, history.history) 
+        handicap = handicap or (lambda start, stop, inputs: True)
+        handicap_inputs = HandicapInputs(self, history)
+        return [square.value for square in moves if square and handicap(start, square, handicap_inputs)]
 
     def winner(self, whose_turn, history, handicap=None):
         has_king, has_move = False, False
