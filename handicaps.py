@@ -564,6 +564,13 @@ def get_down_mr_president(start, stop, inputs):
         return board.get(start).piece != Piece.KING
     return True
 
+def bottled_lightning(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    king_pos = board.cache.kings[history.whose_turn()]
+    if not king_pos:
+        return True
+    return board.get(start).piece == Piece.KING or not board.legal_moves(king_pos, history, history.whose_turn())
+
 # Comment so I can search for the bottom of the handicaps
 
 # number is how bad the handicap is, 1-10
@@ -645,6 +652,7 @@ tested_handicaps = {
     "Stop stalling: Your pieces can't move laterally": (stop_stalling, 3),
     "Remorseful: You can't capture twice in a row": (remorseful, 4),
     "Get down Mr. President: You can't move your king when in check": (get_down_mr_president, 5),
+    "Bottled lightning: If you can move your king, you must": (bottled_lightning, 8),
 }
 
 # Stuff in here won't randomly get assigned but you can interact with it by changing get_handicaps 
@@ -685,5 +693,5 @@ def get_handicaps(x, y):
         # This is Gabe's line. For Gabe's use only. Keep out. No girls allowed. 
         handicaps.update(untested_handicaps)
         # return random.sample(handicaps.keys(), 2)
-        return descriptions[get_down_mr_president], descriptions[no_handicap] 
+        return descriptions[bottled_lightning], descriptions[no_handicap] 
         return descriptions[only_capture_each_piece_type_once], descriptions[no_handicap] 
