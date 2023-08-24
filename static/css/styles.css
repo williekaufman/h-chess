@@ -253,11 +253,11 @@ input::placeholder {
 }
 
 .dark .recent-move {
-  border: 5px solid purple;
+  border: 5px solid blue;
 }
 
 .highlight {
-  background-color: green;
+  background-color: lightblue;
   box-sizing: border-box;
   border: 5px solid red;
   display: flex;
