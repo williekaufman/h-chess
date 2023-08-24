@@ -168,7 +168,7 @@ class Square(Enum):
         except:
             return None
 
-    def of_rank_and_file(file, rank):
+    def of_file_and_rank(file, rank):
         try:
             return Square(file.name + rank.name)
         except:
@@ -186,7 +186,7 @@ class Square(Enum):
     
     def distance(self, other_square):
         return abs(self.rank().to_index() - other_square.rank().to_index()) + abs(self.file().to_index() - other_square.file().to_index())
-    
+
     def is_adjacent(self, other_square):
         return  abs(self.rank().to_index() - other_square.rank().to_index()) <= 1 \
             and abs(self.file().to_index() - other_square.file().to_index()) <= 1 \
@@ -194,3 +194,16 @@ class Square(Enum):
 
     def color(self):
         return Color.BLACK if self.rank().to_index() % 2 == self.file().to_index() % 2 else Color.WHITE
+    
+    def is_between(self, square1, square2):
+        same_rank, same_file = self.rank() == square1.rank() == square2.rank(), self.file() == square1.file() == square2.file()
+        if same_rank:
+            x, y = square1.file().to_index(), square2.file().to_index()
+            return min(x, y) < self.file().to_index() < max(x, y)
+        if same_file:
+            x, y = square1.rank().to_index(), square2.rank().to_index()
+            return min(x, y) < self.rank().to_index() < max(x, y)
+        return False
+
+    def between(self, other):
+        return [square for square in Square if square.is_between(self, other)]

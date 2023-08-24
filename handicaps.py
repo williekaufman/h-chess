@@ -541,6 +541,17 @@ def monkey_see(start, stop, inputs):
         return board.get(start).piece in history.pieces_captured_with(history.whose_turn().other())
     return True
 
+def rook_buddies(start, stop, inputs):
+    board = inputs.board
+    if board.get(start).piece != Piece.ROOK:
+        return True
+    for rook in board.loc(ColoredPiece(inputs.history.whose_turn(), Piece.ROOK)):
+        if rook != start:
+            if (squares_between := start.between(rook)):
+                if not [sq for sq in squares_between if board.get(sq)]:
+                    return True
+    return False            
+    
 
 # number is how bad the handicap is, 1-10
 # capture-based handicaps are maybe all broken with enpassant(s)
@@ -617,6 +628,7 @@ tested_handicaps = {
     "Knight errant: You can only move knights and pieces adjacent to knights": (knight_errant, 7),
     "Slippery: You can't move a piece less far than it could move": (slippery, 7),
     "Monkey see: You can't capture with pieces that your opponent hasn't captured with yet": (monkey_see, 7),
+    "Rook buddies: Your rooks can only move if they're connected with another rook": (rook_buddies, 4),
 }
 
 # Stuff in here won't randomly get assigned but you can interact with it by changing get_handicaps 
@@ -657,5 +669,5 @@ def get_handicaps(x, y):
         # This is Gabe's line. For Gabe's use only. Keep out. No girls allowed. 
         handicaps.update(untested_handicaps)
         # return random.sample(handicaps.keys(), 2)
-        return descriptions[monkey_see], descriptions[no_handicap] 
+        return descriptions[rook_buddies], descriptions[no_handicap] 
         return descriptions[only_capture_each_piece_type_once], descriptions[no_handicap] 
