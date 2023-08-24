@@ -63,10 +63,8 @@ def bongcloud(start, stop, inputs):
     board, history = inputs.board, inputs.history
     king_pos = board.cache.kings[history.whose_turn()]
     if not king_pos:
-        # You should probably have a king but idk not my problem if you don't
         return True
     if king_pos.rank() == (Rank.First if history.whose_turn() == Color.WHITE else Rank.Eighth):
-        # piece should never be None but idk
         piece = board.get(start) and board.get(start).piece
         return piece in [Piece.PAWN, Piece.KING]
     return True
@@ -522,6 +520,8 @@ def lead_by_example(start, stop, inputs):
     board = inputs.board
     c = inputs.history.whose_turn()
     king_pos = board.cache.kings[c]
+    if not king_pos:
+        return True
     if board.get(start).piece in [Piece.KING, Piece.PAWN]:
         return True
     return stop.rank().less_adv_than_or_equal(king_pos.rank(), c)
@@ -545,6 +545,26 @@ def rook_buddies(start, stop, inputs):
     if inputs.board.get(start).piece == Piece.ROOK:
         return inputs.board.cache.rooks_have_connected[inputs.history.whose_turn()]
     return True
+
+def stop_stalling(start, stop, inputs):
+    return not start.rank() == stop.rank()
+
+def remorseful(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    if board.capture(start, stop, history) and (last_move := history.last_move(history.whose_turn())):
+            return not last_move.capture
+    return True 
+
+def get_down_mr_president(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    king_pos = board.cache.kings[history.whose_turn()]
+    if not king_pos:
+        return True
+    if board.is_attacked(king_pos, history.whose_turn().other(), history):
+        return board.get(start).piece != Piece.KING
+    return True
+
+# Comment so I can search for the bottom of the handicaps
 
 # number is how bad the handicap is, 1-10
 # capture-based handicaps are maybe all broken with enpassant(s)
@@ -622,6 +642,9 @@ tested_handicaps = {
     "Slippery: You can't move a piece less far than it could move": (slippery, 7),
     "Monkey see: You can't capture with pieces that your opponent hasn't captured with yet": (monkey_see, 7),
     "Rook buddies: You can't move your rooks until you've connected them": (rook_buddies, 4),
+    "Stop stalling: Your pieces can't move laterally": (stop_stalling, 3),
+    "Remorseful: You can't capture twice in a row": (remorseful, 4),
+    "Get down Mr. President: You can't move your king when in check": (get_down_mr_president, 5),
 }
 
 # Stuff in here won't randomly get assigned but you can interact with it by changing get_handicaps 
@@ -662,5 +685,5 @@ def get_handicaps(x, y):
         # This is Gabe's line. For Gabe's use only. Keep out. No girls allowed. 
         handicaps.update(untested_handicaps)
         # return random.sample(handicaps.keys(), 2)
-        return descriptions[rook_buddies], descriptions[no_handicap] 
+        return descriptions[get_down_mr_president], descriptions[no_handicap] 
         return descriptions[only_capture_each_piece_type_once], descriptions[no_handicap] 
