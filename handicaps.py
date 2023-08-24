@@ -712,11 +712,10 @@ def flatterer(start, stop, inputs):
     target_square = Square.of_rank_and_file(
         last_move.stop.rank().flip(), last_move.stop.file())
     piece = last_move.piece.piece
-    for square in board.loc(ColoredPiece(history.whose_turn(), piece)):
-        if target_square.value in board.legal_moves(square, history, history.whose_turn()):
-            return stop == target_square and board.get(start).piece == piece
+    f = lambda board, square: board.get(square) and board.get(square).piece == piece
+    if board.can_move_to(target_square, history.whose_turn(), history, f):
+        return stop == target_square and board.get(start).piece == piece
     return True
-
 
 # Comment so I can search for the bottom of the handicaps
 
@@ -847,4 +846,4 @@ def get_handicaps(x, y):
         # This is Gabe's line. For Gabe's use only. Keep out. No girls allowed.
         handicaps.update(untested_handicaps)
         # return random.sample(handicaps.keys(), 2)
-        return descriptions[no_handicap], descriptions[no_handicap]
+        return descriptions[flatterer], descriptions[no_handicap]
