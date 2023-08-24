@@ -2,7 +2,7 @@ from redis_utils import rget, rset
 import random
 from enum import Enum
 from color import Color
-from squares import Square
+from squares import Square, Rank, File
 from collections import Counter
 import json
 import math
@@ -226,22 +226,21 @@ def king_moves(board, square, color, history):
 # Any values that we want to cache for calculating handicaps
 # Values should only change on a move
 
-# It's probably not actually worth caching the king positions
-# but just doing it as a test
-
 # If we want to remember something forever, it should be in Move, but if
 # we just might use it many times to check handicaps in a single move, it should be here
 class Cache():
-    def __init__(self, kings, rand, rooks_have_connected):
+    def __init__(self, kings, rand, rooks_have_connected, king_has_reached_last_rank):
         self.kings = kings
         self.rand = rand
         self.rooks_have_connected = rooks_have_connected
+        self.king_has_reached_last_rank = king_has_reached_last_rank
 
     def dict(self):
         return {
             'kings': {k.value: v and v.value for k, v in self.kings.items()},
             'rand': self.rand,
-            'rooks_have_connected': {k.value: v for k, v in self.rooks_have_connected.items()}
+            'rooks_have_connected': {k.value: v for k, v in self.rooks_have_connected.items()},
+            'king_has_reached_last_rank': {k.value: v for k, v in self.king_has_reached_last_rank.items()}
         }
     
     def of_string(s):
@@ -249,6 +248,7 @@ class Cache():
             cache = json.loads(s)
             cache['kings'] = {Color(k): v and Square(v) for k, v in cache['kings'].items()}
             cache['rooks_have_connected'] = {Color(k): v for k, v in cache['rooks_have_connected'].items()}
+            cache['king_has_reached_last_rank'] = {Color(k): v for k, v in cache['king_has_reached_last_rank'].items()}
             return Cache(**cache)
         except:
             return None
@@ -338,11 +338,14 @@ class Board():
         for c in Color:
             rooks_have_connected[c] = self.cache.rooks_have_connected[c] or rooks_are_connected(self, c)
         kings = {c : self.loc_singleton(ColoredPiece(c, Piece.KING)) for c in Color}
+        king_has_reached_last_rank = {c : False for c in Color}
+        for c in Color:
+            king_has_reached_last_rank[c] = king_has_reached_last_rank[c] or (kings[c] and kings[c].rank() == Rank.home(c.other()))
         # Random is a function of the game_id plus number of moves
         # so you get the same number if you call legal_moves again
         # This could theoretically collide but it never will
         random.seed(int(self.game_id, 16) + len(history.history))
-        self.cache = Cache(kings, random.random(), rooks_have_connected)
+        self.cache = Cache(kings, random.random(), rooks_have_connected, king_has_reached_last_rank)
 
     def get(self, square):
         rank, file = square.to_coordinates()
@@ -516,6 +519,7 @@ def starting_cache():
     return Cache(
         {Color.WHITE: Square('E1'), Color.BLACK: Square('E8')}, 
         random.random(),
+        {Color.WHITE: False, Color.BLACK: False},
         {Color.WHITE: False, Color.BLACK: False}
         )
 

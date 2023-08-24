@@ -571,6 +571,12 @@ def bottled_lightning(start, stop, inputs):
         return True
     return board.get(start).piece == Piece.KING or not board.legal_moves(king_pos, history, history.whose_turn())
 
+def pilgrimage(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    if (captured_piece := board.capture(start, stop, history)) and captured_piece.piece not in [Piece.KING, Piece.PAWN]:
+        return board.cache.king_has_reached_last_rank[history.whose_turn()]
+    return True
+
 # Comment so I can search for the bottom of the handicaps
 
 # number is how bad the handicap is, 1-10
@@ -653,6 +659,7 @@ tested_handicaps = {
     "Remorseful: You can't capture twice in a row": (remorseful, 4),
     "Get down Mr. President: You can't move your king when in check": (get_down_mr_president, 5),
     "Bottled lightning: If you can move your king, you must": (bottled_lightning, 8),
+    "Pilgrimage: Until your king reached their home row, you can only capture kings and pawns": (pilgrimage, 8),
 }
 
 # Stuff in here won't randomly get assigned but you can interact with it by changing get_handicaps 
@@ -693,5 +700,5 @@ def get_handicaps(x, y):
         # This is Gabe's line. For Gabe's use only. Keep out. No girls allowed. 
         handicaps.update(untested_handicaps)
         # return random.sample(handicaps.keys(), 2)
-        return descriptions[bottled_lightning], descriptions[no_handicap] 
+        return descriptions[pilgrimage], descriptions[no_handicap] 
         return descriptions[only_capture_each_piece_type_once], descriptions[no_handicap] 
