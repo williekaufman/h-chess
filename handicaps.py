@@ -95,7 +95,6 @@ def cant_move_to_half_of_squares_at_random(start, stop, inputs):
 
 
 def cant_move_to_one_color_at_random(start, stop, inputs):
-    print(inputs.board.cache.rand)
     color = Color.WHITE if inputs.board.cache.rand > 0.5 else Color.BLACK
     return stop.color() == color
 
@@ -689,6 +688,19 @@ def leveling_up(start, stop, inputs):
             }[captured_piece.piece] in pieces_captured
     return True
 
+def flatterer(start, stop, inputs):
+    board, history = inputs.board, inputs.history 
+    last_move = history.last_move()
+    if not last_move:
+        return True
+    target_square = Square.of_rank_and_file(last_move.stop.rank().flip(), last_move.stop.file())
+    piece = last_move.piece.piece 
+    for square in board.loc(ColoredPiece(history.whose_turn(), piece)):
+        if target_square.value in board.legal_moves(square, history, history.whose_turn()):
+            return stop == target_square and board.get(start).piece == piece
+    return True
+    
+
 # Comment so I can search for the bottom of the handicaps
 
 
@@ -774,6 +786,7 @@ tested_handicaps = {
     "Bottled lightning: If you can move your king, you must": (bottled_lightning, 8),
     "Pilgrimage: Until your king reached their home row, you can only capture kings and pawns": (pilgrimage, 8),
     "Leveling up: You can't capture a piece until you've captured its predecessor in the list pawn, knight, bishop, rook, queen, king": (leveling_up, 8),
+    "Flatterer: If you can mirror your opponent's move, you must (same piece, same stop square reflected over the midline)": (flatterer, 4),
 }
 
 # Stuff in here won't randomly get assigned but you can interact with it by changing get_handicaps
@@ -816,4 +829,4 @@ def get_handicaps(x, y):
         # This is Gabe's line. For Gabe's use only. Keep out. No girls allowed.
         handicaps.update(untested_handicaps)
         # return random.sample(handicaps.keys(), 2)
-        return descriptions[pioneer], descriptions[no_handicap]
+        return descriptions[flatterer], descriptions[no_handicap]

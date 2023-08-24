@@ -168,9 +168,9 @@ class Square(Enum):
         except:
             return None
 
-    def of_file_and_rank(file, rank):
+    def of_rank_and_file(rank, file):
         try:
-            return Square(file.name + rank.name)
+            return Square(file.value + rank.value)
         except:
             return None
 

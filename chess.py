@@ -357,10 +357,12 @@ class Board():
 
     # tells you whether the given square is attacked by the player of the given color
     # creates a phantom piece of the opposite color in the square to make self.legal_moves work right
-    def is_attacked(self, given_square, given_color, history):
+    def is_attacked(self, given_square, given_color, history, filter=lambda board, square: True):
         new_board = self.copy()
         new_board.set(given_square, ColoredPiece(given_color.other(), Piece.QUEEN))
         for square in Square:
+            if not filter(new_board, square):
+                continue
             piece = self.get(square)
             if piece and piece.color == given_color and given_square.value in new_board.legal_moves(square, history, given_color):
                 return True
