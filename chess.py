@@ -280,6 +280,12 @@ class History():
         ret.update(Counter([move.capture.piece for move in self.history if move.capture and move.piece.color == color]))
         return ret
 
+    def pieces_captured_with(self, color=None, include_zero=False):
+        color = color or self.whose_turn()
+        ret = { p : 0 for p in Piece } if include_zero else {}
+        ret.update(Counter([move.piece.piece for move in self.history if move.capture and move.piece.color == color]))
+        return ret
+
     def add(self, move):
         self.history.append(move)
 

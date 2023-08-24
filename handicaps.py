@@ -4,7 +4,6 @@ from settings import LOCAL
 from collections import defaultdict
 import random
 
-
 def try_move(board, start, stop, history):
     new_board = board.copy()
     new_board.move(start, stop, history.whose_turn(), None, history)
@@ -86,6 +85,11 @@ def cant_move_to_half_of_squares_at_random(start, stop, inputs):
     random.seed(board.cache.rand)
     squares = random.sample(list(Square), 32)
     return stop in squares
+
+def cant_move_to_one_color_at_random(start, stop, inputs):
+    print(inputs.board.cache.rand)
+    color = Color.WHITE if inputs.board.cache.rand > 0.5 else Color.BLACK
+    return stop.color() == color
 
 def peons_first(start, stop, inputs):
     board = inputs.board
@@ -531,6 +535,12 @@ def slippery(start, stop, inputs):
     max_distance = max([sq.distance(start) for sq in Square if sq.value in board.legal_moves(start, inputs.history, inputs.history.whose_turn())])
     return start.distance(stop) == max_distance
 
+def monkey_see(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    if board.capture(start, stop, history):
+        return board.get(start).piece in history.pieces_captured_with(history.whose_turn().other())
+    return True
+
 
 # number is how bad the handicap is, 1-10
 # capture-based handicaps are maybe all broken with enpassant(s)
@@ -540,6 +550,7 @@ tested_handicaps = {
     "Bongcloud: When your king is on the back rank, you can only move pawns and kings": (bongcloud, 2),
     "Home Base: Can't move to opponent's side of board": (cant_move_to_opponents_side_of_board, 5),
     "Unlucky: Can't move to half of squares, re-randomized every move": (cant_move_to_half_of_squares_at_random, 5),
+    "Colorblind: Can't move to squares of one color, re-randomized every move": (cant_move_to_one_color_at_random, 5),
     "Peons First: Can't move pieces that are directly behind one of your pawns": (peons_first, 2),
     "True Gentleman: You cannot capture your opponent's queen": (true_gentleman, 2),
     "Forward March: Your pieces cannot move backwards": (forward_march, 4),
@@ -605,6 +616,7 @@ tested_handicaps = {
     "Lead by example: You can't move a non-pawn, non-king piece to a rank ahead of your king": (lead_by_example, 8),
     "Knight errant: You can only move knights and pieces adjacent to knights": (knight_errant, 7),
     "Slippery: You can't move a piece less far than it could move": (slippery, 7),
+    "Monkey see: You can't capture with pieces that your opponent hasn't captured with yet": (monkey_see, 7),
 }
 
 # Stuff in here won't randomly get assigned but you can interact with it by changing get_handicaps 
@@ -645,7 +657,5 @@ def get_handicaps(x, y):
         # This is Gabe's line. For Gabe's use only. Keep out. No girls allowed. 
         handicaps.update(untested_handicaps)
         # return random.sample(handicaps.keys(), 2)
-        return descriptions[no_handicap], descriptions[no_handicap] 
+        return descriptions[monkey_see], descriptions[no_handicap] 
         return descriptions[only_capture_each_piece_type_once], descriptions[no_handicap] 
-    # return descriptions[cant_move_to_half_of_squares_at_random], descriptions[lose_if_no_queen]
-    # return descriptions[cant_move_to_opponents_side_of_board], descriptions[cant_move_to_opponents_side_of_board]
