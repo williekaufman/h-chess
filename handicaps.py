@@ -58,7 +58,6 @@ def lose_if_no_queen(start, stop, inputs):
 
 # This doesn't work b/c check isn't implemented
 
-
 def skittish(start, stop, inputs):
     # Use board.cache
     board, history = inputs.board, inputs.history.history
@@ -97,6 +96,20 @@ def cant_move_to_half_of_squares_at_random(start, stop, inputs):
 def cant_move_to_one_color_at_random(start, stop, inputs):
     color = Color.WHITE if inputs.board.cache.rand > 0.5 else Color.BLACK
     return stop.color() == color
+
+def must_move_specific_piece_type_at_random(start, stop, inputs):
+    board = inputs.board
+    random.seed(board.cache.rand)
+    has_legal_moves = { p: False for p in Piece }
+    for square in Square:
+        if board.get(square) and board.get(square).color == inputs.history.whose_turn():
+            if board.legal_moves(square, inputs.history, inputs.history.whose_turn()):
+                has_legal_moves[board.get(square).piece] = True
+    pieces = [p for p in has_legal_moves.keys() if has_legal_moves[p]]
+    if not pieces:
+        return False
+    piece = random.choice(pieces)
+    return board.get(start).piece == piece
 
 
 def peons_first(start, stop, inputs):
@@ -713,6 +726,7 @@ tested_handicaps = {
     "Home Base: Can't move to opponent's side of board": (cant_move_to_opponents_side_of_board, 5),
     "Unlucky: Can't move to half of squares, re-randomized every move": (cant_move_to_half_of_squares_at_random, 5),
     "Colorblind: Can't move to squares of one color, re-randomized every move": (cant_move_to_one_color_at_random, 5),
+    "Flavor of the month: Must move a specific piece type, re-randomized every move": (must_move_specific_piece_type_at_random, 8),
     "Peons First: Can't move pieces that are directly behind one of your pawns": (peons_first, 2),
     "True Gentleman: You cannot capture your opponent's queen": (true_gentleman, 2),
     "Forward March: Your pieces cannot move backwards": (forward_march, 4),
@@ -742,54 +756,54 @@ tested_handicaps = {
     "Spice of Life: You can't move the same piece type twice in a row": (spice_of_life, 3),
     "Simon Says: You must move onto the same color square as your opponent's last move": (simon_says, 5),
     "Hopscotch: You must alternate moving to white and black squares": (hopscotch, 5),
-    "Going the Distance: You must move as least as far (manhattan distance) as your opponent's last move": (going_the_distance, 5),
-    "Closed book: You lose if there is ever an open file": (closed_book, 7),
-    "Cage the King: If your opponent's king leaves its starting rank, you lose": (cage_the_king, 5),
-    "Inside the Lines: You cannot move onto the edge of the board": (inside_the_lines, 4),
-    "Taking Turns: All of your piece types have to have moved an amount of times that are within 1 of each other": (taking_turns, 5),
-    "Left for Dead: You can only capture to the left": (left_for_dead, 6),
-    "Follow the shadow: When your opponent moves from square A to square B, you must move to square A if possible": (follow_the_shadow, 7),
-    "Out in Front: You can only move the most advanced piece in every file": (out_in_front, 6),
-    "Abstinence: If your opponent ever has two non-pawn pieces of the same type adjacent to each other, you lose": (abstinence, 6),
-    "Flanking attack: You can only capture from rim": (flanking_attack, 6),
-    "Element of Surprise: Only capture each piece type once": (only_capture_each_piece_type_once, 5),
-    "Your Own Size: Pieces can only take pieces of the same type (anything can take King)": (your_own_size, 7),
-    "Ego Clash: You can never have two non-pawns on the same file": (ego_clash, 7),
-    "In Mourning: You cannot move pieces of the same type as one that you have captured": (in_mourning, 8),
-    "Cowering in Fear: You cannot move a piece of less value than one your opponent has taken": (cowering_in_fear, 7),
-    "Yin and Yang: Capturing moves must occur on black squares. Non-capturing moves must occur on white squares": (yin_and_yang, 9),
-    "Color swap: When you move a piece, the destination square and starting square must be different colors": (color_swap, 9),
-    "Eat your vegetables: You must take all your opponent's pawns before taking any non-pawn piece": (eat_your_vegetables, 8),
-    "Chain of command: Unless you just moved your king, you cannot move a less valuable piece than last move": (chain_of_command, 7),
-    "Pioneer: You cannot move onto a rank that you already occupy": (pioneer, 9),
-    "X Marks the Spot: Any non-pawn, non-capture moves must be to one of the long diagonals": (x_marks_the_spot, 8),
-    "Flight over Flight: When your opponent captures, you must move backwards": (flight_over_fight, 9),
-    "Helicopter parent: You lose if your opponents capture 3 of your pieces": (helicopter_parent, 8),
-    "Deer in the headlights: Your pieces under attack can't move": (deer_in_the_headlights, 8),
-    "Impulsive: If you can capture something, you must": (impulsive, 7),
-    "Spread Out: You cannot move a pieces next to another one of your pieces": (spread_out, 8),
-    "Left to Right: Unless you just moved to the rightmost file, you must move further to the right than where you last moved": (left_to_right, 7),
-    "Leaps and Bounds: You cannot move a pieces adjacent to where it was": (leaps_and_bounds, 8),
-    "Friendly Fire: You can only move onto squares defended by another one of your pieces": (friendly_fire, 7),
-    "Hold them Back: If your opponent moves a pawn onto your side of the board, you lose": (hold_them_back, 8),
-    "X-ray defense: If an opposing piece would be attacking your king on an otherwise empty board, you lose": (xray_defense, 7),
-    "Outcast: You can't move into the middle two ranks and files": (outcast, 7),
-    "Final Countdown: At the start of move 10, you lose the game": (final_countdown, 8),
-    "Lead by example: You can't move a non-pawn, non-king piece to a rank ahead of your king": (lead_by_example, 8),
-    "Knight errant: You can only move knights and pieces adjacent to knights": (knight_errant, 7),
-    "Slippery: You can't move a piece less far than it could move": (slippery, 7),
-    "Monkey see: You can't capture with pieces that your opponent hasn't captured with yet": (monkey_see, 7),
-    "Rook buddies: You can't move your rooks until you've connected them": (rook_buddies, 4),
-    "Stop stalling: Your pieces can't move laterally": (stop_stalling, 3),
-    "Remorseful: You can't capture twice in a row": (remorseful, 4),
-    "Get down Mr. President: You can't move your king when in check": (get_down_mr_president, 5),
-    "Bottled lightning: If you can move your king, you must": (bottled_lightning, 8),
-    "Pilgrimage: Until your king reached their home row, you can only capture kings and pawns": (pilgrimage, 8),
-    "Leveling up: You can't capture a piece until you've captured its predecessor in the list pawn, knight, bishop, rook, queen, king": (leveling_up, 8),
-    "Flatterer: If you can mirror your opponent's move, you must (same piece, same stop square reflected over the midline)": (flatterer, 4),
-}
+        "Going the Distance: You must move as least as far (manhattan distance) as your opponent's last move": (going_the_distance, 5),
+        "Closed book: You lose if there is ever an open file": (closed_book, 7),
+        "Cage the King: If your opponent's king leaves its starting rank, you lose": (cage_the_king, 5),
+        "Inside the Lines: You cannot move onto the edge of the board": (inside_the_lines, 4),
+        "Taking Turns: All of your piece types have to have moved an amount of times that are within 1 of each other": (taking_turns, 5),
+        "Left for Dead: You can only capture to the left": (left_for_dead, 6),
+        "Follow the shadow: When your opponent moves from square A to square B, you must move to square A if possible": (follow_the_shadow, 7),
+        "Out in Front: You can only move the most advanced piece in every file": (out_in_front, 6),
+        "Abstinence: If your opponent ever has two non-pawn pieces of the same type adjacent to each other, you lose": (abstinence, 6),
+        "Flanking attack: You can only capture from rim": (flanking_attack, 6),
+        "Element of Surprise: Only capture each piece type once": (only_capture_each_piece_type_once, 5),
+        "Your Own Size: Pieces can only take pieces of the same type (anything can take King)": (your_own_size, 7),
+        "Ego Clash: You can never have two non-pawns on the same file": (ego_clash, 7),
+        "In Mourning: You cannot move pieces of the same type as one that you have captured": (in_mourning, 8),
+        "Cowering in Fear: You cannot move a piece of less value than one your opponent has taken": (cowering_in_fear, 7),
+        "Yin and Yang: Capturing moves must occur on black squares. Non-capturing moves must occur on white squares": (yin_and_yang, 9),
+        "Color swap: When you move a piece, the destination square and starting square must be different colors": (color_swap, 9),
+        "Eat your vegetables: You must take all your opponent's pawns before taking any non-pawn piece": (eat_your_vegetables, 8),
+        "Chain of command: Unless you just moved your king, you cannot move a less valuable piece than last move": (chain_of_command, 7),
+        "Pioneer: You cannot move onto a rank that you already occupy": (pioneer, 9),
+        "X Marks the Spot: Any non-pawn, non-capture moves must be to one of the long diagonals": (x_marks_the_spot, 8),
+        "Flight over Flight: When your opponent captures, you must move backwards": (flight_over_fight, 9),
+        "Helicopter parent: You lose if your opponents capture 3 of your pieces": (helicopter_parent, 8),
+        "Deer in the headlights: Your pieces under attack can't move": (deer_in_the_headlights, 8),
+        "Impulsive: If you can capture something, you must": (impulsive, 7),
+        "Spread Out: You cannot move a pieces next to another one of your pieces": (spread_out, 8),
+        "Left to Right: Unless you just moved to the rightmost file, you must move further to the right than where you last moved": (left_to_right, 7),
+        "Leaps and Bounds: You cannot move a pieces adjacent to where it was": (leaps_and_bounds, 8),
+        "Friendly Fire: You can only move onto squares defended by another one of your pieces": (friendly_fire, 7),
+        "Hold them Back: If your opponent moves a pawn onto your side of the board, you lose": (hold_them_back, 8),
+        "X-ray defense: If an opposing piece would be attacking your king on an otherwise empty board, you lose": (xray_defense, 7),
+        "Outcast: You can't move into the middle two ranks and files": (outcast, 7),
+        "Final Countdown: At the start of move 10, you lose the game": (final_countdown, 8),
+        "Lead by example: You can't move a non-pawn, non-king piece to a rank ahead of your king": (lead_by_example, 8),
+        "Knight errant: You can only move knights and pieces adjacent to knights": (knight_errant, 7),
+        "Slippery: You can't move a piece less far than it could move": (slippery, 7),
+        "Monkey see: You can't capture with pieces that your opponent hasn't captured with yet": (monkey_see, 7),
+        "Rook buddies: You can't move your rooks until you've connected them": (rook_buddies, 4),
+        "Stop stalling: Your pieces can't move laterally": (stop_stalling, 3),
+        "Remorseful: You can't capture twice in a row": (remorseful, 4),
+        "Get down Mr. President: You can't move your king when in check": (get_down_mr_president, 5),
+        "Bottled lightning: If you can move your king, you must": (bottled_lightning, 8),
+        "Pilgrimage: Until your king reached their home row, you can only capture kings and pawns": (pilgrimage, 8),
+        "Leveling up: You can't capture a piece until you've captured its predecessor in the list pawn, knight, bishop, rook, queen, king": (leveling_up, 8),
+        "Flatterer: If you can mirror your opponent's move, you must (same piece, same stop square reflected over the midline)": (flatterer, 4),
+    }
 
-# Stuff in here won't randomly get assigned but you can interact with it by changing get_handicaps
+    # Stuff in here won't randomly get assigned but you can interact with it by changing get_handicaps
 # So you can push new handicaps without worrying about breaking the game
 
 # Also for things that are only for testing, e.g. no handicap
@@ -829,4 +843,4 @@ def get_handicaps(x, y):
         # This is Gabe's line. For Gabe's use only. Keep out. No girls allowed.
         handicaps.update(untested_handicaps)
         # return random.sample(handicaps.keys(), 2)
-        return descriptions[flatterer], descriptions[no_handicap]
+        return descriptions[must_move_specific_piece_type_at_random], descriptions[no_handicap]
