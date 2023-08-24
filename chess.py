@@ -232,20 +232,23 @@ def king_moves(board, square, color, history):
 # If we want to remember something forever, it should be in Move, but if
 # we just might use it many times to check handicaps in a single move, it should be here
 class Cache():
-    def __init__(self, kings, rand):
+    def __init__(self, kings, rand, rooks_have_connected):
         self.kings = kings
         self.rand = rand
+        self.rooks_have_connected = rooks_have_connected
 
     def dict(self):
         return {
             'kings': {k.value: v and v.value for k, v in self.kings.items()},
-            'rand': self.rand
+            'rand': self.rand,
+            'rooks_have_connected': {k.value: v for k, v in self.rooks_have_connected.items()}
         }
     
     def of_string(s):
         try:
             cache = json.loads(s)
             cache['kings'] = {Color(k): v and Square(v) for k, v in cache['kings'].items()}
+            cache['rooks_have_connected'] = {Color(k): v for k, v in cache['rooks_have_connected'].items()}
             return Cache(**cache)
         except:
             return None
@@ -331,12 +334,15 @@ class Board():
         return loc[0]
 
     def make_cache(self, history):
+        rooks_have_connected = { c : False for c in Color }
+        for c in Color:
+            rooks_have_connected[c] = self.cache.rooks_have_connected[c] or rooks_are_connected(self, c)
         kings = {c : self.loc_singleton(ColoredPiece(c, Piece.KING)) for c in Color}
         # Random is a function of the game_id plus number of moves
         # so you get the same number if you call legal_moves again
         # This could theoretically collide but it never will
         random.seed(int(self.game_id, 16) + len(history.history))
-        self.cache = Cache(kings, random.random())
+        self.cache = Cache(kings, random.random(), rooks_have_connected)
 
     def get(self, square):
         rank, file = square.to_coordinates()
@@ -507,7 +513,11 @@ class Board():
 empty_rank = ' ' * 8
 
 def starting_cache():
-    return Cache({Color.WHITE: Square('E1'), Color.BLACK: Square('E8')}, random.random())
+    return Cache(
+        {Color.WHITE: Square('E1'), Color.BLACK: Square('E8')}, 
+        random.random(),
+        {Color.WHITE: False, Color.BLACK: False}
+        )
 
 def starting_board():
     return Board(
@@ -524,3 +534,14 @@ def empty_board():
         empty_rank * 8,
         '0', starting_cache()
     )
+
+
+def rooks_are_connected(board, color):
+    rooks = board.loc(ColoredPiece(color, Piece.ROOK))
+    for rook1 in rooks:
+        for rook2 in rooks:
+            if rook1 == rook2:
+                continue
+            if not [sq for sq in rook1.between(rook2) if board.get(sq)]:
+                return True
+    return False
