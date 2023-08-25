@@ -500,6 +500,8 @@ function newGame(toast = true) {
     closeModal();
     setWhoseTurn('White');
     gameIsOver = false;
+    whiteboard_messages = [];
+    updateWhiteboard();
     initBoard();
 }
 
