@@ -14,13 +14,16 @@ import time
 import random
 import json
 from sockets import app, socketio
+from helpers import toast, whiteboard, opt_key
+import signal
+import sys
+
 
 CORS(app)
 
 
 def new_game_id():
     return token_hex(16)
-
 
 def update_time(whose_turn, game_id):
     now = time.time()
@@ -127,6 +130,8 @@ def new_game():
     rset('turn', f'{Color.WHITE.value}', game_id=game_id)
     for color, handicap in zip(Color, handicaps):
         rset(f'{color.value}_handicap', handicap, game_id=game_id)
+    for color in Color:
+        rset(opt_key(color), 'True', game_id=game_id)
     rset('other_player', playerColor.other().value, game_id=game_id)
     return {'success': True, 'gameId': game_id, 'color': playerColor.value}
 
@@ -225,6 +230,7 @@ def move():
     if move:
         winner_on_time = update_time(whose_turn, game_id)
         history.add(move)
+        rset(opt_key(whose_turn), 'True', game_id=game_id)
         whose_turn = whose_turn.other()
         handicap = handicaps[rget(
             f'{whose_turn.value}_handicap', game_id=game_id)][0]
@@ -294,15 +300,30 @@ def example():
 
 @socketio.on('join')
 def on_join(data):
-    join_room(data['room'])
+    game_id = data['room']
+    join_room(game_id)
+    board = Board.of_game_id(game_id)
+    if not board:
+        # Joining a username room, not a game room
+        return 
+    history = History.of_game_id(game_id)
+    whose_turn = Color.whose_turn(game_id)
+    print(f'{whose_turn.value}_handicap', game_id)
+    handicap = handicaps[rget(
+        f'{whose_turn.value}_handicap', game_id=game_id)][0]
+    # so we try once-per-turn events when the frontend 
+    # joins the room in the call to /new_game
+
+    # Might not always work if there isn't a knight at home but 
+    # whatever, just pick up a piece or something. Shouldn't have a lot
+    # of cases of people joining games that are already in progress
+    square = Square('B1') if whose_turn == Color.WHITE else Square('B8')
+    board.legal_moves(square, history, whose_turn, handicap)
 
 
 @socketio.on('leave')
 def on_leave(data):
     leave_room(data['room'])
 
-
 if __name__ == '__main__':
-    test_all_handicaps()
-    Thread(target=socketio.run, args=[app], kwargs={
-           'host': '0.0.0.0', 'port': 5001 if LOCAL else 5003}).start()
+    socketio.run(app, host='0.0.0.0', port=5001 if LOCAL else 5003)

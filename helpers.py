@@ -1,4 +1,5 @@
 from sockets import socketio
+from redis_utils import rget, rset
 
 def try_move(board, start, stop, history):
     new_board = board.copy()
@@ -21,8 +22,32 @@ def get_orthogonally_adjacent_squares(square):
 def get_diagonally_adjacent_squares(square):
     return [sq for sq in get_adjacent_squares(square) if sq.distance(square) == 2]
 
-def broadcast(message, game_id):
-    socketio.emit('message', message, room=game_id)
+def toast(message, color=None, game_id=None):
+    payload = {'message': message, 'color': 'both'}
+    if color:
+        payload['color'] = color.value
+    if not game_id:
+        socketio.emit('message', payload)
+    else:
+        socketio.emit('message', payload, room=game_id)
+
+def whiteboard(message, color=None, game_id=None):
+    payload = {'message': message, 'color': 'both'}
+    if color:
+        payload['color'] = color.value
+    if not game_id:
+        socketio.emit('whiteboard', payload)
+    else:
+        socketio.emit('whiteboard', payload, room=game_id)
+
+def opt_key(color):
+    return f'{color.value}_opt'
+
+def try_opt(color, game_id, f):
+    if rget(opt_key(color), game_id=game_id):
+        f()
+        rset(opt_key(color), '', game_id=game_id)
+
 
 two_letter_words = [
     'aa', 'ab', 'ad', 'ae', 'ag', 'ah', 'ai', 'al', 'am', 'an', 'ar', 'as', 

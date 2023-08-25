@@ -7,6 +7,9 @@ gameId = null;
 
 currentThemeIsDark = document.body.classList.contains('dark');
 
+whiteboard = document.getElementById('whiteboard');
+whiteboard_messages = []
+
 usernameInputElement = document.getElementById('usernameInput');
 username = null;
 
@@ -83,19 +86,65 @@ timesElement = document.getElementById('times');
 
 const socket = io.connect('http://' + document.domain + ':' + location.port);
 
-socket.on('connect', () => {
-    console.log('Connected to server');
-});
-
-socket.on('message', (message) => {
-    console.log(message);
-    showToast(message, 10);
+socket.on('message', (data) => {
+    if (data['color'] === 'both' || data['color'] === color) {
+        showToast(data['message'], 5);
+    }
 });
 
 socket.on('update', (data) => {
     firstMove = false;
     data['color'] === color && updateState();
 });
+
+socket.on('whiteboard', (data) => {
+    if (data['color'] == 'both' || data['color'] == color) {
+        addToWhiteboard(data['message']);
+    }
+})
+
+whiteboard.addEventListener('click', (e) => {
+    if (e.target.classList.contains('whiteboard-message')) {
+        whiteboard_messages.splice(e.target.dataset.index, 1);
+        updateWhiteboard();
+    }
+});
+
+for (var i = 0; i < 10; i++) {
+    e = document.createElement('div');
+    e.classList.add('whiteboard-message');
+
+    if (i == 0) {
+        e.classList.add('most-recent-message');
+    }
+
+    e.dataset.index = i;
+
+    whiteboard.appendChild(e);
+}
+
+updateWhiteboard();
+
+function updateWhiteboard() {
+    for (var i = 0; i < whiteboard_messages.length; i++) {
+        whiteboard.children[i].innerHTML = `${whiteboard_messages[i]}`;
+        whiteboard.children[i].style.display = 'block';
+    } 
+    for (var i = whiteboard_messages.length; i < 10; i++) {
+        whiteboard.children[i].innerHTML = '';
+        whiteboard.children[i].style.display = 'none';
+    }
+}
+
+function addToWhiteboard(message) {
+    if (whiteboard_messages.length >= 10) {
+        whiteboard_messages.pop();
+    }
+
+    whiteboard_messages.unshift(message);
+
+    updateWhiteboard();
+}
 
 function admin() {
     return localStorage.getItem('hchess-testing-mode');

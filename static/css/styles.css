@@ -475,3 +475,42 @@ input::placeholder {
     width: 200px;
   }
 }
+
+.whiteboard {
+  margin-top: 30px;
+  margin-bottom: 30px;
+  width: 175px;
+  overflow: auto;
+  text-align: center;
+}
+
+.whiteboard-message {
+  margin: 10px;
+  padding: 10px;
+  background: white;
+  color: black;
+  border-radius: 5px;
+}
+
+.dark .whiteboard-message {
+  background-color: black;
+  color: white;
+}
+
+.whiteboard-message:hover {
+  cursor: pointer;
+  background-color: lightblue;
+}
+
+.dark .whiteboard-message:hover {
+  background-color: darkblue;
+}
+
+.whiteboard-message.most-recent-message {
+  background-color: lightgreen;
+}
+
+.dark .whiteboard-message.most-recent-message {
+  background-color: darkgreen;
+}
+

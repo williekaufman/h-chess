@@ -3,6 +3,7 @@ from redis_utils import rget, rset
 from enum import Enum
 from color import Color
 from squares import Square, Rank, File
+from helpers import toast, whiteboard
 from collections import Counter
 import json
 import math
@@ -550,14 +551,14 @@ def starting_cache():
         {Color.WHITE: False, Color.BLACK: False}
         )
 
-def starting_board():
+def starting_board(game_id=None):
     return Board(
         'RNBQKBNR' +
         'PPPPPPPP' +
         empty_rank * 4 +
         'pppppppp' +
         'rnbqkbnr',
-        '0', starting_cache()
+        game_id or '0', starting_cache()
     )
 
 def empty_board():

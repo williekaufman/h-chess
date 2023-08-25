@@ -1,13 +1,20 @@
+from redis_utils import rset, rget
 from squares import Square, Rank, File
 from chess import Color, Piece, ColoredPiece, HandicapInputs, starting_board, empty_board, History
 from settings import LOCAL
-from helpers import broadcast, try_move, get_adjacent_squares, get_orthogonally_adjacent_squares, get_diagonally_adjacent_squares, two_letter_words  
+from helpers import toast, whiteboard, try_move, get_adjacent_squares, get_orthogonally_adjacent_squares, get_diagonally_adjacent_squares, two_letter_words, try_opt 
 from collections import defaultdict
 import random
 
 def no_handicap(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    c = history.whose_turn()
+    try_opt(
+        c,
+        board.game_id,
+        lambda : whiteboard('Hello', c, board.game_id),
+        )
     return True
-
 
 def cant_move_pawns(start, stop, inputs):
     board = inputs.board
@@ -78,7 +85,7 @@ def cant_move_to_one_color_at_random(start, stop, inputs):
 
 
 def must_move_specific_piece_type_at_random(start, stop, inputs):
-    board = inputs.board
+    board, history = inputs.board, inputs.history
     random.seed(board.cache.rand)
     has_legal_moves = {p: False for p in Piece}
     for square in Square:
@@ -89,6 +96,11 @@ def must_move_specific_piece_type_at_random(start, stop, inputs):
     if not pieces:
         return False
     piece = random.choice(pieces)
+    try_opt(
+        history.whose_turn(),
+        board.game_id,
+        lambda : whiteboard(f'You must move a {piece.name.lower()}', history.whose_turn(), board.game_id),
+        )
     return board.get(start).piece == piece
 
 
@@ -832,4 +844,4 @@ def get_handicaps(x, y):
         # This is Gabe's line. For Gabe's use only. Keep out. No girls allowed.
         handicaps.update(untested_handicaps)
         # return random.sample(handicaps.keys(), 2)
-        return descriptions[no_handicap], descriptions[no_handicap]
+        return descriptions[must_move_specific_piece_type_at_random], descriptions[no_handicap]
