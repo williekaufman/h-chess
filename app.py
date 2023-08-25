@@ -9,7 +9,7 @@ from settings import LOCAL
 from secrets import compare_digest, token_hex
 from chess import Color, Board, History, starting_board
 from squares import Square
-from handicaps import handicaps, get_handicaps, test_all_handicaps
+from handicaps import handicaps, get_handicaps, tested_handicaps, test_all_handicaps
 import time
 import random
 import json
@@ -186,7 +186,7 @@ def get_handicap():
 
 @app.route("/all_handicaps", methods=['GET'])
 def get_all_handicaps():
-    return {'success': True, 'handicaps': [k for k in handicaps.keys()]}
+    return {'success': True, 'handicaps': [k for k in tested_handicaps.keys()]}
 
 
 @app.route("/board", methods=['GET'])
@@ -308,7 +308,6 @@ def on_join(data):
         return 
     history = History.of_game_id(game_id)
     whose_turn = Color.whose_turn(game_id)
-    print(f'{whose_turn.value}_handicap', game_id)
     handicap = handicaps[rget(
         f'{whose_turn.value}_handicap', game_id=game_id)][0]
     # so we try once-per-turn events when the frontend 
