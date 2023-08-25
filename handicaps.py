@@ -717,6 +717,13 @@ def flatterer(start, stop, inputs):
         return stop == target_square and board.get(start).piece == piece
     return True
 
+def covering_fire(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    if board.capture(start, stop, history):
+        f = lambda board, square: square != start
+        return board.is_attacked(stop, history.whose_turn(), history, f)
+    return True
+
 # Comment so I can search for the bottom of the handicaps
 
 
@@ -804,6 +811,7 @@ tested_handicaps = {
     "Pilgrimage: Until your king reached their home row, you can only capture kings and pawns": (pilgrimage, 8),
     "Leveling up: You can't capture a piece until you've captured its predecessor in the list pawn, knight, bishop, rook, queen, king": (leveling_up, 8),
     "Flatterer: If you can mirror your opponent's move, you must (same piece, same stop square reflected over the midline)": (flatterer, 4),
+    "Covering fire: You can only capture a piece if you could capture it two different ways": (covering_fire, 6),
 }
 
 # Stuff in here won't randomly get assigned but you can interact with it by changing get_handicaps
@@ -846,4 +854,4 @@ def get_handicaps(x, y):
         # This is Gabe's line. For Gabe's use only. Keep out. No girls allowed.
         handicaps.update(untested_handicaps)
         # return random.sample(handicaps.keys(), 2)
-        return descriptions[flatterer], descriptions[no_handicap]
+        return descriptions[covering_fire], descriptions[no_handicap]
