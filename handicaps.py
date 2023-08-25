@@ -80,7 +80,13 @@ def cant_move_to_half_of_squares_at_random(start, stop, inputs):
 
 
 def cant_move_to_one_color_at_random(start, stop, inputs):
-    color = Color.WHITE if inputs.board.cache.rand > 0.5 else Color.BLACK
+    board, history = inputs.board, inputs.history
+    color = Color.WHITE if board.cache.rand > 0.5 else Color.BLACK
+    try_opt(
+        history.whose_turn(),
+        board.game_id,
+        lambda : whiteboard(f'You must move to {color.value.lower()}', history.whose_turn(), inputs.board.game_id),
+    )
     return stop.color() == color
 
 
@@ -844,4 +850,4 @@ def get_handicaps(x, y):
         # This is Gabe's line. For Gabe's use only. Keep out. No girls allowed.
         handicaps.update(untested_handicaps)
         # return random.sample(handicaps.keys(), 2)
-        return descriptions[must_move_specific_piece_type_at_random], descriptions[no_handicap]
+        return descriptions[cant_move_to_one_color_at_random], descriptions[no_handicap]
