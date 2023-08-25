@@ -70,6 +70,9 @@ class Move():
         self.capture_type = CaptureType(capture_type)
 
     def validate(self, board, history, whose_turn, handicap):
+        assert type(board) == Board
+        assert type(history) == History
+        assert type(whose_turn) == Color
         if self.piece is None:
             return False
         if board.get(self.stop) and board.get(self.start).color == board.get(self.stop).color:
@@ -358,6 +361,9 @@ class Board():
     # tells you whether the given square is attacked by the player of the given color
     # creates a phantom piece of the opposite color in the square to make self.legal_moves work right
     def is_attacked(self, target_square, color, history, filter=lambda board, square: True):
+        assert type(target_square) == Square
+        assert type(color) == Color
+        assert type(history) == History
         new_board = self.copy()
         new_board.set(target_square, ColoredPiece(color.other(), Piece.QUEEN))
         for square in Square:
@@ -369,6 +375,9 @@ class Board():
         return False
 
     def can_move_to(self, target_square, color, history, filter=lambda board, square: True):
+        assert type(target_square) == Square
+        assert type(color) == Color
+        assert type(history) == History
         for square in Square:
             if not filter(self, square):
                 continue
@@ -395,6 +404,10 @@ class Board():
         return self.capture_outer(start, stop, history)[0]
 
     def move(self, start, stop, whose_turn, handicap, history=History(), promote_to=None):
+        assert type(start) == Square
+        assert type(stop) == Square
+        assert type(whose_turn) == Color
+        assert type(history) == History
         piece = self.get(start)
         extra = []
         if not piece:
@@ -459,6 +472,9 @@ class Board():
         return move, extra, None
 
     def legal_moves(self, start, history, whose_turn, handicap=None):
+        assert type(start) == Square
+        assert type(history) == History
+        assert type(whose_turn) == Color
         piece = self.get(start)
         moves = []
         if not piece:
