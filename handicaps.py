@@ -1,31 +1,9 @@
 from squares import Square, Rank, File
 from chess import Color, Piece, ColoredPiece, HandicapInputs, starting_board, empty_board, History
 from settings import LOCAL
+from helpers import broadcast, try_move, get_adjacent_squares, get_orthogonally_adjacent_squares, get_diagonally_adjacent_squares, two_letter_words  
 from collections import defaultdict
 import random
-
-
-def try_move(board, start, stop, history):
-    new_board = board.copy()
-    new_board.move(start, stop, history.whose_turn(), None, history)
-    return new_board
-
-
-def get_adjacent_squares(square):
-    adj_sqs = []
-    for i in range(3):
-        for j in range(3):
-            adj_sqs.append(square.shift(i - 1, j - 1))
-    return [sq for sq in adj_sqs if sq and sq != square]
-
-
-def get_orthogonally_adjacent_squares(square):
-    return [sq for sq in get_adjacent_squares(square) if sq.distance(square) == 1]
-
-
-def get_diagonally_adjacent_squares(square):
-    return [sq for sq in get_adjacent_squares(square) if sq.distance(square) == 2]
-
 
 def no_handicap(start, stop, inputs):
     return True
@@ -854,4 +832,4 @@ def get_handicaps(x, y):
         # This is Gabe's line. For Gabe's use only. Keep out. No girls allowed.
         handicaps.update(untested_handicaps)
         # return random.sample(handicaps.keys(), 2)
-        return descriptions[covering_fire], descriptions[no_handicap]
+        return descriptions[no_handicap], descriptions[no_handicap]

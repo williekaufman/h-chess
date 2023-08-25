@@ -13,9 +13,8 @@ from handicaps import handicaps, get_handicaps, test_all_handicaps
 import time
 import random
 import json
+from sockets import app, socketio
 
-app = Flask(__name__)
-socketio = SocketIO(app)
 CORS(app)
 
 
