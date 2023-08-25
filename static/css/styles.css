@@ -514,3 +514,11 @@ input::placeholder {
   background-color: darkgreen;
 }
 
+.whiteboard-message.flash {
+  background-color: pink;
+}
+
+.dark .whiteboard-message.flash {
+  background-color: darkred;
+}
+

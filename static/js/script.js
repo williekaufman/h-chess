@@ -125,7 +125,7 @@ for (var i = 0; i < 10; i++) {
 
 updateWhiteboard();
 
-function updateWhiteboard() {
+function updateWhiteboard(flash=false) {
     for (var i = 0; i < whiteboard_messages.length; i++) {
         whiteboard.children[i].innerHTML = `${whiteboard_messages[i]}`;
         whiteboard.children[i].style.display = 'block';
@@ -133,6 +133,12 @@ function updateWhiteboard() {
     for (var i = whiteboard_messages.length; i < 10; i++) {
         whiteboard.children[i].innerHTML = '';
         whiteboard.children[i].style.display = 'none';
+    }
+    if (flash) {
+        whiteboard.children[0].classList.add('flash');
+        setTimeout(() => {
+            whiteboard.children[0].classList.remove('flash');
+        }, 2000);
     }
 }
 
@@ -143,7 +149,7 @@ function addToWhiteboard(message) {
 
     whiteboard_messages.unshift(message);
 
-    updateWhiteboard();
+    updateWhiteboard(true);
 }
 
 function admin() {

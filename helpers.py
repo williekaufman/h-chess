@@ -1,5 +1,6 @@
 from sockets import socketio
 from redis_utils import rget, rset
+import datetime
 
 
 def try_move(board, start, stop, history):

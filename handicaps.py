@@ -85,7 +85,7 @@ def cant_move_to_one_color_at_random(start, stop, inputs):
     try_opt(
         history.whose_turn(),
         board.game_id,
-        lambda : whiteboard(f'You must move to {color.value.lower()}', history.whose_turn(), inputs.board.game_id),
+        lambda : whiteboard(f'Must move to a {color.value.lower()} square', history.whose_turn(), inputs.board.game_id),
     )
     return stop.color() == color
 
@@ -105,7 +105,7 @@ def must_move_specific_piece_type_at_random(start, stop, inputs):
     try_opt(
         history.whose_turn(),
         board.game_id,
-        lambda : whiteboard(f'You must move a {piece.name.lower()}', history.whose_turn(), board.game_id),
+        lambda : whiteboard(f'Must move a {piece.name.lower()}', history.whose_turn(), board.game_id),
         )
     return board.get(start).piece == piece
 
@@ -229,6 +229,11 @@ def pack_mentality(start, stop, inputs):
 def spice_of_life(start, stop, inputs):
     board, history = inputs.board, inputs.history
     if (last_move := history.last_move(history.whose_turn())):
+        try_opt(
+            history.whose_turn(),
+            board.game_id,
+            lambda : whiteboard(f"Can't move a {last_move.piece.piece.name.lower()}", history.whose_turn(), board.game_id),
+            )
         return not (board.get(start) and board.get(start).piece == last_move.piece.piece)
     return True
 
@@ -307,6 +312,11 @@ def simon_says(start, stop, inputs):
 def hopscotch(start, stop, inputs):
     history = inputs.history
     if (last_move := history.last_move(history.whose_turn())):
+        try_opt(
+            history.whose_turn(),
+            inputs.board.game_id,
+            lambda : whiteboard(f"Must move to a {last_move.stop.color().other().value.lower()} square", history.whose_turn(), inputs.board.game_id),
+        )
         return last_move.stop.color() != stop.color()
     else:
         return True
@@ -391,6 +401,12 @@ def left_for_dead(start, stop, inputs):
 
 def taking_turns(start, stop, inputs):
     piece_counter = inputs.history.pieces_moved(include_zero=True)
+    can_move = str([p.value for p in piece_counter.keys() if piece_counter[p] == min(piece_counter.values())]).replace("'", "")
+    try_opt(
+        inputs.history.whose_turn(),
+        inputs.board.game_id,
+        lambda : whiteboard(f'Can move: {can_move}', inputs.history.whose_turn(), inputs.board.game_id),
+    )
     piece_counter[inputs.board.get(start).piece] += 1
     return max(piece_counter.values()) - min(piece_counter.values()) <= 1
 
@@ -472,13 +488,28 @@ def ego_clash(start, stop, inputs):
 
 
 def in_mourning(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    pieces_captured = history.pieces_captured()
+    whiteboard_str = str([p.value for p in pieces_captured.keys()]).replace("'", "")
+    pieces_captured and try_opt(
+        history.whose_turn(),
+        board.game_id,
+        lambda : whiteboard(f'Captured: {whiteboard_str}', history.whose_turn(), board.game_id),
+    )
     return inputs.board.get(start).piece not in inputs.history.pieces_captured()
 
 
 def cowering_in_fear(start, stop, inputs):
     board, history = inputs.board, inputs.history
     if (pieces_captured := history.pieces_captured(history.whose_turn().other())):
-        return board.get(start).piece.points() >= max([piece.points() for piece in pieces_captured.keys()])
+        min_points_to_move = max([piece.points() for piece in pieces_captured.keys()])
+        whiteboard_str = str([p.value for p in Piece if p.points() >= min_points_to_move]).replace("'", "")
+        pieces_captured and try_opt(
+            history.whose_turn(),
+            board.game_id,
+            lambda : whiteboard(f'Can move: {whiteboard_str}', history.whose_turn(), board.game_id),
+        )
+        return board.get(start).piece.points() >= min_points_to_move
     return True
 
 
@@ -502,8 +533,13 @@ def eat_your_vegetables(start, stop, inputs):
 
 def chain_of_command(start, stop, inputs):
     board, history = inputs.board, inputs.history
-    if len(history.history) > 1:
-        last_piece = history.history[-2].piece.piece
+    if (last_move := history.last_move(history.whose_turn())):
+        last_piece = last_move.piece.piece
+        try_opt(
+            history.whose_turn(),
+            board.game_id,
+            lambda : whiteboard(f'Last piece was {last_piece.name.lower()}', history.whose_turn(), board.game_id),
+        )
         return last_piece == Piece.KING or last_piece.points() <= board.get(start).points()
     else:
         return True
@@ -552,6 +588,11 @@ def impulsive(start, stop, inputs):
         if board.get(s) and board.get(s).color == c:
             mvs = [Square(x) for x in board.legal_moves(s, history, c)]
             if [m for m in mvs if board.capture(s, m, history)]:
+                try_opt(
+                    c,
+                    board.game_id,
+                    lambda : whiteboard(f'Must capture', c, board.game_id),
+                )
                 return board.capture(start, stop, history)
     return True
 
@@ -564,13 +605,19 @@ def spread_out(start, stop, inputs):
 def left_to_right(start, stop, inputs):
     board, history = inputs.board, inputs.history
     c = history.whose_turn()
-    if len(history.history) > 1:
-        last_file = history.history[-2].stop.file()
+    if (last_move := history.last_move(history.whose_turn())):
+        last_file = last_move.stop.file()
+        try_opt(
+            c,
+            board.game_id,
+            lambda: whiteboard(
+                f'Last file: {last_file.name}', c, board.game_id),
+        )
         if last_file == File.H and c == Color.WHITE \
                 or last_file == File.A and c == Color.BLACK:
             return True
         else:
-            return last_file.more_left_than(stop.file(), c)
+           return last_file.more_left_than(stop.file(), c)
     else:
         return True
 
@@ -610,7 +657,14 @@ def outcast(start, stop, inputs):
 
 
 def final_countdown(start, stop, inputs):
-    return len(inputs.history.history) < 18
+    history = inputs.history
+    moves = len(history.player_moves(history.whose_turn()))
+    try_opt(
+        history.whose_turn(),
+        inputs.board.game_id,
+        lambda : whiteboard(f'{10 - moves}', history.whose_turn(), inputs.board.game_id),
+    )
+    return moves < 9
 
 
 def lead_by_example(start, stop, inputs):
@@ -638,6 +692,14 @@ def slippery(start, stop, inputs):
 
 def monkey_see(start, stop, inputs):
     board, history = inputs.board, inputs.history
+    pieces_captured = history.pieces_captured_with(history.whose_turn().other())
+    whiteboard_str = str([p.value for p in pieces_captured.keys()]).replace("'", "")
+    try_opt(
+        history.whose_turn(),
+        board.game_id,
+        lambda: whiteboard(
+            f'Can capture with {whiteboard_str}', history.whose_turn(), board.game_id),
+    )
     if board.capture(start, stop, history):
         return board.get(start).piece in history.pieces_captured_with(history.whose_turn().other())
     return True
@@ -687,16 +749,24 @@ def pilgrimage(start, stop, inputs):
 
 def leveling_up(start, stop, inputs):
     board, history = inputs.board, inputs.history
+    pieces_captured = history.pieces_captured()
+    d = {
+        Piece.KNIGHT: Piece.PAWN,
+        Piece.BISHOP: Piece.KNIGHT,
+        Piece.ROOK: Piece.BISHOP,
+        Piece.QUEEN: Piece.ROOK,
+        Piece.KING: Piece.QUEEN}
+    can_capture = [p for p in Piece if p == Piece.PAWN or d[p] in pieces_captured]
+    whiteboard_str = str([p.value for p in can_capture]).replace("'", "")
+    try_opt(
+        history.whose_turn(),
+        board.game_id,
+        lambda: whiteboard(
+            f'Can capture {whiteboard_str}', history.whose_turn(), board.game_id),
+    ) 
     if (captured_piece := board.capture(start, stop, history)):
-        pieces_captured = history.pieces_captured()
         if captured_piece.piece not in pieces_captured and captured_piece.piece not in [Piece.PAWN]:
-            return {
-                Piece.KNIGHT: Piece.PAWN,
-                Piece.BISHOP: Piece.KNIGHT,
-                Piece.ROOK: Piece.BISHOP,
-                Piece.QUEEN: Piece.ROOK,
-                Piece.KING: Piece.QUEEN
-            }[captured_piece.piece] in pieces_captured
+            return d[captured_piece.piece] in pieces_captured
     return True
 
 
@@ -710,6 +780,12 @@ def flatterer(start, stop, inputs):
     piece = last_move.piece.piece
     f = lambda board, square: board.get(square) and board.get(square).piece == piece
     if board.can_move_to(target_square, history.whose_turn(), history, f):
+        try_opt(
+            history.whose_turn(),
+            board.game_id,
+            lambda: whiteboard(
+                f'Must mirror', history.whose_turn(), board.game_id),
+        )
         return stop == target_square and board.get(start).piece == piece
     return True
 
@@ -850,4 +926,4 @@ def get_handicaps(x, y):
         # This is Gabe's line. For Gabe's use only. Keep out. No girls allowed.
         handicaps.update(untested_handicaps)
         # return random.sample(handicaps.keys(), 2)
-        return descriptions[cant_move_to_one_color_at_random], descriptions[no_handicap]
+        return descriptions[flatterer], descriptions[no_handicap]
