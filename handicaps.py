@@ -846,6 +846,34 @@ def scrabble(start, stop, inputs):
     )
     return stop.file() in valid_files
 
+def fearless_leader(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    c = history.whose_turn()
+    k = board.loc_singleton(ColoredPiece(c, Piece.KING))
+    pawns_below = [p for p in k.sqs_below(c) if board.get(p) and board.get(p).piece == Piece.PAWN]
+    return pawns_below or not board.capture(start, stop, history)
+
+def protect_the_peons(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    c = history.whose_turn()
+    return not [s for s in board.loc(ColoredPiece(c, Piece.PAWN)) if not board.is_attacked(s, c, history)]
+
+def mind_the_middle(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    center = [Square('E4'), Square('E5'), Square('D4'), Square('D5')]
+    new_board = try_move(board, start, stop, history)
+    return not [s for s in center if new_board.is_attacked(s, history.whose_turn(), history)]
+
+# This needs a dialog box to help you keep track
+def monkey_dont(start, stop, inputs):
+    h = inputs.history
+    c = h.whose_turn()
+    ap_moves = h.player_moves(c)
+    nap_moves = h.player_moves(c.other())
+    if c == Color.BLACK:
+        nap_moves = nap_moves[1:]
+    s = zip(ap_moves, nap_moves)
+    return len([1 for x,y in zip(ap_moves, nap_moves) if x.piece.piece == y.piece.piece]) < 3
 
 # Comment so I can search for the bottom of the handicaps
 
@@ -932,12 +960,15 @@ tested_handicaps = {
     "Get down Mr. President: You can't move your king when in check": (get_down_mr_president, 5),
     "Bottled lightning: If you can move your king, you must": (bottled_lightning, 8),
     "Pilgrimage: Until your king reached their home row, you can only capture kings and pawns": (pilgrimage, 8),
-    "Leveling up: You can't capture a piece until you've captured its predecessor in the list pawn, knight, bishop, rook, queen, king": (leveling_up, 8),
+    "Leveling up: You can't capture a piece until you've captured its predecessor in the list [pawn, knight, bishop, rook, queen, king]": (leveling_up, 8),
     "Flatterer: If you can mirror your opponent's move, you must (same piece, same stop square reflected over the midline)": (flatterer, 4),
     "Covering fire: You can only capture a piece if you could capture it two different ways": (covering_fire, 6),
     "Reflective: You can only move non-pawns to squares whose opposite square reflected across the center line is occupied": (reflective, 6),
     "Tower Defense: You can't move your rooks. If you lose all your rooks, you lose": (tower_defense, 7),
     "Bloodthirsty: After the first 3 turns, if you go 2 turns without capturing, you must capture on the third (or lose)": (bloodthirsty, 5),
+    "Fearless Leader: You can only capture when your king is in front of one of your pawns": (fearless_leader, 8),
+    "Protect the Peons: You lose if you have an undefended pawn": (protect_the_peons, 8), 
+    "Mind the Middle: You can't attack the central four squares": (mind_the_middle, 9),
 }
 
 # Stuff in here won't randomly get assigned but you can interact with it by changing get_handicaps
@@ -951,6 +982,7 @@ untested_handicaps = {
     "The Loneliest Number: You can only move a pawn once": (loneliest_number, 6),
     # It turns out this is quite close to "you have to move to the a or e file on even numbered turns". Kinda lame
     "Scrabble: For each pair of moves, the files that your piece stops on must spell a 2-letter word. E.g. you could do H file, A file (ha) and then B file, E file (be) for your first 4 moves.": (scrabble, 7),
+    "Monkey Don't: If your opponent moves the same piece as you just moved 3 times over the course of the game, you lose": (monkey_dont, 9)
 }
 
 handicaps = dict(tested_handicaps, **untested_handicaps)
@@ -979,7 +1011,6 @@ def get_handicaps(x, y):
     if not LOCAL:
         return random.sample(tested_handicaps.keys(), 2)
     else:
-        # This is Gabe's line. For Gabe's use only. Keep out. No girls allowed.
         handicaps.update(untested_handicaps)
         # return random.sample(handicaps.keys(), 2)
-        return descriptions[bloodthirsty], descriptions[no_handicap]
+        return descriptions[monkey_dont], descriptions[monkey_dont]

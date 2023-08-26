@@ -210,3 +210,6 @@ class Square(Enum):
 
     def between(self, other):
         return [square for square in Square if square.is_between(self, other)]
+    
+    def sqs_below(self, color):
+        return [s for s in self.file().squares() if self.rank().more_adv_than(s.rank(), color)]
