@@ -802,6 +802,26 @@ def reflective(start, stop, inputs):
         return True
     return board.get(stop.flip()) 
 
+def tower_defense(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    return board.get(start).piece != Piece.ROOK and board.loc(ColoredPiece(history.whose_turn(), Piece.ROOK))
+
+def bloodthirsty(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    player_moves = history.player_moves(inputs.history.whose_turn())
+    if len(player_moves) < 5:
+        return True
+    if not player_moves[-1].capture and not player_moves[-2].capture:
+        try_opt(
+            history.whose_turn(),
+            board.game_id,
+            lambda: whiteboard(
+                f'Must capture!', history.whose_turn(), board.game_id),
+        )
+        return board.capture(start, stop, history)
+    return True
+    
+
 def scrabble(start, stop, inputs):
     history = inputs.history
     moves = history.player_moves(history.whose_turn())
@@ -916,6 +936,8 @@ tested_handicaps = {
     "Flatterer: If you can mirror your opponent's move, you must (same piece, same stop square reflected over the midline)": (flatterer, 4),
     "Covering fire: You can only capture a piece if you could capture it two different ways": (covering_fire, 6),
     "Reflective: You can only move non-pawns to squares whose opposite square reflected across the center line is occupied": (reflective, 6),
+    "Tower Defense: You can't move your rooks. If you lose all your rooks, you lose": (tower_defense, 7),
+    "Bloodthirsty: After the first 3 turns, if you go 2 turns without capturing, you must capture on the third (or lose)": (bloodthirsty, 5),
 }
 
 # Stuff in here won't randomly get assigned but you can interact with it by changing get_handicaps
@@ -960,4 +982,4 @@ def get_handicaps(x, y):
         # This is Gabe's line. For Gabe's use only. Keep out. No girls allowed.
         handicaps.update(untested_handicaps)
         # return random.sample(handicaps.keys(), 2)
-        return descriptions[reflective], descriptions[no_handicap]
+        return descriptions[bloodthirsty], descriptions[no_handicap]
