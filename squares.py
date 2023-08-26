@@ -180,6 +180,9 @@ class Square(Enum):
     def file(self):
         return File(self.name[0])
 
+    def flip(self):
+        return Square.of_rank_and_file(self.rank().flip(), self.file())
+
     def shift(self, rank_shift, file_shift):
         rank, file = self.to_coordinates()
         return Square.of_coordinates(file + file_shift, rank + rank_shift)

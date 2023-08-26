@@ -796,6 +796,37 @@ def covering_fire(start, stop, inputs):
         return board.is_attacked(stop, history.whose_turn(), history, f)
     return True
 
+def reflective(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    if board.get(start).piece == Piece.PAWN:
+        return True
+    return board.get(stop.flip()) 
+
+def scrabble(start, stop, inputs):
+    history = inputs.history
+    moves = history.player_moves(history.whose_turn())
+    if len(moves) == 0:
+        try_opt(
+            history.whose_turn(),
+            inputs.board.game_id,
+            lambda: whiteboard(
+                "Hint: Don't move to the c or g file on odd-numbered turns"
+            )
+        )
+    if len(moves) % 2 == 0:
+        return True
+    last_move = history.last_move(history.whose_turn())
+    valid_files = [file for file in File if f'{last_move.stop.file().value}{file.value}'.lower() in two_letter_words]
+    valid_files_str = str([file.value for file in valid_files]).replace("'", "")
+    try_opt(
+        history.whose_turn(),
+        inputs.board.game_id,
+        lambda: whiteboard(
+            f'Valid files: {valid_files_str}', history.whose_turn(), inputs.board.game_id),
+    )
+    return stop.file() in valid_files
+
+
 # Comment so I can search for the bottom of the handicaps
 
 
@@ -884,6 +915,7 @@ tested_handicaps = {
     "Leveling up: You can't capture a piece until you've captured its predecessor in the list pawn, knight, bishop, rook, queen, king": (leveling_up, 8),
     "Flatterer: If you can mirror your opponent's move, you must (same piece, same stop square reflected over the midline)": (flatterer, 4),
     "Covering fire: You can only capture a piece if you could capture it two different ways": (covering_fire, 6),
+    "Reflective: You can only move non-pawns to squares whose opposite square reflected across the center line is occupied": (reflective, 6),
 }
 
 # Stuff in here won't randomly get assigned but you can interact with it by changing get_handicaps
@@ -895,6 +927,8 @@ untested_handicaps = {
     "No capturing!": (no_captures, 5),
     "Peasant Rebellion: Can't move pawns": (cant_move_pawns, 7),
     "The Loneliest Number: You can only move a pawn once": (loneliest_number, 6),
+    # It turns out this is quite close to "you have to move to the a or e file on even numbered turns". Kinda lame
+    "Scrabble: For each pair of moves, the files that your piece stops on must spell a 2-letter word. E.g. you could do H file, A file (ha) and then B file, E file (be) for your first 4 moves.": (scrabble, 7),
 }
 
 handicaps = dict(tested_handicaps, **untested_handicaps)
@@ -926,4 +960,4 @@ def get_handicaps(x, y):
         # This is Gabe's line. For Gabe's use only. Keep out. No girls allowed.
         handicaps.update(untested_handicaps)
         # return random.sample(handicaps.keys(), 2)
-        return descriptions[flatterer], descriptions[no_handicap]
+        return descriptions[reflective], descriptions[no_handicap]
