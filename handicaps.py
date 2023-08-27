@@ -698,10 +698,10 @@ def monkey_see(start, stop, inputs):
         history.whose_turn(),
         board.game_id,
         lambda: whiteboard(
-            f'Can capture with {whiteboard_str}', history.whose_turn(), board.game_id),
+            f'Can capture with {whiteboard_str}' if pieces_captured else "Can't capture yet!", history.whose_turn(), board.game_id),
     )
     if board.capture(start, stop, history):
-        return board.get(start).piece in history.pieces_captured_with(history.whose_turn().other())
+        return board.get(start).piece in pieces_captured
     return True
 
 
