@@ -7,7 +7,7 @@ from threading import Thread
 from redis_utils import rget, rset, redis
 from settings import LOCAL
 from secrets import compare_digest, token_hex
-from chess import Color, Board, History, starting_board
+from chess import Color, Result, Board, History, starting_board
 from squares import Square
 from handicaps import handicaps, get_handicaps, tested_handicaps, test_all_handicaps
 import time
@@ -228,6 +228,7 @@ def move():
     move, extra, error = board.move(
         start, stop, whose_turn, handicap, history, promotion)
     if move:
+        rset('draw', '', game_id=game_id)
         winner_on_time = update_time(whose_turn, game_id)
         history.add(move)
         rset(opt_key(whose_turn), 'True', game_id=game_id)
@@ -292,6 +293,40 @@ def unfriend():
     remove_friend(username, friend)
     return {'success': True}
 
+
+@app.route("/offer_draw", methods=['POST'])
+def offer_draw():
+    game_id = request.json.get('gameId')
+    color = request.json.get('color')
+    try:
+        color = Color(color)
+    except:
+        return {'success': False, 'error': 'Invalid color'}
+    if not game_id or not color:
+        return {'success': False, 'error': 'No game id or color provided'}
+    if rget('other_player', game_id=game_id):
+        return {'success': False, 'error': 'Other player has not yet joined'}
+    socketio.emit('draw_offer', {'color': color.other().value}, room=game_id)
+    rset('draw', color.value, game_id=game_id)
+    return {'success': True} 
+
+@app.route("/accept_draw", methods=['POST'])
+def accept_draw():
+    game_id = request.json.get('gameId')
+    color = request.json.get('color')
+    try:
+        color = Color(color)
+    except:
+        return {'success': False, 'error': 'Invalid color'}
+    if not game_id or not color:
+        return {'success': False, 'error': 'No game id or color provided'}
+    if rget('draw', game_id=game_id) != color.other().value:
+        return {'success': False, 'error': 'Draw offer not live - expires when either player makes a move'}
+    if rget('winner', game_id=game_id):
+        return {'success': False, 'error': 'Game already over'}
+    rset('winner', Result.AGREEMENT.value, game_id=game_id)
+    socketio.emit('update', {'color': 'both'}, room=game_id)
+    return {'success': True}
 
 @socketio.on('connect')
 def example():

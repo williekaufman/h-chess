@@ -1,7 +1,7 @@
 import random
 from redis_utils import rget, rset
 from enum import Enum
-from color import Color
+from color import Color, Result
 from squares import Square, Rank, File
 from helpers import toast, whiteboard
 from collections import Counter
@@ -227,32 +227,43 @@ def king_moves(board, square, color, history):
             candidates.append(candidate)
     return filter_candidates(candidates, board, color)
 
+
+# Only for colorifying and decolorify cache keys
+def decolorify_dict(d):
+    return {k.value: v for k, v in d.items()}
+
+def colorify_dict(d):
+    return {Color(k): v for k, v in d.items()}
+
 # Any values that we want to cache for calculating handicaps
 # Values should only change on a move
 
 # If we want to remember something forever, it should be in Move, but if
 # we just might use it many times to check handicaps in a single move, it should be here
 class Cache():
-    def __init__(self, kings, rand, rooks_have_connected, king_has_reached_last_rank):
+    def __init__(self, kings, rand, rooks_have_connected, king_has_reached_last_rank, reached_positions):
         self.kings = kings
         self.rand = rand
         self.rooks_have_connected = rooks_have_connected
         self.king_has_reached_last_rank = king_has_reached_last_rank
+        self.reached_positions = reached_positions
 
     def dict(self):
         return {
             'kings': {k.value: v and v.value for k, v in self.kings.items()},
             'rand': self.rand,
-            'rooks_have_connected': {k.value: v for k, v in self.rooks_have_connected.items()},
-            'king_has_reached_last_rank': {k.value: v for k, v in self.king_has_reached_last_rank.items()}
+            'rooks_have_connected': decolorify_dict(self.rooks_have_connected),
+            'king_has_reached_last_rank': decolorify_dict(self.king_has_reached_last_rank),
+            'reached_positions': decolorify_dict(self.reached_positions)
         }
     
     def of_string(s):
         try:
             cache = json.loads(s)
             cache['kings'] = {Color(k): v and Square(v) for k, v in cache['kings'].items()}
-            cache['rooks_have_connected'] = {Color(k): v for k, v in cache['rooks_have_connected'].items()}
-            cache['king_has_reached_last_rank'] = {Color(k): v for k, v in cache['king_has_reached_last_rank'].items()}
+            cache['rooks_have_connected'] = colorify_dict(cache['rooks_have_connected']) 
+            cache['king_has_reached_last_rank'] = colorify_dict(cache['king_has_reached_last_rank'])
+            cache['reached_positions'] = colorify_dict(cache['reached_positions'])
             return Cache(**cache)
         except:
             return None
@@ -349,7 +360,11 @@ class Board():
         # so you get the same number if you call legal_moves again
         # This could theoretically collide but it never will
         random.seed(int(self.game_id, 16) + len(history.history))
-        self.cache = Cache(kings, random.random(), rooks_have_connected, king_has_reached_last_rank)
+        x = self.cache.reached_positions[history.whose_turn()].get(self.to_string(), 0)
+        if x == 1:
+            whiteboard(f'Position reached before - one more will be threefold repition', game_id=self.game_id)
+        self.cache.reached_positions[history.whose_turn()][self.to_string()] = x + 1
+        self.cache = Cache(kings, random.random(), rooks_have_connected, king_has_reached_last_rank, self.cache.reached_positions)
 
     def get(self, square):
         rank, file = square.to_coordinates()
@@ -499,6 +514,20 @@ class Board():
         handicap_inputs = HandicapInputs(self, history)
         return [square.value for square in moves if square and handicap(start, square, handicap_inputs)]
 
+    def draw(self, whose_turn, history):
+        if self.cache.reached_positions[whose_turn.other()][self.to_string()] >= 3:
+            return Result.THREEFOLD_REPITION
+        if len(history.history) > 100:
+            moves = history.history[-100:]
+            if not any(move.capture for move in moves) and not any(move.piece.piece == Piece.PAWN for move in moves):
+                return Result.FIFTY_MOVE_RULE
+        if (winner := rget('winner', game_id=self.game_id)):
+            try:
+                return Result(winner)
+            except:
+                return False
+        return False    
+
     def winner(self, whose_turn, history, handicap=None):
         has_king, has_move = False, False
         for square in Square:
@@ -510,7 +539,7 @@ class Board():
             if self.legal_moves(square, history, whose_turn, handicap):
                 has_move = True
             if has_move and has_king:
-                return False
+                return self.draw(whose_turn, history)
         return whose_turn.other()
 
     def to_string(self):
@@ -548,7 +577,8 @@ def starting_cache():
         {Color.WHITE: Square('E1'), Color.BLACK: Square('E8')}, 
         random.random(),
         {Color.WHITE: False, Color.BLACK: False},
-        {Color.WHITE: False, Color.BLACK: False}
+        {Color.WHITE: False, Color.BLACK: False},
+        {Color.WHITE: {}, Color.BLACK: {}}
         )
 
 def starting_board(game_id=None):

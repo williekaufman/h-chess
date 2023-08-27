@@ -23,6 +23,7 @@ newGameModal = document.getElementById('newGameModal');
 newGameModalOverlay = document.getElementById('newGameModalOverlay');
 
 newGameButton = document.getElementById('newGameButton');
+offerDrawButton = document.getElementById('offerDrawButton');
 copyGameIdButton = document.getElementById('copyGameIdButton');
 toggleThemeButton = document.getElementById('toggleThemeButton');
 displayFriendsListButton = document.getElementById('displayFriendsListButton');
@@ -56,6 +57,8 @@ stateToastElement = document.getElementById('stateToast');
 
 gameIsOver = false;
 gameResultToastElement = document.getElementById('gameResult');
+drawToastElement = document.getElementById('drawToast');
+confirmDrawElement = document.getElementById('confirmDrawToast');
 
 colorSelection = 'random';
 whiteKingElement = document.getElementById('whiteKing');
@@ -94,7 +97,9 @@ socket.on('message', (data) => {
 
 socket.on('update', (data) => {
     firstMove = false;
-    data['color'] === color && updateState();
+    if (data['color'] === 'both' || data['color'] === color) {
+        updateState();
+    }
 });
 
 socket.on('whiteboard', (data) => {
@@ -102,6 +107,68 @@ socket.on('whiteboard', (data) => {
         addToWhiteboard(data['message']);
     }
 })
+
+socket.on('draw_offer', (data) => {
+    if (data['color'] == color) {
+        showToast('Your opponent offered a draw', 10);
+        opponentOfferedDraw();
+    }  
+})
+
+socket.on('draw_offer_rescinded', (data) => {
+    if (data['color'] == color) {
+        drawToastElement.style.display = 'none';
+    }
+})
+
+drawButton = document.getElementById('drawButton');
+noDrawButton = document.getElementById('noDrawButton');
+
+confirmDrawButton = document.getElementById('confirmDrawButton');
+cancelDrawButton = document.getElementById('cancelDrawButton');
+
+drawButton.addEventListener('click', () => {
+    fetchWrapper(URL + 'accept_draw', { 'gameId': gameId, 'color': color }, 'POST')
+        .then((response) => response.json())
+        .then((data) => {
+            if (!data['success']) {
+                showToast(data['error'], 5)
+                return;
+            }
+        });
+    drawToastElement.style.display = 'none';
+});
+
+noDrawButton.addEventListener('click', () => {
+    drawToastElement.style.display = 'none';
+});
+
+confirmDrawButton.addEventListener('click', () => {
+    offerDraw();
+    confirmDrawElement.style.display = 'none';
+});
+
+cancelDrawButton.addEventListener('click', () => {
+    confirmDrawElement.style.display = 'none';
+});
+
+function opponentOfferedDraw() {
+    drawToastElement.style.display = 'inline-block';
+}
+
+function offerDraw() {
+    fetchWrapper(URL + 'offer_draw', { 'gameId': gameId, 'color': color }, 'POST')
+        .then((response) => response.json())
+        .then((data) => {
+            if (!data['success']) {
+                showToast(data['error'], 5)
+                return;
+            }
+            else {
+                showToast('You offered a draw', 5);
+            }
+        });
+}
 
 whiteboard.addEventListener('click', (e) => {
     if (e.target.classList.contains('whiteboard-message')) {
@@ -195,9 +262,12 @@ function highlightMostRecentMove() {
 function processGameOver(result) {
     setWhoseTurn('');
     gameIsOver = true;
+    gameResultToastElement.classList.remove('win', 'loss', 'draw');
     gameResultToastElement.style.display = 'inline-block';
-    gameResultToastElement.textContent = `${result} wins!`;
-    gameResultToastElement.style.backgroundColor = result === color ? 'green' : 'red';
+    result_string = result === 'White' ? 'White wins' : result === 'Black' ? 'Black wins' : result;
+    result_class = result === color ? 'win' : (result === 'Black' || result == 'White') ? 'loss' : 'draw'; 
+    gameResultToastElement.textContent = result_string;
+    gameResultToastElement.classList.add(result_class);
 }
 
 function unhighlightSquares() {
@@ -549,6 +619,10 @@ function openModal() {
     newGameModalOverlay.style.display = 'block';
 }
 
+function confirmDraw() {
+    confirmDrawElement.style.display = 'inline-block';
+}
+
 function closeModal() {
     newGameModal.style.display = 'none';
     newGameModalOverlay.style.display = 'none';
@@ -562,11 +636,8 @@ function handleKeyDown(event) {
     k = event.key.toLowerCase();
     if (event.shiftKey) {
         shiftKeyIsDown = true;
-        if (event.key == 'N') {
-            newGame();
-        }
     }
-    else if (k == 'c') {
+    if (k == 'c') {
         if (admin() && event.ctrlKey) {
             showOpponentsHandicap();
         } else {
@@ -587,6 +658,8 @@ function handleKeyDown(event) {
         newGameButton.click();
     } else if (k == 't') {
         toggleThemeButton.click();
+    } else if (k == 'o') {
+        offerDrawButton.click();
     }
 }
 
@@ -605,6 +678,14 @@ document.addEventListener("click", function (event) {
 
 newGameButton.addEventListener('click', () => {
     shiftKeyIsDown ? newGame() : openModal();
+});
+
+offerDrawButton.addEventListener('click', () => {
+    if (gameIsOver || drawToastElement.style.display == 'inline-block') {
+        showToast('Respond to your opponent\'s draw offer first', 5);
+        return ;
+    }
+    shiftKeyIsDown ? offerDraw() : confirmDraw();
 });
 
 toggleThemeButton.addEventListener('click', () => {
@@ -836,7 +917,7 @@ setInterval(function () {
     } else {
         populateFriendsList();
     }
-}, 10000);
+}, 3000);
 
 function toggleGameButtons() {
     document.querySelectorAll('.game-button').forEach(element => {

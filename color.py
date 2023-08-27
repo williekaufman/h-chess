@@ -10,4 +10,10 @@ class Color(Enum):
 
     def whose_turn(game_id):
         return Color.WHITE if rget('turn', game_id=game_id) == 'White' else Color.BLACK
-
+    
+class Result(Enum):
+    WHITE_WINS = 'White'
+    BLACK_WINS = 'Black'
+    THREEFOLD_REPITION = 'Draw by threefold repetition'
+    FIFTY_MOVE_RULE = 'Draw by fifty-move rule'
+    AGREEMENT = 'Draw by agreement'

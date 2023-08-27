@@ -30,6 +30,7 @@
     <div>
         <span style="min-width: 60px; display: inline-block"> Hotkeys </span>
         <button class="one-char-button" id="newGameButton">n</button>
+        <button class="one-char-button" id="offerDrawButton">o</button>
         <button class="one-char-button" id="copyGameIdButton">c</button>
         <div class="username">
             <input id="usernameInput" type="text" placeholder="username" size="15">
@@ -38,7 +39,7 @@
                 <button id="addFriendButton" style="margin-left:5px">Add</button>
             </div>
             <div class="whiteboard" id="whiteboard">
-                Messages from the server if necessary for your handicap will appear here, 
+                Messages from the server if necessary for your handicap will appear here,
                 most recent at the top. Click to remove.
             </div>
         </div>
@@ -51,7 +52,18 @@
         <button class="one-char-button" id="toggleThemeButton">t</button>
     </div>
     <div> <span class="toast" id="toast"> </span> </div>
+    <div> <span class="draw-toast" id="drawToast">
+            <button class="draw-button" id="drawButton">Draw</button>
+            <button class="draw-button" id="noDrawButton">No draw</button>
+        </span> </div>
     <div> <span class="state-toast" id="stateToast"> </span> </div>
+
+    <div> <span class="draw-toast" id="confirmDrawToast">
+            <button class="draw-button" id="confirmDrawButton">Offer Draw</button>
+            <button class="draw-button" id="cancelDrawButton">Cancel</button>
+        </span> </div>
+    <div> <span class="state-toast" id="stateToast"> </span>
+    </div>
     <div> <span class="result-toast" id="gameResult"></span> </div>
 </div>
 <div class="chess">
@@ -113,6 +125,8 @@
     <div> Hotkeys </div>
     <div> <b> n </b> - new game </div>
     <div> <b> N </b> - skip new game dialog, use defaults </div>
+    <div> <b> o </b> - offer draw </div>
+    <div> <b> O </b> - offer draw, skip confirm </div>
     <div> <b> c </b> - copy game id </div>
     <div> Toggle </div>
     <div> <b> f </b> - display friends list </div>

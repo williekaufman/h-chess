@@ -9,11 +9,11 @@ import random
 def no_handicap(start, stop, inputs):
     board, history = inputs.board, inputs.history
     c = history.whose_turn()
-    try_opt(
-        c,
-        board.game_id,
-        lambda : whiteboard('Hello', c, board.game_id),
-        )
+    # try_opt(
+    #     c,
+    #     board.game_id,
+    #     lambda : whiteboard('Hello', c, board.game_id),
+    #     )
     return True
 
 def cant_move_pawns(start, stop, inputs):
@@ -698,10 +698,10 @@ def monkey_see(start, stop, inputs):
         history.whose_turn(),
         board.game_id,
         lambda: whiteboard(
-            f'Can capture with {whiteboard_str}', history.whose_turn(), board.game_id),
+            f'Can capture with {whiteboard_str}' if pieces_captured else "Can't capture yet!", history.whose_turn(), board.game_id),
     )
     if board.capture(start, stop, history):
-        return board.get(start).piece in history.pieces_captured_with(history.whose_turn().other())
+        return board.get(start).piece in pieces_captured
     return True
 
 
@@ -1013,4 +1013,4 @@ def get_handicaps(x, y):
     else:
         handicaps.update(untested_handicaps)
         # return random.sample(handicaps.keys(), 2)
-        return descriptions[monkey_dont], descriptions[monkey_dont]
+        return descriptions[no_handicap], descriptions[no_handicap]
