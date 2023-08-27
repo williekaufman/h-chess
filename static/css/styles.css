@@ -5,12 +5,12 @@
 }
 
 body {
-  background: radial-gradient(circle, #cbdbe9, #a3bceb);
+  background: radial-gradient(circle, #e9dfcb, #ebd3a3);
   color: #121212;
 }
 
 body.dark {
-  background: radial-gradient(circle, #222222, #222222);
+  background: radial-gradient(circle, #373737, #222222);
   color: #e0e0e0;
 }
 
