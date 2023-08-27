@@ -176,6 +176,45 @@ input::placeholder {
   color: white;
 }
 
+.draw-toast {
+  display: none;
+  justify-content: space-around;
+  padding: 10px;
+  max-width: 200px;
+  margin-top: 10px;
+  /* background-color: white; */
+  color: black;
+  z-index: 9999;
+}
+
+.dark .draw-toast {
+  /* background-color: brown; */
+  color: white;
+}
+
+.draw-button {
+  background-color: yellow;
+  color: black;
+  border-color: black;
+  border-radius: 5px;
+  padding: 5px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.draw-button:hover {
+  background-color: lightblue;
+}
+
+.dark .draw-button {
+  background-color: darkred;
+  color: white;
+  border-color: white;
+}
+
+.dark .draw-button:hover {
+  background-color: darkblue;
+}
+
 .result-toast {
   display: none;
   font-size: 30px;
@@ -183,16 +222,39 @@ input::placeholder {
   font-weight: bold;
   padding: 10px;
   margin-top: 10px;
-  background-color: lightgreen;
   color: black;
   border-radius: 5px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
   z-index: 9999;
 }
 
+.result-toast.win {
+  background-color: lightgreen;
+}
+
+.result-toast.lose {
+  background-color: lightpink;
+}
+
+.result-toast.draw {
+  font-size: 24px;
+  background-color: yellow;
+}
+
 .dark .result-toast {
-  background-color: darkgreen;
   color: white;
+}
+
+.dark .result-toast.win {
+  background-color: darkgreen;
+}
+
+.dark .result-toast.lose {
+  background-color: darkred;
+}
+
+.dark .result-toast.draw {
+  background-color: darkslateblue;
 }
 
 .how-to-play {

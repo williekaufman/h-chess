@@ -9,11 +9,11 @@ import random
 def no_handicap(start, stop, inputs):
     board, history = inputs.board, inputs.history
     c = history.whose_turn()
-    try_opt(
-        c,
-        board.game_id,
-        lambda : whiteboard('Hello', c, board.game_id),
-        )
+    # try_opt(
+    #     c,
+    #     board.game_id,
+    #     lambda : whiteboard('Hello', c, board.game_id),
+    #     )
     return True
 
 def cant_move_pawns(start, stop, inputs):
@@ -1013,4 +1013,4 @@ def get_handicaps(x, y):
     else:
         handicaps.update(untested_handicaps)
         # return random.sample(handicaps.keys(), 2)
-        return descriptions[monkey_dont], descriptions[monkey_dont]
+        return descriptions[no_handicap], descriptions[no_handicap]
