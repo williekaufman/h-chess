@@ -23,6 +23,7 @@ newGameModal = document.getElementById('newGameModal');
 newGameModalOverlay = document.getElementById('newGameModalOverlay');
 
 newGameButton = document.getElementById('newGameButton');
+openJoinDialogButton = document.getElementById('openJoinDialogButton');
 offerDrawButton = document.getElementById('offerDrawButton');
 copyGameIdButton = document.getElementById('copyGameIdButton');
 toggleThemeButton = document.getElementById('toggleThemeButton');
@@ -410,7 +411,8 @@ gameIdInput.addEventListener('focus', function () {
 });
 
 gameIdInput.addEventListener('blur', function () {
-    document.addEventListener('keydown', handleKeyDown);
+    gameIdInput.value = '';
+    closeModals();
 });
 
 gameIdInput.addEventListener('keydown', e => {
@@ -673,6 +675,7 @@ function openNewGameModal() {
 function openJoinGameModal() {
     joinGameModal.style.display = 'flex';
     joinGameModalOverlay.style.display = 'block';
+    document.removeEventListener('keydown', handleKeyDown);
 }
 
 function confirmDraw() {
@@ -684,6 +687,7 @@ function closeModals() {
     newGameModalOverlay.style.display = 'none';
     joinGameModal.style.display = 'none';
     joinGameModalOverlay.style.display = 'none';
+    document.addEventListener('keydown', handleKeyDown);
 }
 
 function flipVisibility(element) {
@@ -716,7 +720,7 @@ function handleKeyDown(event) {
         newGameButton.click();
     } else if (k == 'j') {
         event.preventDefault();
-        joinGameButton.click();
+        openJoinDialogButton.click();
     } else if (k == 't') {
         toggleThemeButton.click();
     } else if (k == 'o') {
@@ -741,10 +745,14 @@ newGameButton.addEventListener('click', () => {
     shiftKeyIsDown ? newGame() : openNewGameModal();
 });
 
-joinGameButton.addEventListener('click', () => {
+openJoinDialogButton.addEventListener('click', () => {
     openJoinGameModal();
     gameIdInput.focus();
 })
+
+joinGameButton.addEventListener('click', () => {
+    loadGame();
+});
 
 offerDrawButton.addEventListener('click', () => {
     if (gameIsOver || drawToastElement.style.display == 'inline-block') {

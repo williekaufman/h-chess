@@ -409,7 +409,7 @@ input::placeholder {
 }
 
 .piece-image {
-  height: 100px;
+  height: 80px;
   box-sizing: border-box;
   cursor: pointer;
 }
@@ -430,7 +430,7 @@ input::placeholder {
 
 .time-selection {
   width: 50px;
-  height: 25px;
+  height: 35px;
   box-sizing: border-box;
   text-align: center;
   justify-content: center;
@@ -456,9 +456,14 @@ input::placeholder {
   border-color: white;
 }
 
+.handicap-selection {
+  box-sizing: border-box;
+  height: 30px;
+}
+
 .handicap-selection.selected {
   font-weight: bold;
-  letter-spacing: -0.035em;
+  letter-spacing: -0.038em;
 }
 
 .grid {
@@ -480,7 +485,7 @@ input::placeholder {
   left: 50%;
   top: 50%;
   width: 100%;
-  max-width: 1500px;
+  max-width: 1000px;
   transform: translate(-50%, -50%);
   height: 300px;
   overflow: auto;
@@ -531,6 +536,7 @@ input::placeholder {
 .grid-container {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
+  height: 100%;
   grid-gap: 10px;
   justify-content: center;
   align-items: center;
@@ -561,7 +567,9 @@ input::placeholder {
 
 .label-container {
   display: flex;
-  min-width: 33%;
+  /* If you comment this back in, it'll center the modal boxes, but it looks bad...I think */
+  /* min-width: 33%; */
+  height: 60%;
   flex-direction: column;
   align-items: center;
   text-align: center;
