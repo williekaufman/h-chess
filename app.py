@@ -115,16 +115,15 @@ def new_game():
         playerColor = Color(request.json.get('color'))
     except:
         playerColor = Color.WHITE if random.random() > 0.5 else Color.BLACK
+    if rget('board', game_id=game_id):
+        return {'success': False, 'error': 'Game already exists'}
     username = request.json.get('username')
     if username:
         rset(live_game_key(username), game_id, game_id=None)
         rset('username', username, game_id=game_id)
     if (timeControl := request.json.get('timeControl')):
         for color in Color:
-            rset(f'{color.value}_time', timeControl, game_id=game_id)
-    if rget('board', game_id=game_id):
-        return {'success': False, 'error': 'Game already exists'}
-    
+            rset(f'{color.value}_time', timeControl, game_id=game_id)   
     hs = {Color.WHITE: None, Color.BLACK: None}
     if (yourHandicap := request.json.get('yourHandicap')):
         hs[playerColor] = yourHandicap
