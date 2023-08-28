@@ -413,6 +413,15 @@ gameIdInput.addEventListener('blur', function () {
     document.addEventListener('keydown', handleKeyDown);
 });
 
+gameIdInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+        loadGame();
+    }
+    if (e.key === 'Escape') {
+        gameIdInput.blur();
+    }
+});
+
 whiteKingElement.addEventListener('click', function () {
     if (colorSelection == 'White') {
         colorSelection = 'random';
@@ -624,6 +633,7 @@ function newGame(toast = true) {
 
 function loadGame(game = null) {
     game = game || gameIdInput.value;
+    gameIdInput.value = '';
     if (!game) {
         showToast('Enter the game ID', 3);
         return;
@@ -705,6 +715,7 @@ function handleKeyDown(event) {
     } else if (k == 'n') {
         newGameButton.click();
     } else if (k == 'j') {
+        event.preventDefault();
         joinGameButton.click();
     } else if (k == 't') {
         toggleThemeButton.click();
@@ -721,7 +732,7 @@ function handleKeyUp(event) {
 }
 
 document.addEventListener("click", function (event) {
-    if (event.target === newGameModalOverlay) {
+    if (event.target === newGameModalOverlay || event.target === joinGameModalOverlay) {
         closeModals();
     }
 });
@@ -732,6 +743,7 @@ newGameButton.addEventListener('click', () => {
 
 joinGameButton.addEventListener('click', () => {
     openJoinGameModal();
+    gameIdInput.focus();
 })
 
 offerDrawButton.addEventListener('click', () => {
@@ -749,8 +761,6 @@ toggleThemeButton.addEventListener('click', () => {
 createGameButton.addEventListener('click', () => {
     newGame();
 });
-
-joinGameButton.addEventListener('click', () => loadGame()); 
 
 function copyToClipboard(text) {
     var textarea = document.createElement("textarea");
