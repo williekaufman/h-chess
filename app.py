@@ -124,7 +124,20 @@ def new_game():
             rset(f'{color.value}_time', timeControl, game_id=game_id)
     if rget('board', game_id=game_id):
         return {'success': False, 'error': 'Game already exists'}
-    handicaps = get_handicaps(0, 0)
+    
+    hs = {Color.WHITE: None, Color.BLACK: None}
+    if (yourHandicap := request.json.get('yourHandicap')):
+        print("found your handicap diff")
+        hs[playerColor] = yourHandicap
+    if (theirHandicap := request.json.get('theirHandicap')):
+        print("found their handicap diff")
+        hs[playerColor.other()] = theirHandicap
+    print(hs[Color.WHITE])
+    print(hs[Color.BLACK])
+    print("done with hs")
+    handicaps = get_handicaps(hs[Color.WHITE], hs[Color.BLACK])
+    print(handicaps)
+
     starting_board().write_to_redis(game_id)
     rset('history', History().to_string(), game_id=game_id)
     rset('turn', f'{Color.WHITE.value}', game_id=game_id)

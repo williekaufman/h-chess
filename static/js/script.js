@@ -78,6 +78,8 @@ yourTimeElement = document.getElementById('yourTime');
 opponentTimeElement = document.getElementById('opponentTime');
 
 timeSelection = null;
+yourHandicapSelection = null;
+theirHandicapSelection = null;
 
 highlightedSquares = [];
 
@@ -448,7 +450,39 @@ timeSelectionElements.forEach(element => {
     });
 });
 
-handicapDifficultyElements = document.querySelectorAll('.handicap-difficulty')
+yourHandicapSelectionElements = document.querySelectorAll('.handicap-selection[yours="t"]')
+
+yourHandicapSelectionElements.forEach(element => {
+    element.addEventListener('click', function () {
+        if (element.classList.contains('your-selected-difficulty')) {
+            element.classList.remove('your-selected-difficulty');
+            yourHandicapSelection = null;
+            return;
+        }
+        yourHandicapSelectionElements.forEach(element => {
+            element.classList.remove('your-selected-difficulty');
+        });
+        element.classList.add('your-selected-difficulty');
+        yourHandicapSelection = element.getAttribute('diff');
+    });
+});
+
+theirHandicapSelectionElements = document.querySelectorAll('.handicap-selection[yours="f"]')
+
+theirHandicapSelectionElements.forEach(element => {
+    element.addEventListener('click', function () {
+        if (element.classList.contains('their-selected-difficulty')) {
+            element.classList.remove('their-selected-difficulty');
+            theirHandicapSelection = null;
+            return;
+        }
+        theirHandicapSelectionElements.forEach(element => {
+            element.classList.remove('their-selected-difficulty');
+        });
+        element.classList.add('their-selected-difficulty');
+        theirHandicapSelection = element.getAttribute('diff');
+    });
+});
 
 addFriendInputElement.addEventListener('focus', function () {
     document.removeEventListener('keydown', handleKeyDown);
@@ -516,7 +550,6 @@ function makeRequestOptions(body, method = 'POST') {
             headers: { 'Content-Type': 'application/json' },
         };
     }
-
     return {
         method,
         mode: 'cors',
@@ -545,6 +578,10 @@ function newGameBody() {
         ret['color'] = colorSelection;
     } if (timeSelection) {
         ret['timeControl'] = timeSelection;
+    } if (yourHandicapSelection){
+        ret['yourHandicap'] = yourHandicapSelection;
+    } if (theirHandicapSelection){
+        ret['theirHandicap'] = theirHandicapSelection;
     } if (username) {
         ret['username'] = username;
     }

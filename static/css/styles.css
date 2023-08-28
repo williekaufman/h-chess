@@ -446,6 +446,13 @@ input::placeholder {
   font-weight: bold;
 }
 
+.your-selected-difficulty {
+  font-weight: bold;
+}
+
+.their-selected-difficulty {
+  font-weight: bold;
+}
 .grid {
   display: flex;
   flex-direction: row;
@@ -465,7 +472,7 @@ input::placeholder {
   left: 50%;
   top: 50%;
   width: 100%;
-  max-width: 900px;
+  max-width: 1000px;
   transform: translate(-50%, -50%);
   height: 300px;
   overflow: auto;
@@ -508,7 +515,7 @@ input::placeholder {
 }
 
 .title {
-  grid-column: span 3;
+  grid-column: span 4;
   text-align: center;
   font-size: 16px;
   margin-bottom: 0px;
@@ -517,8 +524,9 @@ input::placeholder {
 
 .label{
   grid-column: 1;
-  margin-left: -100px;
-  margin-right: -100px;
+  margin-left: 0px;
+  margin-right: 0px;
+  column-gap: 0px;
 }
 
 .label-container {
