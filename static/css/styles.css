@@ -481,7 +481,7 @@ input::placeholder {
 }
 
 .dark .modal {
-  background-color: darkblue;
+  background: radial-gradient(circle, rgb(108, 107, 107), rgb(39, 39, 39));
 }
 
 .modal-overlay {
@@ -509,7 +509,7 @@ input::placeholder {
 }
 
 .dark .grid-container {
-  background-color: darkred;
+  background-color: rgb(131, 124, 174);
 }
 
 .title {
