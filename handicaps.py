@@ -864,7 +864,6 @@ def mind_the_middle(start, stop, inputs):
     new_board = try_move(board, start, stop, history)
     return not [s for s in center if new_board.is_attacked(s, history.whose_turn(), history)]
 
-# This needs a dialog box to help you keep track
 def monkey_dont(start, stop, inputs):
     h = inputs.history
     c = h.whose_turn()
@@ -873,7 +872,17 @@ def monkey_dont(start, stop, inputs):
     if c == Color.BLACK:
         nap_moves = nap_moves[1:]
     s = zip(ap_moves, nap_moves)
-    return len([1 for x,y in zip(ap_moves, nap_moves) if x.piece.piece == y.piece.piece]) < 3
+    n = len([1 for x,y in zip(ap_moves, nap_moves) if x.piece.piece == y.piece.piece])
+    most_recent_copy = ap_moves and nap_moves and (ap_moves[-1].piece.piece == nap_moves[-1].piece.piece)
+    plural = '' if n == 1 else 's'
+    if most_recent_copy:
+        try_opt(
+            h.whose_turn(),
+            inputs.board.game_id,
+            lambda: whiteboard(
+                f'Your opponent has copied you {n} time{plural}', h.whose_turn(), inputs.board.game_id),
+        )
+    return n < 3
 
 # Comment so I can search for the bottom of the handicaps
 
@@ -881,7 +890,7 @@ def monkey_dont(start, stop, inputs):
 # number is how bad the handicap is, 1-10
 # capture-based handicaps are maybe all broken with enpassant(s)
 tested_handicaps = {
-    "Simp: Lose if you have no queen": (lose_if_no_queen, 7),
+    "Simp: Lose if you have no queen": (lose_if_no_queen, 6),
     "Skittish: While in check, you must move your king": (skittish, 2),
     "Bongcloud: When your king is on the back rank, you can only move pawns and kings": (bongcloud, 2),
     "Home Base: Can't move to opponent's side of board": (cant_move_to_opponents_side_of_board, 5),
@@ -1013,4 +1022,4 @@ def get_handicaps(x, y):
     else:
         handicaps.update(untested_handicaps)
         # return random.sample(handicaps.keys(), 2)
-        return descriptions[no_handicap], descriptions[no_handicap]
+        return descriptions[monkey_dont], descriptions[no_handicap]

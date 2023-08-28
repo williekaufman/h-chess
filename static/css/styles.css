@@ -515,6 +515,12 @@ input::placeholder {
   margin-top: 0px;
 }
 
+.label{
+  grid-column: 1;
+  margin-left: -100px;
+  margin-right: -100px;
+}
+
 .label-container {
   display: flex;
   flex-direction: column;

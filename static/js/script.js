@@ -448,6 +448,8 @@ timeSelectionElements.forEach(element => {
     });
 });
 
+handicapDifficultyElements = document.querySelectorAll('.handicap-difficulty')
+
 addFriendInputElement.addEventListener('focus', function () {
     document.removeEventListener('keydown', handleKeyDown);
 });
