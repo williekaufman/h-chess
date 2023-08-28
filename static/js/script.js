@@ -33,6 +33,8 @@ ignoreOtherPlayerCheckButton = document.getElementById('ignoreOtherPlayerCheckBu
 holdingPiece = false;
 
 joinGameButton = document.getElementById('joinGameButton');
+joinGameModal = document.getElementById('joinGameModal')
+joinGameModalOverlay = document.getElementById('joinGameModalOverlay');
 
 gameIdInput = document.getElementById('gameIdInput');
 
@@ -612,7 +614,7 @@ function newGame(toast = true) {
             updateState();
             firstMove = true;
         });
-    closeModal();
+    closeModals();
     setWhoseTurn('White');
     gameIsOver = false;
     whiteboard_messages = [];
@@ -626,7 +628,7 @@ function loadGame(game = null) {
         showToast('Enter the game ID', 3);
         return;
     }
-    closeModal();
+    closeModals();
     gameResultToastElement.style.display = 'none';
     fetchWrapper(URL + 'join_game', { 'gameId': game }, 'GET')
         .then((response) => response.json())
@@ -653,18 +655,25 @@ function loadGame(game = null) {
         });
 }
 
-function openModal() {
+function openNewGameModal() {
     newGameModal.style.display = 'flex';
     newGameModalOverlay.style.display = 'block';
+}
+
+function openJoinGameModal() {
+    joinGameModal.style.display = 'flex';
+    joinGameModalOverlay.style.display = 'block';
 }
 
 function confirmDraw() {
     confirmDrawElement.style.display = 'inline-block';
 }
 
-function closeModal() {
+function closeModals() {
     newGameModal.style.display = 'none';
     newGameModalOverlay.style.display = 'none';
+    joinGameModal.style.display = 'none';
+    joinGameModalOverlay.style.display = 'none';
 }
 
 function flipVisibility(element) {
@@ -683,7 +692,7 @@ function handleKeyDown(event) {
             copyGameIdButton.click();
         }
     } else if (k == 'escape') {
-        closeModal();
+        closeModals();
     } else if (k == 'enter' && newGameModal.style.display == 'flex') {
         event.preventDefault();
         createGameButton.click();
@@ -695,6 +704,8 @@ function handleKeyDown(event) {
         ignoreOtherPlayerCheckButton.click();
     } else if (k == 'n') {
         newGameButton.click();
+    } else if (k == 'j') {
+        joinGameButton.click();
     } else if (k == 't') {
         toggleThemeButton.click();
     } else if (k == 'o') {
@@ -711,13 +722,17 @@ function handleKeyUp(event) {
 
 document.addEventListener("click", function (event) {
     if (event.target === newGameModalOverlay) {
-        closeModal();
+        closeModals();
     }
 });
 
 newGameButton.addEventListener('click', () => {
-    shiftKeyIsDown ? newGame() : openModal();
+    shiftKeyIsDown ? newGame() : openNewGameModal();
 });
+
+joinGameButton.addEventListener('click', () => {
+    openJoinGameModal();
+})
 
 offerDrawButton.addEventListener('click', () => {
     if (gameIsOver || drawToastElement.style.display == 'inline-block') {
@@ -735,7 +750,7 @@ createGameButton.addEventListener('click', () => {
     newGame();
 });
 
-joinGameButton.addEventListener('click', () => loadGame());
+joinGameButton.addEventListener('click', () => loadGame()); 
 
 function copyToClipboard(text) {
     var textarea = document.createElement("textarea");

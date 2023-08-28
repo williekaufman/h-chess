@@ -118,20 +118,25 @@
                     <button class="handicap-selection" diff="hard" yours="f">Hard</button>
                 </div>
             </div>
-            <div class="label-container">
-                <div class="grid-container" style="grid-template-columns: repeat(2, 1fr)">
-                    <button id="createGameButton" class="create-game-button">New Game</button>
-                    <button id="joinGameButton" class="create-game-button">Join Game</button>
-                </div>
+        </div>
+        <button id="createGameButton" class="create-game-button">Start New Game</button>
+    </div>
+</div>
+<div id="joinGameModalOverlay" class="modal-overlay">
+    <div id="joinGameModal" class="join-modal">
+        <div class="label-container">
+            <div class="grid-container" style="grid-template-columns: repeat(1, 1fr)">
+                <div> <input type="text" class="game-id-box" id="gameIdInput" placeholder="game id" size="30"> </div>
+                <button id="joinGameButton" class="create-game-button">Join Game</button>
             </div>
         </div>
-        <div> <input type="text" class="game-id-box" id="gameIdInput" placeholder="game id" size="30"> </div>
     </div>
 </div>
 <div class="hotkeys">
     <div> Hotkeys </div>
     <div> <b> n </b> - new game </div>
     <div> <b> N </b> - skip new game dialog, use defaults </div>
+    <div> <b> j </b> - join game </div>
     <div> <b> o </b> - offer draw </div>
     <div> <b> O </b> - offer draw, skip confirm </div>
     <div> <b> c </b> - copy game id </div>
