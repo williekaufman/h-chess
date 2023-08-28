@@ -149,10 +149,7 @@ def conscientious_objectors(start, stop, inputs):
     board, history = inputs.board, inputs.history
     p = board.get(start)
     stop_p = board.get(stop)
-    if p and stop_p:
-        return not (stop_p.color != history.whose_turn() and p.piece == Piece.PAWN)
-    else:
-        return True
+    return p.piece == Piece.PAWN and board.capture(start, stop, history)
 
 
 def outflanked(start, stop, inputs):
@@ -1016,7 +1013,8 @@ def test_all_handicaps():
 def get_handicaps(white_diff, black_diff):
     # So I can't forget to undo anything weird
     if not LOCAL:
-        dd = {1: 'easy', 2: 'easy', 3: 'easy', 4: 'medium', 5: 'medium', 6: 'medium', 7: 'hard', 8: 'hard', 9: 'hard', 10: 'hard'}
+        handicaps.update(untested_handicaps)
+        dd = {0: 'easy', 1: 'easy', 2: 'easy', 3: 'easy', 4: 'medium', 5: 'medium', 6: 'medium', 7: 'hard', 8: 'hard', 9: 'hard', 10: 'hard'}
         white_hs = tested_handicaps.keys()
         black_hs = tested_handicaps.keys()
         if white_diff:
@@ -1024,16 +1022,17 @@ def get_handicaps(white_diff, black_diff):
         if black_diff:
             black_hs = [x for x in tested_handicaps if dd[tested_handicaps[x][1]] == black_diff]
         return [random.sample(white_hs, 1)[0], random.sample(black_hs, 1)[0]]
+        # return random.sample(tested_handicaps.keys(), 2)
     else:
         handicaps.update(untested_handicaps)
-        dd = {1: 'easy', 2: 'easy', 3: 'easy', 4: 'medium', 5: 'medium', 6: 'medium', 7: 'hard', 8: 'hard', 9: 'hard', 10: 'hard'}
+        dd = {0: 'easy', 1: 'easy', 2: 'easy', 3: 'easy', 4: 'medium', 5: 'medium', 6: 'medium', 7: 'hard', 8: 'hard', 9: 'hard', 10: 'hard'}
         white_hs = tested_handicaps.keys()
         black_hs = tested_handicaps.keys()
         if white_diff:
             white_hs = [x for x in tested_handicaps if dd[tested_handicaps[x][1]] == white_diff]
         if black_diff:
             black_hs = [x for x in tested_handicaps if dd[tested_handicaps[x][1]] == black_diff]
-        if white_diff: 
+        if white_diff:
             return [random.sample(white_hs, 1)[0], random.sample(black_hs, 1)[0]]
         # return random.sample(handicaps.keys(), 2)
         return descriptions[monkey_dont], descriptions[no_handicap]

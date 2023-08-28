@@ -362,7 +362,7 @@ class Board():
         random.seed(int(self.game_id, 16) + len(history.history))
         x = self.cache.reached_positions[history.whose_turn()].get(self.to_string(), 0)
         if x == 1:
-            whiteboard(f'Position reached before - one more will be threefold repition', game_id=self.game_id)
+            whiteboard(f'Position reached before - one more will be threefold repetion', game_id=self.game_id)
         self.cache.reached_positions[history.whose_turn()][self.to_string()] = x + 1
         self.cache = Cache(kings, random.random(), rooks_have_connected, king_has_reached_last_rank, self.cache.reached_positions)
 
@@ -516,7 +516,7 @@ class Board():
 
     def draw(self, whose_turn, history):
         if self.cache.reached_positions[whose_turn.other()][self.to_string()] >= 3:
-            return Result.THREEFOLD_REPITION
+            return Result.THREEFOLD_REPETION
         if len(history.history) > 100:
             moves = history.history[-100:]
             if not any(move.capture for move in moves) and not any(move.piece.piece == Piece.PAWN for move in moves):

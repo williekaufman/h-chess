@@ -14,6 +14,6 @@ class Color(Enum):
 class Result(Enum):
     WHITE_WINS = 'White'
     BLACK_WINS = 'Black'
-    THREEFOLD_REPITION = 'Draw by threefold repetition'
+    THREEFOLD_REPETION = 'Draw by threefold repetition'
     FIFTY_MOVE_RULE = 'Draw by fifty-move rule'
     AGREEMENT = 'Draw by agreement'
