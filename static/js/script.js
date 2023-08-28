@@ -497,6 +497,14 @@ theirHandicapSelectionElements.forEach(element => {
     });
 });
 
+document.querySelectorAll('.handicap-selection[yours="t"][diff="easy"]').forEach(element => {
+    element.click();
+});
+
+document.querySelectorAll('.handicap-selection[yours="f"][diff="easy"]').forEach(element => {
+    element.click();
+});
+
 addFriendInputElement.addEventListener('focus', function () {
     document.removeEventListener('keydown', handleKeyDown);
 });
