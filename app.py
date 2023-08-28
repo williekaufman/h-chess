@@ -127,16 +127,10 @@ def new_game():
     
     hs = {Color.WHITE: None, Color.BLACK: None}
     if (yourHandicap := request.json.get('yourHandicap')):
-        print("found your handicap diff")
         hs[playerColor] = yourHandicap
     if (theirHandicap := request.json.get('theirHandicap')):
-        print("found their handicap diff")
         hs[playerColor.other()] = theirHandicap
-    print(hs[Color.WHITE])
-    print(hs[Color.BLACK])
-    print("done with hs")
     handicaps = get_handicaps(hs[Color.WHITE], hs[Color.BLACK])
-    print(handicaps)
 
     starting_board().write_to_redis(game_id)
     rset('history', History().to_string(), game_id=game_id)

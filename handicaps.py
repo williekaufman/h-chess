@@ -47,8 +47,6 @@ def lose_if_no_queen(start, stop, inputs):
 def skittish(start, stop, inputs):
     # Use board.cache
     board, history = inputs.board, inputs.history.history
-    if history:
-        print(history[-1].check)
     return not history or not history[-1].check or board.get(start).piece == Piece.KING
 
 
