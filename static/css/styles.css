@@ -446,13 +446,11 @@ input::placeholder {
   font-weight: bold;
 }
 
-.your-selected-difficulty {
+.handicap-selection.selected {
   font-weight: bold;
+  letter-spacing: -0.035em;
 }
 
-.their-selected-difficulty {
-  font-weight: bold;
-}
 .grid {
   display: flex;
   flex-direction: row;

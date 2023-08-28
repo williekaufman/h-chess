@@ -454,15 +454,15 @@ yourHandicapSelectionElements = document.querySelectorAll('.handicap-selection[y
 
 yourHandicapSelectionElements.forEach(element => {
     element.addEventListener('click', function () {
-        if (element.classList.contains('your-selected-difficulty')) {
-            element.classList.remove('your-selected-difficulty');
+        if (element.classList.contains('selected')) {
+            element.classList.remove('selected');
             yourHandicapSelection = null;
             return;
         }
         yourHandicapSelectionElements.forEach(element => {
-            element.classList.remove('your-selected-difficulty');
+            element.classList.remove('selected');
         });
-        element.classList.add('your-selected-difficulty');
+        element.classList.add('selected');
         yourHandicapSelection = element.getAttribute('diff');
     });
 });
@@ -471,15 +471,15 @@ theirHandicapSelectionElements = document.querySelectorAll('.handicap-selection[
 
 theirHandicapSelectionElements.forEach(element => {
     element.addEventListener('click', function () {
-        if (element.classList.contains('their-selected-difficulty')) {
-            element.classList.remove('their-selected-difficulty');
+        if (element.classList.contains('selected')) {
+            element.classList.remove('selected');
             theirHandicapSelection = null;
             return;
         }
         theirHandicapSelectionElements.forEach(element => {
-            element.classList.remove('their-selected-difficulty');
+            element.classList.remove('selected');
         });
-        element.classList.add('their-selected-difficulty');
+        element.classList.add('selected');
         theirHandicapSelection = element.getAttribute('diff');
     });
 });
