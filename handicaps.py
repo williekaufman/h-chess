@@ -991,9 +991,6 @@ handicaps = dict(tested_handicaps, **untested_handicaps)
 
 descriptions = {v[0]: k for k, v in handicaps.items()}
 
-# theoretical args for some kind of config, e.g. difficulties, elos, idk
-
-
 # This just checks that none of them throw errors when called
 # Doesn't check logic or anything
 # Hopefully just catches stupid things like calling piece.piece.piece.piece
