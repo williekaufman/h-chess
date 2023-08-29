@@ -1019,7 +1019,7 @@ def get_handicaps(white_diff, black_diff):
             white_hs = [x for x in tested_handicaps if dd[tested_handicaps[x][1]] == white_diff]
         if black_diff:
             black_hs = [x for x in tested_handicaps if dd[tested_handicaps[x][1]] == black_diff]
-        return [random.sample(white_hs, 1)[0], random.sample(black_hs, 1)[0]]
+        return [random.choice(white_hs), random.choice(black_hs)]
         # return random.sample(tested_handicaps.keys(), 2)
     else:
         handicaps.update(untested_handicaps)
@@ -1032,6 +1032,6 @@ def get_handicaps(white_diff, black_diff):
             white_hs = [x for x in tested_handicaps if dd[tested_handicaps[x][1]] == white_diff]
         if black_diff:
             black_hs = [x for x in tested_handicaps if dd[tested_handicaps[x][1]] == black_diff]
-        return [random.sample(white_hs, 1)[0], random.sample(black_hs, 1)[0]]
+        return [random.choice(white_hs), random.choice(black_hs)]
         # return random.sample(handicaps.keys(), 2)
         # return descriptions[monkey_dont], descriptions[no_handicap]

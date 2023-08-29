@@ -1,3 +1,4 @@
+import copy
 import random
 from redis_utils import rget, rset
 from enum import Enum
@@ -268,6 +269,9 @@ class Cache():
         except:
             return None
         
+    def copy(self):
+        return Cache(copy.deepcopy(self.kings), self.rand, copy.deepcopy(self.rooks_have_connected), copy.deepcopy(self.king_has_reached_last_rank), copy.deepcopy(self.reached_positions.copy()))
+        
 class History():
     def __init__(self, s=''):
         if not s:
@@ -337,7 +341,7 @@ class Board():
                 self.board[i][j] = piece_or_none(s[i*8+j])
 
     def copy(self):
-        return Board(self.to_string(), self.game_id, self.cache)
+        return Board(self.to_string(), self.game_id, self.cache.copy())
 
     def loc(self, piece):
         return [square for square in Square if self.get(square) and self.get(square).equals(piece)]
@@ -348,7 +352,7 @@ class Board():
             return None
         return loc[0]
 
-    def make_cache(self, history):
+    def make_cache(self, history, warn_about_repetition=True):
         rooks_have_connected = { c : False for c in Color }
         for c in Color:
             rooks_have_connected[c] = self.cache.rooks_have_connected[c] or rooks_are_connected(self, c)
@@ -361,7 +365,7 @@ class Board():
         # This could theoretically collide but it never will
         random.seed(int(self.game_id, 16) + len(history.history))
         x = self.cache.reached_positions[history.whose_turn().other()].get(self.to_string(), 0)
-        if x == 1:
+        if x == 1 and warn_about_repetition:
             whiteboard(f'Position reached before - one more will be threefold repetition', game_id=self.game_id)
         self.cache.reached_positions[history.whose_turn().other()][self.to_string()] = x + 1
         self.cache = Cache(kings, random.random(), rooks_have_connected, king_has_reached_last_rank, self.cache.reached_positions)
@@ -419,7 +423,7 @@ class Board():
     def capture(self, start, stop, history):
         return self.capture_outer(start, stop, history)[0]
 
-    def move(self, start, stop, whose_turn, handicap, history=History(), promote_to=None):
+    def move(self, start, stop, whose_turn, handicap, history=History(), promote_to=None, warn_about_repetition=True):
         assert type(start) == Square
         assert type(stop) == Square
         assert type(whose_turn) == Color
@@ -484,7 +488,7 @@ class Board():
         # napking = self.loc(ColoredPiece(whose_turn), Piece.KING)
         check = 'f'
         # This sets all the values that only change on a move
-        self.make_cache(history)
+        self.make_cache(history, warn_about_repetition=warn_about_repetition)
         return move, extra, None
 
     def legal_moves(self, start, history, whose_turn, handicap=None):

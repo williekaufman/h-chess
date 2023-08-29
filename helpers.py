@@ -5,7 +5,7 @@ import datetime
 
 def try_move(board, start, stop, history):
     new_board = board.copy()
-    new_board.move(start, stop, history.whose_turn(), None, history)
+    new_board.move(start, stop, history.whose_turn(), None, history, warn_about_repetition=False)
     return new_board
 
 
