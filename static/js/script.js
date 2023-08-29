@@ -372,7 +372,11 @@ promotionElements.forEach(element => {
         promotionPiece = element.getAttribute('piece');
         element.classList.add('selected');
     });
+    if (element.getAttribute('piece') == 'Q') {
+        element.click();
+    }
 });
+
 
 function setOrientation(orientation) {
     color = orientation;
