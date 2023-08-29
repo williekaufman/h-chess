@@ -5,7 +5,7 @@ import datetime
 
 def try_move(board, start, stop, history):
     new_board = board.copy()
-    new_board.move(start, stop, history.whose_turn(), None, history, warn_about_repetition=False)
+    new_board.move(start, stop, history.whose_turn(), None, history)
     return new_board
 
 
@@ -35,12 +35,17 @@ def toast(message, color=None, game_id=None):
         socketio.emit('message', payload, room=game_id)
 
 
-def whiteboard(message, color=None, game_id=None):
+def whiteboard(message, color=None, game_id=None, really_broadcast_to_all=False):
     payload = {'message': message, 'color': 'both'}
     if color:
         payload['color'] = color.value
     if not game_id:
-        socketio.emit('whiteboard', payload)
+        # Now that board.game_id is sometimes None, 
+        # wants to make sure this is not accidentally called w/o a game id
+        if really_broadcast_to_all:
+            socketio.emit('whiteboard', payload)
+        else:
+            print(f'whiteboard called without game_id: {message}')
     else:
         socketio.emit('whiteboard', payload, room=game_id)
 
@@ -50,6 +55,8 @@ def opt_key(color):
 
 
 def try_opt(color, game_id, f):
+    if not game_id:
+        return 
     if rget(opt_key(color), game_id=game_id):
         f()
         rset(opt_key(color), '', game_id=game_id)

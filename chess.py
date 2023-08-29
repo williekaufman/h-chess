@@ -270,7 +270,13 @@ class Cache():
             return None
         
     def copy(self):
-        return Cache(copy.deepcopy(self.kings), self.rand, copy.deepcopy(self.rooks_have_connected), copy.deepcopy(self.king_has_reached_last_rank), copy.deepcopy(self.reached_positions.copy()))
+        return Cache(
+            {k: v for k, v in self.kings.items()},
+            self.rand,
+            {k: v for k, v in self.rooks_have_connected.items()},
+            {k: v for k, v in self.king_has_reached_last_rank.items()},
+            {k: {kk: vv for kk, vv in v.items()} for k, v in self.reached_positions.items()}
+        )
         
 class History():
     def __init__(self, s=''):
@@ -334,6 +340,7 @@ class CaptureType(Enum):
 class Board():
     def __init__(self, s, game_id, cache):
         self.cache = cache
+        # Game_id should be None if this is a temporary board
         self.game_id = game_id
         self.board = [[None] * 8 for _ in range(8)]
         for i in range(8):
@@ -341,7 +348,7 @@ class Board():
                 self.board[i][j] = piece_or_none(s[i*8+j])
 
     def copy(self):
-        return Board(self.to_string(), self.game_id, self.cache.copy())
+        return Board(self.to_string(), None, self.cache.copy())
 
     def loc(self, piece):
         return [square for square in Square if self.get(square) and self.get(square).equals(piece)]
@@ -352,7 +359,7 @@ class Board():
             return None
         return loc[0]
 
-    def make_cache(self, history, warn_about_repetition=True):
+    def make_cache(self, history):
         rooks_have_connected = { c : False for c in Color }
         for c in Color:
             rooks_have_connected[c] = self.cache.rooks_have_connected[c] or rooks_are_connected(self, c)
@@ -363,9 +370,9 @@ class Board():
         # Random is a function of the game_id plus number of moves
         # so you get the same number if you call legal_moves again
         # This could theoretically collide but it never will
-        random.seed(int(self.game_id, 16) + len(history.history))
+        random.seed(int(self.game_id or '0', 16) + len(history.history))
         x = self.cache.reached_positions[history.whose_turn().other()].get(self.to_string(), 0)
-        if x == 1 and warn_about_repetition:
+        if x == 1 and self.game_id:
             whiteboard(f'Position reached before - one more will be threefold repetition', game_id=self.game_id)
         self.cache.reached_positions[history.whose_turn().other()][self.to_string()] = x + 1
         self.cache = Cache(kings, random.random(), rooks_have_connected, king_has_reached_last_rank, self.cache.reached_positions)
@@ -423,7 +430,7 @@ class Board():
     def capture(self, start, stop, history):
         return self.capture_outer(start, stop, history)[0]
 
-    def move(self, start, stop, whose_turn, handicap, history=History(), promote_to=None, warn_about_repetition=True):
+    def move(self, start, stop, whose_turn, handicap, history=History(), promote_to=None):
         assert type(start) == Square
         assert type(stop) == Square
         assert type(whose_turn) == Color
@@ -488,7 +495,7 @@ class Board():
         # napking = self.loc(ColoredPiece(whose_turn), Piece.KING)
         check = 'f'
         # This sets all the values that only change on a move
-        self.make_cache(history, warn_about_repetition=warn_about_repetition)
+        self.make_cache(history)
         return move, extra, None
 
     def legal_moves(self, start, history, whose_turn, handicap=None):

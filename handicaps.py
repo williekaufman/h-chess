@@ -1010,28 +1010,19 @@ def test_all_handicaps():
 
 def get_handicaps(white_diff, black_diff):
     # So I can't forget to undo anything weird
+    handicaps.update(untested_handicaps)
+    dd = {0: 'easy', 1: 'easy', 2: 'easy', 3: 'easy', 4: 'medium',
+          5: 'medium', 6: 'medium', 7: 'hard', 8: 'hard', 9: 'hard', 10: 'hard'}
+    white_hs = ['No handicap']
+    black_hs = ['No handicap']
+    if white_diff:
+        white_hs = [
+            x for x in tested_handicaps if dd[tested_handicaps[x][1]] == white_diff]
+    if black_diff:
+        black_hs = [
+            x for x in tested_handicaps if dd[tested_handicaps[x][1]] == black_diff]
     if not LOCAL:
-        handicaps.update(untested_handicaps)
-        dd = {0: 'easy', 1: 'easy', 2: 'easy', 3: 'easy', 4: 'medium', 5: 'medium', 6: 'medium', 7: 'hard', 8: 'hard', 9: 'hard', 10: 'hard'}
-        white_hs = ['No handicap']        
-        black_hs = ['No handicap']  
-        if white_diff:
-            white_hs = [x for x in tested_handicaps if dd[tested_handicaps[x][1]] == white_diff]
-        if black_diff:
-            black_hs = [x for x in tested_handicaps if dd[tested_handicaps[x][1]] == black_diff]
         return [random.choice(white_hs), random.choice(black_hs)]
-        # return random.sample(tested_handicaps.keys(), 2)
     else:
-        handicaps.update(untested_handicaps)
-        dd = {0: 'easy', 1: 'easy', 2: 'easy', 3: 'easy', 4: 'medium', 5: 'medium', 6: 'medium', 7: 'hard', 8: 'hard', 9: 'hard', 10: 'hard'}
-        white_hs = ['No handicap']        
-        black_hs = ['No handicap']  
-        # white_hs = tested_handicaps.keys()
-        # black_hs = tested_handicaps.keys()
-        if white_diff:
-            white_hs = [x for x in tested_handicaps if dd[tested_handicaps[x][1]] == white_diff]
-        if black_diff:
-            black_hs = [x for x in tested_handicaps if dd[tested_handicaps[x][1]] == black_diff]
-        return [random.choice(white_hs), random.choice(black_hs)]
-        # return random.sample(handicaps.keys(), 2)
-        # return descriptions[monkey_dont], descriptions[no_handicap]
+        # return [random.choice(white_hs), random.choice(black_hs)]
+        return descriptions[pawn_of_the_hill], descriptions[no_handicap]
