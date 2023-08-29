@@ -671,6 +671,8 @@ function loadGame(game = null) {
                 firstMove = true;
             }
             updateState();
+            whiteboard_messages = [];
+            updateWhiteboard();
         });
 }
 

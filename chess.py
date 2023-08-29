@@ -360,10 +360,10 @@ class Board():
         # so you get the same number if you call legal_moves again
         # This could theoretically collide but it never will
         random.seed(int(self.game_id, 16) + len(history.history))
-        x = self.cache.reached_positions[history.whose_turn()].get(self.to_string(), 0)
+        x = self.cache.reached_positions[history.whose_turn().other()].get(self.to_string(), 0)
         if x == 1:
-            whiteboard(f'Position reached before - one more will be threefold repetion', game_id=self.game_id)
-        self.cache.reached_positions[history.whose_turn()][self.to_string()] = x + 1
+            whiteboard(f'Position reached before - one more will be threefold repetition', game_id=self.game_id)
+        self.cache.reached_positions[history.whose_turn().other()][self.to_string()] = x + 1
         self.cache = Cache(kings, random.random(), rooks_have_connected, king_has_reached_last_rank, self.cache.reached_positions)
 
     def get(self, square):
@@ -515,7 +515,7 @@ class Board():
         return [square.value for square in moves if square and handicap(start, square, handicap_inputs)]
 
     def draw(self, whose_turn, history):
-        if self.cache.reached_positions[whose_turn.other()][self.to_string()] >= 3:
+        if self.cache.reached_positions[whose_turn][self.to_string()] >= 3:
             return Result.THREEFOLD_REPETION
         if len(history.history) > 100:
             moves = history.history[-100:]
@@ -572,23 +572,26 @@ class Board():
 
 empty_rank = ' ' * 8
 
+starting_str = (
+    'RNBQKBNR' +
+    'PPPPPPPP' +
+    empty_rank * 4 +
+    'pppppppp' +
+    'rnbqkbnr'
+)
+
 def starting_cache():
     return Cache(
         {Color.WHITE: Square('E1'), Color.BLACK: Square('E8')}, 
         random.random(),
         {Color.WHITE: False, Color.BLACK: False},
         {Color.WHITE: False, Color.BLACK: False},
-        {Color.WHITE: {}, Color.BLACK: {}}
+        {Color.WHITE: {starting_str: 1}, Color.BLACK: {}}
         )
 
 def starting_board(game_id=None):
     return Board(
-        'RNBQKBNR' +
-        'PPPPPPPP' +
-        empty_rank * 4 +
-        'pppppppp' +
-        'rnbqkbnr',
-        game_id or '0', starting_cache()
+        starting_str, game_id or '0', starting_cache()
     )
 
 def empty_board():
