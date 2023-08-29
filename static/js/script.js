@@ -762,7 +762,11 @@ joinGameButton.addEventListener('click', () => {
 });
 
 offerDrawButton.addEventListener('click', () => {
-    if (gameIsOver || drawToastElement.style.display == 'inline-block') {
+    if (gameIsOver) {
+        showToast('Game is over, can\'t offer draw', 5);
+        return ;
+    }
+    if (drawToastElement.style.display == 'inline-block') {
         showToast('Respond to your opponent\'s draw offer first', 5);
         return ;
     }
