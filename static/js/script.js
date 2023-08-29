@@ -411,8 +411,7 @@ gameIdInput.addEventListener('focus', function () {
 });
 
 gameIdInput.addEventListener('blur', function () {
-    gameIdInput.value = '';
-    closeModals();
+    document.addEventListener('keydown', handleKeyDown);
 });
 
 gameIdInput.addEventListener('keydown', e => {
@@ -683,7 +682,6 @@ function openNewGameModal() {
 function openJoinGameModal() {
     joinGameModal.style.display = 'flex';
     joinGameModalOverlay.style.display = 'block';
-    document.removeEventListener('keydown', handleKeyDown);
 }
 
 function confirmDraw() {
@@ -695,7 +693,6 @@ function closeModals() {
     newGameModalOverlay.style.display = 'none';
     joinGameModal.style.display = 'none';
     joinGameModalOverlay.style.display = 'none';
-    document.addEventListener('keydown', handleKeyDown);
 }
 
 function flipVisibility(element) {
