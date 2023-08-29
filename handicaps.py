@@ -7,13 +7,6 @@ from collections import defaultdict, Counter
 import random
 
 def no_handicap(start, stop, inputs):
-    board, history = inputs.board, inputs.history
-    c = history.whose_turn()
-    # try_opt(
-    #     c,
-    #     board.game_id,
-    #     lambda : whiteboard('Hello', c, board.game_id),
-    #     )
     return True
 
 def cant_move_pawns(start, stop, inputs):
