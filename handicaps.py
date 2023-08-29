@@ -147,9 +147,7 @@ def stoic(start, stop, inputs):
 
 def conscientious_objectors(start, stop, inputs):
     board, history = inputs.board, inputs.history
-    p = board.get(start)
-    stop_p = board.get(stop)
-    return p.piece == Piece.PAWN and board.capture(start, stop, history)
+    return not (board.get(start).piece == Piece.PAWN and board.capture(start, stop, history))
 
 
 def outflanked(start, stop, inputs):
