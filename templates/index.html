@@ -48,9 +48,12 @@
     <div style="margin-top: 5px">
         <span style="min-width: 60px; display: inline-block"> Toggles </span>
         <button class="one-char-button" id="displayFriendsListButton">f</button>
-        <button class="one-char-button" id="displayPromotionOptionsButton">d</button>
+        <button class="one-char-button" id="displayPromotionOptionsButton">p</button>
         <button class="one-char-button" id="ignoreOtherPlayerCheckButton">a</button>
-        <button class="one-char-button" id="toggleThemeButton">t</button>
+        <button class="one-char-button" id="toggleThemeButton">d</button>
+    </div>
+    <div>
+        <button class="rules-button" id="rulesButton">How to Play</button>
     </div>
     <div> <span class="toast" id="toast"> </span> </div>
     <div> <span class="draw-toast" id="drawToast">
@@ -133,6 +136,31 @@
         </div>
     </div>
 </div>
+<div id="rulesModalOverlay" class="modal-overlay">
+    <div id="rulesModal" class="rules-modal">
+        <h1>How to play handicap chess</h1>
+        <p>Welcome! To play handicap chess, you and your opponent are each given a handicap at the beginning of the game. On your turn, you can move a piece normally as long as that move is also allowed by your handicap. 
+            <b>You two do not know each others' handicaps.</b> The game ends when a player loses, by either (1) having their king captured, (2) having no legal moves, or (3) losing directly due to their handicap. 
+            See below for clarifications and exceptions.</p>  
+
+        <h2>Starting a New Game</h2>
+        <p>To start a new game, press “n”, set the parameters, and click “start new game”. Then press “c” to copy the game id and send it to your friend, who will press “j” to join that game. Alternatively, you can add a friend in the top right, and challenge them in the bottom right (press “f” to toggle friends list).  For more hotkeys, see the hotkey descriptions in the bottom left.</p>
+
+        <h2>Rules Clarifications</h2>
+        <p><b>Lose conditions:</b> Some handicaps, instead of specifying which moves are illegal every turn, just specify a loss condition, e.g. “lose if you have no queen”. These conditions are checked at the beginning of your turn.</p>
+
+        <p><b>Stalemate</b>: This is not a thing in handicap chess. Moving into check is a legal move (see below), so if that is your only option, you must do it. If you truly have no legal moves (likely due to your handicap), then you lose. Threefold repetition and 50 move rule work the same as in normal chess.</p>
+
+        <p><b>Check:</b> This is not a thing in handicap chess. <b>You can move into check and you can decline to move out of check.</b> But if your king gets taken, you lose. However, if you move into check but your opponent can’t take your king due to their handicap, the game continues!</p>
+
+        <p><b>King en passant:</b> This game has one special move, called the king en passant! If your opponent castles through check, that is allowed, but you may capture their king by capturing the square that their king moved through (like the way you capture a pawn en passant). Any piece may perform king en passant. This is intended to mimic the rule in normal chess that people can’t (or in this case shouldn’t) castle through check, but mostly it’s a meme.</p>
+
+        <p><b>Other:</b>
+            "Piece" means any piece, including pawns and kings.
+            “Capture” refers to any capture move, including en passant and capturing the king.
+            Some handicaps reference the values of different pieces. Pawns are worth 1, knights and bishops 3, rooks 5, queens 9, and kings infinity.
+    </div>
+</div>
 <div class="hotkeys">
     <div> Hotkeys </div>
     <div> <b> n </b> - new game </div>
@@ -143,9 +171,9 @@
     <div> <b> c </b> - copy game id </div>
     <div> Toggle </div>
     <div> <b> f </b> - display friends list </div>
-    <div> <b> d </b> - display promotion options </div>
+    <div> <b> p </b> - display promotion options </div>
     <div> <b> a </b> - allow moving opponent's pieces / pieces in a one player game </div>
-    <div> <b> t </b> - toggle theme </div>
+    <div> <b> d </b> - toggle dark mode </div>
 </div>
 </div>
 <div class="active-games-wrapper" id="activeGamesWrapper" style="visibility: hidden"></div>

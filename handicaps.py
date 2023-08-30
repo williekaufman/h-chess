@@ -40,7 +40,8 @@ def lose_if_no_queen(start, stop, inputs):
 def skittish(start, stop, inputs):
     # Use board.cache
     board, history = inputs.board, inputs.history
-    return not board.is_attacked(board.cache.kings[history.whose_turn()], history.whose_turn().other(), history) or board.get(start).piece == Piece.KING 
+    king_sq = board.cache.kings[history.whose_turn()]
+    return king_sq and not board.is_attacked(king_sq, history.whose_turn().other(), history) or board.get(start).piece == Piece.KING 
 
 
 def bongcloud(start, stop, inputs):
@@ -1014,5 +1015,5 @@ def get_handicaps(white_diff, black_diff):
     if not LOCAL:
         return [random.choice(white_hs), random.choice(black_hs)]
     else:
-        # return [random.choice(white_hs), random.choice(black_hs)]
+        #return [random.choice(white_hs), random.choice(black_hs)]
         return descriptions[skittish], descriptions[no_handicap]

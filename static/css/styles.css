@@ -62,6 +62,17 @@ input::placeholder {
   margin-right: 5px;
 }
 
+.rules-button{
+  display: inline-block;
+  text-align: center;
+  min-width: 210px;
+  min-height: 100px;
+  font-size: 20px;
+  margin-top: 20px;
+  border-width: 5px;
+  /*background-color: rgb(225, 224, 224);*/
+}
+
 .username {
   position: fixed;
   top: 10px;
@@ -518,6 +529,29 @@ input::placeholder {
 }
 
 .dark .join-modal {
+  background: radial-gradient(circle, rgb(108, 107, 107), rgb(39, 39, 39));
+}
+
+.rules-modal{
+  display: none;
+  position: absolute;
+  flex-direction: column;
+  text-align: left;
+  z-index: 1;
+  left: 50%;
+  top: 50%;
+  width: 100%;
+  max-width: 1000px;
+  transform: translate(-50%, -50%);
+  height: 600px;
+  overflow: auto;
+  padding: 20px;
+  border-radius: 10px;
+  background-color: lightseagreen;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+}
+
+.dark .rules-modal {
   background: radial-gradient(circle, rgb(108, 107, 107), rgb(39, 39, 39));
 }
 

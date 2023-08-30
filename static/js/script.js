@@ -37,6 +37,10 @@ joinGameButton = document.getElementById('joinGameButton');
 joinGameModal = document.getElementById('joinGameModal')
 joinGameModalOverlay = document.getElementById('joinGameModalOverlay');
 
+rulesButton = document.getElementById('rulesButton');
+rulesModal = document.getElementById('rulesModal');
+rulesModalOverlay = document.getElementById('rulesModalOverlay');
+
 gameIdInput = document.getElementById('gameIdInput');
 
 promotionSelector = document.getElementById('promotionSelector');
@@ -690,6 +694,11 @@ function openJoinGameModal() {
     joinGameModalOverlay.style.display = 'block';
 }
 
+function openRulesModal() {
+    rulesModal.style.display = 'flex';
+    rulesModalOverlay.style.display = 'block';
+}
+
 function confirmDraw() {
     confirmDrawElement.style.display = 'inline-block';
 }
@@ -699,6 +708,8 @@ function closeModals() {
     newGameModalOverlay.style.display = 'none';
     joinGameModal.style.display = 'none';
     joinGameModalOverlay.style.display = 'none';
+    rulesModal.style.display = 'none';
+    rulesModalOverlay.style.display = 'none';
 }
 
 function flipVisibility(element) {
@@ -721,7 +732,7 @@ function handleKeyDown(event) {
     } else if (k == 'enter' && newGameModal.style.display == 'flex') {
         event.preventDefault();
         createGameButton.click();
-    } else if (k == 'd') {
+    } else if (k == 'p') {
         displayPromotionOptionsButton.click();
     } else if (k == 'f') {
         displayFriendsListButton.click();
@@ -732,7 +743,7 @@ function handleKeyDown(event) {
     } else if (k == 'j') {
         event.preventDefault();
         openJoinDialogButton.click();
-    } else if (k == 't') {
+    } else if (k == 'd') {
         toggleThemeButton.click();
     } else if (k == 'o') {
         offerDrawButton.click();
@@ -747,7 +758,7 @@ function handleKeyUp(event) {
 }
 
 document.addEventListener("click", function (event) {
-    if (event.target === newGameModalOverlay || event.target === joinGameModalOverlay) {
+    if (event.target === newGameModalOverlay || event.target === joinGameModalOverlay || event.target == rulesModalOverlay) {
         closeModals();
     }
 });
@@ -822,6 +833,10 @@ displayPromotionOptionsButton.addEventListener('click', () => {
 ignoreOtherPlayerCheckButton.addEventListener('click', () => {
     toggleOtherPlayerCheck();
 });
+
+rulesButton.addEventListener('click', () => {
+    openRulesModal();
+})
 
 
 function setSquare(square, piece) {
