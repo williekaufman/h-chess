@@ -1015,5 +1015,5 @@ def get_handicaps(white_diff, black_diff):
     if not LOCAL:
         return [random.choice(white_hs), random.choice(black_hs)]
     else:
-        #return [random.choice(white_hs), random.choice(black_hs)]
-        return descriptions[skittish], descriptions[no_handicap]
+        return [random.choice(white_hs), random.choice(black_hs)]
+        #return descriptions[skittish], descriptions[no_handicap]
