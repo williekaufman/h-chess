@@ -339,8 +339,8 @@ input::placeholder {
 }
 
 .dark .highlight {
-  background-color: purple;
-  border: 5px solid darkred;
+  background-color: rgb(91, 91, 91);
+  border: 5px solid rgb(206, 206, 206);
 }
 
 .active-games-wrapper {
