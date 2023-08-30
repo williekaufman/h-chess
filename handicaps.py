@@ -1,6 +1,6 @@
 from redis_utils import rset, rget
 from squares import Square, Rank, File
-from chess import Color, Piece, ColoredPiece, HandicapInputs, starting_board, empty_board, History
+from chess import Color, Piece, ColoredPiece, HandicapInputs, starting_board, empty_board, History, CaptureType
 from settings import LOCAL
 from helpers import toast, whiteboard, try_move, get_adjacent_squares, get_orthogonally_adjacent_squares, get_diagonally_adjacent_squares, two_letter_words, try_opt 
 from collections import defaultdict, Counter
@@ -871,11 +871,15 @@ def monkey_dont(start, stop, inputs):
         )
     return n < 3
 
+def femme_fatale(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    cap_pc, cap_type = board.capture_outer(start, stop, history)
+    return (not cap_pc) or cap_pc.piece != Piece.KING or board.get(start).piece == Piece.QUEEN
+
 # Comment so I can search for the bottom of the handicaps
 
 
 # number is how bad the handicap is, 1-10
-# capture-based handicaps are maybe all broken with enpassant(s)
 tested_handicaps = {
     "Simp: Lose if you have no queen": (lose_if_no_queen, 6),
     "Skittish: While in check, you must move your king": (skittish, 2),
@@ -965,6 +969,7 @@ tested_handicaps = {
     "Fearless Leader: You can only capture when your king is in front of one of your pawns": (fearless_leader, 8),
     "Protect the Peons: You lose if you have an undefended pawn": (protect_the_peons, 8), 
     "Mind the Middle: You can't attack the central four squares": (mind_the_middle, 9),
+    "Femme Fatale: Only your queen can take their king": (femme_fatale, 3),
 }
 
 # Stuff in here won't randomly get assigned but you can interact with it by changing get_handicaps
@@ -978,7 +983,7 @@ untested_handicaps = {
     "The Loneliest Number: You can only move a pawn once": (loneliest_number, 6),
     # It turns out this is quite close to "you have to move to the a or e file on even numbered turns". Kinda lame
     "Scrabble: For each pair of moves, the files that your piece stops on must spell a 2-letter word. E.g. you could do H file, A file (ha) and then B file, E file (be) for your first 4 moves.": (scrabble, 7),
-    "Monkey Don't: If your opponent moves the same piece as you just moved 3 times over the course of the game, you lose": (monkey_dont, 9)
+    "Monkey Don't: If your opponent moves the same piece as you just moved 3 times over the course of the game, you lose": (monkey_dont, 9),
 }
 
 handicaps = dict(tested_handicaps, **untested_handicaps)
@@ -1015,5 +1020,5 @@ def get_handicaps(white_diff, black_diff):
     if not LOCAL:
         return [random.choice(white_hs), random.choice(black_hs)]
     else:
-        return [random.choice(white_hs), random.choice(black_hs)]
-        #return descriptions[skittish], descriptions[no_handicap]
+        #return [random.choice(white_hs), random.choice(black_hs)]
+        return descriptions[femme_fatale], descriptions[no_handicap]

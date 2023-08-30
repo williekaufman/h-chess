@@ -424,7 +424,7 @@ class Board():
             return ColoredPiece(piece.color.other(), Piece.PAWN), CaptureType.EN_PASSANT
         if stop in kingEnPassantSquares:
             # King en passant always captures a rook
-            return ColoredPiece(piece.color.other(), Piece.ROOK), CaptureType.KING_EN_PASSANT
+            return ColoredPiece(piece.color.other(), Piece.KING), CaptureType.KING_EN_PASSANT
         return ret
 
     def capture(self, start, stop, history):
