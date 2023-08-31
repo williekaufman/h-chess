@@ -91,6 +91,8 @@ def friends_key(username):
 def get_friends(username):
     return json.loads(rget(friends_key(username), game_id=None) or '[]')
 
+def is_online(username):
+    return redis.sismember('online_players', username)
 
 def add_friend(username, friend):
     friends = get_friends(username)
@@ -141,6 +143,16 @@ def new_game():
     rset('other_player', playerColor.other().value, game_id=game_id)
     return {'success': True, 'gameId': game_id, 'color': playerColor.value}
 
+@app.route("/friends", methods=['GET'])
+def get_friends_list():
+    username = request.args.get('username')
+    if not username:
+        return {'success': False, 'error': 'No username provided'}
+    friends = sorted([str(f) for f in get_friends(username)])
+    online_friends, offline_friends = [
+        [f for f in friends if is_online(f) == online] for online in [True, False]
+    ]
+    return {'success': True, 'online': online_friends, 'offline': offline_friends}
 
 @app.route("/active_games", methods=['GET'])
 def active_games():
@@ -171,6 +183,7 @@ def join_game():
         return {'success': False, 'error': 'Game already has two players'}
     username = rget('username', game_id=game_id)
     username and rset(live_game_key(username), '', game_id=None)
+    toast(f"{request.args.get('username') or 'anonymous player'} joined!", game_id=game_id)
     if winner:
         return {'success': True, 'board': board.to_dict(), 'winner': winner}
     rset('other_player', '', game_id=game_id)
@@ -334,10 +347,46 @@ def accept_draw():
     socketio.emit('update', {'color': 'both'}, room=game_id)
     return {'success': True}
 
-@socketio.on('connect')
-def example():
-    print('connected', request.sid)
+@app.route("/invite", methods=['POST'])
+def invite():
+    friend = request.json.get('friend')
+    username = request.json.get('username') or 'anonymous'
+    game_id = request.json.get('gameId')
+    if not friend or not game_id:
+        return {'success': False, 'error': 'No friend or game id provided'}
+    socketio.emit('invite', {'gameId': game_id, 'username': username }, room=friend)
+    return {'success': True}
 
+def logon(username):
+    redis.sadd('online_players', username)
+
+def logoff(username):
+    redis.srem('online_players', username)
+
+@socketio.on('connect')
+def on_connect():
+    pass
+
+@socketio.on('disconnect')
+def on_disconnect():
+    username = rget(request.sid, game_id=None)
+    if username:
+        logoff(username)
+
+@socketio.on('logon')
+def on_logon(data):
+    username = data['username']
+    if not username:
+        return
+    logon(username)
+    rset(request.sid, username, game_id=None)
+
+@socketio.on('logoff')
+def on_logoff(data):
+    username = data['username']
+    if not username:
+        return
+    logoff(username)
 
 @socketio.on('join')
 def on_join(data):

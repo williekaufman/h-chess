@@ -4,6 +4,7 @@ previousToast = null;
 toastElement = document.getElementById('toast');
 
 gameId = null;
+inviteId = null;
 
 currentThemeIsDark = document.body.classList.contains('dark');
 
@@ -64,6 +65,11 @@ gameResultToastElement = document.getElementById('gameResult');
 drawToastElement = document.getElementById('drawToast');
 confirmDrawElement = document.getElementById('confirmDrawToast');
 
+inviteToastElement = document.getElementById('inviteToast');
+acceptInviteButton = document.getElementById('acceptInviteButton');
+declineInviteButton = document.getElementById('declineInviteButton');
+
+
 colorSelection = 'random';
 whiteKingElement = document.getElementById('whiteKing');
 blackKingElement = document.getElementById('blackKing');
@@ -97,7 +103,7 @@ const socket = io.connect('http://' + document.domain + ':' + location.port);
 
 socket.on('message', (data) => {
     if (data['color'] === 'both' || data['color'] === color) {
-        showToast(data['message'], 5);
+        showToast(data['message'], 10);
     }
 });
 
@@ -121,11 +127,33 @@ socket.on('draw_offer', (data) => {
     }  
 })
 
-socket.on('draw_offer_rescinded', (data) => {
-    if (data['color'] == color) {
-        drawToastElement.style.display = 'none';
-    }
+socket.on('invite', (data) => {
+    makeInvite(data);
 })
+
+function removeOnClickEventListener(element) {
+  const clone = element.cloneNode(true);
+  element.parentNode.replaceChild(clone, element);
+}
+
+declineInviteButton.addEventListener('click', () => {
+    inviteToastElement.style.display = 'none';
+});
+
+acceptInviteButton.addEventListener('click', () => {
+    acceptInvite(inviteId);
+});
+
+function acceptInvite(id) {
+    loadGame(id);
+    inviteToastElement.style.display = 'none';
+}
+
+function makeInvite(data) {
+    inviteId = data['gameId'];
+    inviteToastElement.style.display = 'inline-block';
+    showToast(`You were invited to a game by ${data['username']}`, 5);
+}
 
 drawButton = document.getElementById('drawButton');
 noDrawButton = document.getElementById('noDrawButton');
@@ -350,10 +378,14 @@ function setWhoseTurn(turn) {
 }
 
 function setUsername() {
-    username && socket.emit('leave', { room: username });
+    if (username) {
+        socket.emit('leave', { room: username })
+        socket.emit('logoff', { username })
+    }
     username = usernameInputElement.value;
     localStorage.setItem('handicap-chess-username', username);
     socket.emit('join', { room: username });
+    socket.emit('logon', { username });
     populateFriendsList();
 
 }
@@ -645,6 +677,14 @@ function newGame(toast = true) {
     initBoard();
 }
 
+function invite(friend) {
+    fetchWrapper(URL + 'invite', { gameId, friend , username })
+        .then((response) => response.json())
+        .then((data) => {
+            showToast(data.success ? `Successfully invited ${friend}` : data.error);
+        });
+}
+
 function loadGame(game = null) {
     game = game || gameIdInput.value;
     gameIdInput.value = '';
@@ -654,7 +694,11 @@ function loadGame(game = null) {
     }
     closeModals();
     gameResultToastElement.style.display = 'none';
-    fetchWrapper(URL + 'join_game', { 'gameId': game }, 'GET')
+    d = { 'gameId': game }
+    if (username) {
+        d['username'] = username;
+    }
+    fetchWrapper(URL + 'join_game', d, 'GET')
         .then((response) => response.json())
         .then((data) => {
             if (!data['success']) {
@@ -1002,13 +1046,13 @@ setInterval(function () {
 // }, 1000);
 
 function populateFriendsList() {
-    fetchWrapper(URL + 'active_games', { 'username': username }, 'GET')
+    fetchWrapper(URL + 'friends', { 'username': username }, 'GET')
         .then((response) => response.json())
         .then((data) => {
             if (!data['success']) {
                 return;
             }
-            displayActiveGames(data['games']);
+            displayFriends(data['online'], data['offline'])
         })
 }
 
@@ -1035,21 +1079,26 @@ function toggleTheme() {
     localStorage.setItem('hchess-dark-mode', currentThemeIsDark);
 }
 
+function makeFriendElement(name, isOnline) {
+    onClick = isOnline ? `onclick="invite('${name}')"` : '';
+    content = `<button class="game-button ${isOnline ? "active" : "dead"} ${currentThemeIsDark ? 'dark' : ''}" ${onClick}>Invite ${name}</button>`
+    return `
+        <div class="friend">
+            ${content}
+            <button class="remove-friend-button ${currentThemeIsDark ? 'dark' : ''}" onClick="removeFriend('${name}')">
+                X
+            </button>
+        </div>
+    `;
+}
 
-function displayActiveGames(activeGames) {
+function displayFriends(online, offline) {
     activeGamesWrapper.innerHTML = '<h4> Friends </h4>';
-    activeGames.forEach(game => {
-        id = game['gameId'];
-        f = id ? `loadGame('${id}')` : '';
-        content = `<button class="game-button ${id ? "active" : "dead"} ${currentThemeIsDark ? 'dark' : ''}" onclick="${f}">Challenge ${game['username']}</button>`
-        activeGamesWrapper.innerHTML += `
-                <div class="friend">
-                    ${content}
-                    <button class="remove-friend-button ${currentThemeIsDark ? 'dark' : ''}" onClick="removeFriend('${game['username']}')">
-                        X
-                    </button>
-                </div>
-            `;
+    online.forEach(name => {
+        activeGamesWrapper.innerHTML += makeFriendElement(name, true);
+    });
+    offline.forEach(name => {
+        activeGamesWrapper.innerHTML += makeFriendElement(name, false);
     });
 }
 

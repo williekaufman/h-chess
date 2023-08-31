@@ -25,15 +25,17 @@ def get_diagonally_adjacent_squares(square):
     return [sq for sq in get_adjacent_squares(square) if sq.distance(square) == 2]
 
 
-def toast(message, color=None, game_id=None):
+def toast(message, color=None, game_id=None, really_broadcast_to_all=False):
     payload = {'message': message, 'color': 'both'}
     if color:
         payload['color'] = color.value
     if not game_id:
-        socketio.emit('message', payload)
+        if really_broadcast_to_all:
+            socketio.emit('message', payload)
+        else:
+            print(f'toast called without game_id: {message}')
     else:
         socketio.emit('message', payload, room=game_id)
-
 
 def whiteboard(message, color=None, game_id=None, really_broadcast_to_all=False):
     payload = {'message': message, 'color': 'both'}
