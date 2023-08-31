@@ -34,6 +34,16 @@ def lose_if_no_queen(start, stop, inputs):
     board, history = inputs.board, inputs.history
     return board.loc(ColoredPiece(history.whose_turn(), Piece.QUEEN))
 
+def h_file_phobe(start, stop, inputs):
+    return stop.file() != File.H
+
+def respectful(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    if board.is_attacked(board.cache.kings[history.whose_turn().other()], history.whose_turn(), history):
+        return True
+    new_board = try_move(board, start, stop, history)
+    return not new_board.is_attacked(board.cache.kings[history.whose_turn().other()], history.whose_turn(), history)
+
 # This doesn't work b/c check isn't implemented
 
 
@@ -563,6 +573,8 @@ def flight_over_fight(start, stop, inputs):
 def helicopter_parent(start, stop, inputs):
     return sum(inputs.history.pieces_captured(inputs.history.whose_turn().other()).values()) < 3
 
+def octomom(start, stop, inputs):
+    return sum(inputs.history.pieces_captured(inputs.history.whose_turn().other()).values()) < 8
 
 def deer_in_the_headlights(start, stop, inputs):
     return not inputs.board.is_attacked(start, inputs.history.whose_turn().other(), inputs.history)
@@ -858,7 +870,6 @@ def monkey_dont(start, stop, inputs):
     nap_moves = h.player_moves(c.other())
     if c == Color.BLACK:
         nap_moves = nap_moves[1:]
-    s = zip(ap_moves, nap_moves)
     n = len([1 for x,y in zip(ap_moves, nap_moves) if x.piece.piece == y.piece.piece])
     most_recent_copy = ap_moves and nap_moves and (ap_moves[-1].piece.piece == nap_moves[-1].piece.piece)
     plural = '' if n == 1 else 's'
@@ -939,7 +950,8 @@ tested_handicaps = {
     "Pioneer: You cannot move onto a rank that you already occupy": (pioneer, 9),
     "X Marks the Spot: Any non-pawn, non-capture moves must be to one of the long diagonals": (x_marks_the_spot, 8),
     "Flight over Flight: When your opponent captures, you must move backwards": (flight_over_fight, 9),
-    "Helicopter parent: You lose if your opponents capture 3 of your pieces": (helicopter_parent, 8),
+    "Helicopter parent: You lose if your opponent captures 3 of your pieces": (helicopter_parent, 8),
+    "Octomom: You lose if your opponent captures 8 of your pieces": (octomom, 3),
     "Deer in the headlights: Your pieces under attack can't move": (deer_in_the_headlights, 8),
     "Impulsive: If you can capture something, you must": (impulsive, 7),
     "Spread Out: You cannot move a pieces next to another one of your pieces": (spread_out, 8),
@@ -970,6 +982,8 @@ tested_handicaps = {
     "Protect the Peons: You lose if you have an undefended pawn": (protect_the_peons, 8), 
     "Mind the Middle: You can't attack the central four squares": (mind_the_middle, 9),
     "Femme Fatale: Only your queen can take their king": (femme_fatale, 3),
+    "H-file-phobe: You can't move to the h file": (h_file_phobe, 3),
+    "Respectful: Can't give check": (respectful, 4),
 }
 
 # Stuff in here won't randomly get assigned but you can interact with it by changing get_handicaps
@@ -1021,4 +1035,4 @@ def get_handicaps(white_diff, black_diff):
         return [random.choice(white_hs), random.choice(black_hs)]
     else:
         #return [random.choice(white_hs), random.choice(black_hs)]
-        return descriptions[femme_fatale], descriptions[no_handicap]
+        return descriptions[respectful], descriptions[no_handicap]
