@@ -79,10 +79,11 @@ def times(game_id, whose_turn):
 def index():
     return render_template('index.html')
 
+def last_game_key(username):
+    return 'last_game:' + username
 
-def live_game_key(username):
-    return 'live_game:' + username
-
+def last_color_key(username):
+    return 'last_color:' + username
 
 def friends_key(username):
     return 'friends:' + username
@@ -109,6 +110,16 @@ def remove_friend(username, friend):
     friends.remove(friend)
     rset(friends_key(username), json.dumps(friends), game_id=None, ex=None)
 
+@app.route("/rejoin", methods=['GET'])
+def rejoin():
+    username = request.args.get('username')
+    if not username:
+        return {'success': False, 'error': 'No username provided'}
+    game_id = rget(last_game_key(username), game_id=None)
+    color = rget(last_color_key(username), game_id=None)
+    if not game_id or not color:
+        return {'success': False, 'error': 'No game to rejoin'}
+    return {'success': True, 'gameId': game_id, 'color': color}
 
 @app.route("/new_game", methods=['POST'])
 def new_game():
@@ -121,7 +132,8 @@ def new_game():
         return {'success': False, 'error': 'Game already exists'}
     username = request.json.get('username')
     if username:
-        rset(live_game_key(username), game_id, game_id=None)
+        rset(last_game_key(username), game_id, game_id=None)
+        rset(last_color_key(username), playerColor.value, game_id=None)
         rset('username', username, game_id=game_id)
     if (timeControl := request.json.get('timeControl')):
         for color in Color:
@@ -154,39 +166,29 @@ def get_friends_list():
     ]
     return {'success': True, 'online': online_friends, 'offline': offline_friends}
 
-@app.route("/active_games", methods=['GET'])
-def active_games():
-    username = request.args.get('username')
-    if not username:
-        return {'success': False, 'error': 'No username provided'}
-    friends = [str(f) for f in get_friends(username)]
-    games = []
-    for friend in friends:
-        game_id = rget(live_game_key(friend), game_id=None)
-        games.append({
-            'username': friend,
-            'gameId': game_id,
-        })
-    return {'success': True, 'games': games}
-
-
 @app.route("/join_game", methods=['GET'])
 def join_game():
     game_id = request.args.get('gameId')
     board = Board.of_game_id(game_id)
     winner = rget('winner', game_id=game_id)
-    color = rget('other_player', game_id=game_id)
+    set_other_player = False
+    color = request.args.get('color') 
+    if not color:
+        color = rget('other_player', game_id=game_id)
+        set_other_player = True
     last_move = rget('last_move', game_id=game_id)
     if not board:
         return {'success': False, 'error': 'Invalid game id'}
     if not color:
         return {'success': False, 'error': 'Game already has two players'}
-    username = rget('username', game_id=game_id)
-    username and rset(live_game_key(username), '', game_id=None)
-    toast(f"{request.args.get('username') or 'anonymous player'} joined!", game_id=game_id)
+    username = request.args.get('username')
+    if username:
+        rset(last_game_key(username), game_id, game_id=None)
+        rset(last_color_key(username), color, game_id=None)
+    toast(f"{username or 'anonymous player'} joined!", game_id=game_id)
     if winner:
         return {'success': True, 'board': board.to_dict(), 'winner': winner}
-    rset('other_player', '', game_id=game_id)
+    set_other_player and rset('other_player', '', game_id=game_id)
     return {'success': True, 'color': color, 'board': board.to_dict(), 'whoseTurn': rget('turn', game_id=game_id), 'firstMove': last_move is None}
 
 
@@ -296,7 +298,7 @@ def befriend():
         return {'success': False, 'error': 'No username or friend provided'}
     if username == friend:
         return {'success': False, 'error': 'Befriending yourself is just sad'} 
-    socketio.emit('message', f'{username} added you as a friend', room=friend)
+    socketio.emit('message', {'message': f'{username} added you as a friend'}, room=friend)
     add_friend(username, friend)
     return {'success': True}
 
@@ -354,6 +356,8 @@ def invite():
     game_id = request.json.get('gameId')
     if not friend or not game_id:
         return {'success': False, 'error': 'No friend or game id provided'}
+    if not rget('other_player', game_id=game_id):
+        return {'success': False, 'error': 'Game already has two players'}
     socketio.emit('invite', {'gameId': game_id, 'username': username }, room=friend)
     return {'success': True}
 

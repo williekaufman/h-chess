@@ -4,6 +4,7 @@ previousToast = null;
 toastElement = document.getElementById('toast');
 
 gameId = null;
+lastGameId = null;
 inviteId = null;
 
 currentThemeIsDark = document.body.classList.contains('dark');
@@ -652,8 +653,17 @@ function getHandicap() {
         });
 }
 
-function newGame(toast = true) {
+function initGame() {
     gameResultToastElement.style.display = 'none';
+    closeModals();
+    setWhoseTurn('White');
+    gameIsOver = false;
+    whiteboard_messages = [];
+    updateWhiteboard();
+    initBoard();
+}
+
+function newGame(toast = true) {
     fetchWrapper(URL + 'new_game', newGameBody(), 'POST')
         .then((response) => response.json())
         .then((data) => {
@@ -668,12 +678,7 @@ function newGame(toast = true) {
             updateState();
             firstMove = true;
         });
-    closeModals();
-    setWhoseTurn('White');
-    gameIsOver = false;
-    whiteboard_messages = [];
-    updateWhiteboard();
-    initBoard();
+        initGame();
 }
 
 function invite(friend) {
@@ -684,7 +689,7 @@ function invite(friend) {
         });
 }
 
-function loadGame(game = null) {
+function loadGame(game = null, color = null) {
     game = game || gameIdInput.value;
     gameIdInput.value = '';
     if (!game) {
@@ -696,12 +701,17 @@ function loadGame(game = null) {
     d = { 'gameId': game }
     if (username) {
         d['username'] = username;
+    } if (color) {
+        d['color'] = color;
     }
     fetchWrapper(URL + 'join_game', d, 'GET')
         .then((response) => response.json())
         .then((data) => {
             if (!data['success']) {
                 showToast(data['error'], 3);
+                if (color) {
+                    newGame(false);
+                }
                 return;
             }
             setGameId(game);
@@ -861,7 +871,7 @@ function showOpponentsHandicap() {
 
 function copyGameId() {
     copyToClipboard(gameId);
-    showToast(`Copied game id to clipboard`);
+    showToast(`Copied game id`);
 }
 
 copyGameIdButton.addEventListener('click', () => {
@@ -1116,7 +1126,19 @@ if (localStorage.getItem('hchess-dark-mode') == 'true') {
     toggleTheme();
 }
 
-newGame(false);
+function rejoin() {
+    fetchWrapper('rejoin', {username}, 'GET')
+        .then((response) => response.json())
+        .then((data) => {
+            if (!data['success']) {
+                newGame();
+            } else {
+                initGame() || loadGame(data['gameId'], data['color'])
+            }
+        });
+}
+
+rejoin();
 populateFriendsList();
 
 if (!localStorage.getItem('hchess-cookie')) {
