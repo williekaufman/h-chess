@@ -185,7 +185,7 @@ def join_game():
     if username:
         rset(last_game_key(username), game_id, game_id=None)
         rset(last_color_key(username), color, game_id=None)
-    set_other_player or toast(f"{username or 'anonymous player'} joined!", game_id=game_id)
+    set_other_player and toast(f"{username or 'anonymous player'} joined!", game_id=game_id)
     if winner:
         return {'success': True, 'board': board.to_dict(), 'winner': winner}
     set_other_player and rset('other_player', '', game_id=game_id)
