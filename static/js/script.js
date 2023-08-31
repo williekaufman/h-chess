@@ -655,7 +655,6 @@ function getHandicap() {
 
 function initGame() {
     gameResultToastElement.style.display = 'none';
-    closeModals();
     setWhoseTurn('White');
     gameIsOver = false;
     whiteboard_messages = [];
@@ -849,6 +848,7 @@ toggleThemeButton.addEventListener('click', () => {
 });
 
 createGameButton.addEventListener('click', () => {
+    closeModals();
     newGame();
 });
 
