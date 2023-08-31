@@ -621,7 +621,6 @@ input::placeholder {
   height: 75px;
   width: 300px;
   border-radius: 10px;
-  border: 0px;
   box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
   cursor: pointer;
   font-size: 30px;
