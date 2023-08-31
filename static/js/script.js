@@ -102,9 +102,8 @@ timesElement = document.getElementById('times');
 const socket = io.connect('http://' + document.domain + ':' + location.port);
 
 socket.on('message', (data) => {
-    if (data['color'] === 'both' || data['color'] === color) {
-        showToast(data['message'], 10);
-    }
+    // No colors here - messages are for games or users
+    showToast(data['message'], 10);
 });
 
 socket.on('update', (data) => {
