@@ -982,7 +982,7 @@ tested_handicaps = {
     "Protect the Peons: You lose if you have an undefended pawn": (protect_the_peons, 8), 
     "Mind the Middle: You can't attack the central four squares": (mind_the_middle, 9),
     "Femme Fatale: Only your queen can take their king": (femme_fatale, 3),
-    "H-file-phobe: You can't move to the h file": (h_file_phobe, 3),
+    "H-phile: You can't move to the h file": (h_file_phobe, 3),
     "Respectful: Can't give check": (respectful, 4),
 }
 
