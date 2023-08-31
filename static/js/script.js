@@ -101,9 +101,9 @@ timesElement = document.getElementById('times');
 
 const socket = io.connect('http://' + document.domain + ':' + location.port);
 
-socket.on('message', (message) => {
-    // No colors here - messages are for users
-    showToast(message, 10);
+socket.on('message', (data) => {
+    // No need for color checking here
+    showToast(data['message'], 10);
 });
 
 socket.on('update', (data) => {
