@@ -101,9 +101,9 @@ timesElement = document.getElementById('times');
 
 const socket = io.connect('http://' + document.domain + ':' + location.port);
 
-socket.on('message', (data) => {
+socket.on('message', (message) => {
     // No colors here - messages are for games or users
-    showToast(data['message'], 10);
+    showToast(message, 10);
 });
 
 socket.on('update', (data) => {
