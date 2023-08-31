@@ -1131,7 +1131,7 @@ function rejoin() {
         .then((response) => response.json())
         .then((data) => {
             if (!data['success']) {
-                newGame();
+                newGame(false);
             } else {
                 initGame() || loadGame(data['gameId'], data['color'])
             }
