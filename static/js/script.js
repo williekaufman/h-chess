@@ -102,7 +102,7 @@ timesElement = document.getElementById('times');
 const socket = io.connect('http://' + document.domain + ':' + location.port);
 
 socket.on('message', (message) => {
-    // No colors here - messages are for games or users
+    // No colors here - messages are for users
     showToast(message, 10);
 });
 
