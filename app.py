@@ -88,12 +88,22 @@ def last_color_key(username):
 def friends_key(username):
     return 'friends:' + username
 
-
 def get_friends(username):
     return json.loads(rget(friends_key(username), game_id=None) or '[]')
 
 def is_online(username):
     return redis.sismember('online_players', username)
+
+# We're going to call this a lot unnecessarily
+def logon(username):
+    redis.sadd('online_players', username)
+
+# Called whenever you change your username or close a window
+# with a username. If you had multiple open, we'll log you back on
+# as soon as you do anything that requires a username, like reloading
+# the friends list
+def logoff(username):
+    redis.srem('online_players', username)
 
 def add_friend(username, friend):
     friends = get_friends(username)
@@ -115,6 +125,7 @@ def rejoin():
     username = request.args.get('username')
     if not username:
         return {'success': False, 'error': 'No username provided'}
+    logon(username)
     game_id = rget(last_game_key(username), game_id=None)
     color = rget(last_color_key(username), game_id=None)
     if not game_id or not color:
@@ -132,6 +143,7 @@ def new_game():
         return {'success': False, 'error': 'Game already exists'}
     username = request.json.get('username')
     if username:
+        logon(username)
         rset(last_game_key(username), game_id, game_id=None)
         rset(last_color_key(username), playerColor.value, game_id=None)
         rset('username', username, game_id=game_id)
@@ -183,6 +195,7 @@ def join_game():
         return {'success': False, 'error': 'Game already has two players'}
     username = request.args.get('username')
     if username:
+        logon(username)
         rset(last_game_key(username), game_id, game_id=None)
         rset(last_color_key(username), color, game_id=None)
     set_other_player and toast(f"{username or 'anonymous player'} joined!", game_id=game_id)
@@ -360,12 +373,6 @@ def invite():
         return {'success': False, 'error': 'Game already has two players'}
     socketio.emit('invite', {'gameId': game_id, 'username': username }, room=friend)
     return {'success': True}
-
-def logon(username):
-    redis.sadd('online_players', username)
-
-def logoff(username):
-    redis.srem('online_players', username)
 
 @socketio.on('connect')
 def on_connect():
