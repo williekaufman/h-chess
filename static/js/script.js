@@ -22,6 +22,7 @@ shiftKeyIsDown = false;
 newGameModal = document.getElementById('newGameModal');
 newGameModalOverlay = document.getElementById('newGameModalOverlay');
 
+rulesButton = document.getElementById('rulesButton');
 newGameButton = document.getElementById('newGameButton');
 openJoinDialogButton = document.getElementById('openJoinDialogButton');
 offerDrawButton = document.getElementById('offerDrawButton');
@@ -37,7 +38,6 @@ joinGameButton = document.getElementById('joinGameButton');
 joinGameModal = document.getElementById('joinGameModal')
 joinGameModalOverlay = document.getElementById('joinGameModalOverlay');
 
-rulesButton = document.getElementById('rulesButton');
 rulesModal = document.getElementById('rulesModal');
 rulesModalOverlay = document.getElementById('rulesModalOverlay');
 
@@ -53,9 +53,6 @@ mostRecentFrom = null;
 mostRecentTo = null;
 
 handicapInfo = document.getElementById('handicapInfo');
-
-howToPlayPopup = document.getElementById('how-to-play-popup');
-howToPlayBtnText = document.getElementById('how-to-play-btn-text');
 
 whoseTurn = null;
 whoseTurnElement = document.getElementById('whoseTurn');
@@ -738,6 +735,8 @@ function handleKeyDown(event) {
         displayFriendsListButton.click();
     } else if (k == 'a') {
         ignoreOtherPlayerCheckButton.click();
+    } else if (k == 'h') {
+        rulesButton.click();
     } else if (k == 'n') {
         newGameButton.click();
     } else if (k == 'j') {
@@ -765,6 +764,10 @@ document.addEventListener("click", function (event) {
 
 newGameButton.addEventListener('click', () => {
     shiftKeyIsDown ? newGame() : openNewGameModal();
+});
+
+rulesButton.addEventListener('click', () => {
+    openRulesModal();
 });
 
 openJoinDialogButton.addEventListener('click', () => {
@@ -833,10 +836,6 @@ displayPromotionOptionsButton.addEventListener('click', () => {
 ignoreOtherPlayerCheckButton.addEventListener('click', () => {
     toggleOtherPlayerCheck();
 });
-
-rulesButton.addEventListener('click', () => {
-    openRulesModal();
-})
 
 
 function setSquare(square, piece) {
@@ -1071,3 +1070,8 @@ if (localStorage.getItem('hchess-dark-mode') == 'true') {
 
 newGame(false);
 populateFriendsList();
+
+if (!localStorage.getItem('hchess-cookie')) {
+    openRulesModal();    
+    localStorage.setItem('hchess-cookie', 'true');
+}
