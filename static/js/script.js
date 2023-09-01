@@ -63,6 +63,7 @@ stateToastElement = document.getElementById('stateToast');
 
 gameIsOver = false;
 gameResultToastElement = document.getElementById('gameResult');
+showOpponentsHandicapButton = document.getElementById('showOpponentsHandicapButton');
 drawToastElement = document.getElementById('drawToast');
 confirmDrawElement = document.getElementById('confirmDrawToast');
 
@@ -298,6 +299,7 @@ function processGameOver(result) {
     gameIsOver = true;
     gameResultToastElement.classList.remove('win', 'loss', 'draw');
     gameResultToastElement.style.display = 'inline-block';
+    showOpponentsHandicapButton.style.display = 'inline-block';
     result_string = result === 'White' ? 'White wins' : result === 'Black' ? 'Black wins' : result;
     result_class = result === color ? 'win' : (result === 'Black' || result == 'White') ? 'loss' : 'draw'; 
     gameResultToastElement.textContent = result_string;
@@ -655,6 +657,7 @@ function getHandicap() {
 
 function initGame() {
     gameResultToastElement.style.display = 'none';
+    showOpponentsHandicapButton.style.display = 'none';
     setWhoseTurn('White');
     gameIsOver = false;
     whiteboard_messages = [];
@@ -697,6 +700,7 @@ function loadGame(game = null, color = null) {
     }
     closeModals();
     gameResultToastElement.style.display = 'none';
+    showOpponentsHandicapButton.style.display = 'none';
     d = { 'gameId': game }
     if (username) {
         d['username'] = username;
@@ -713,21 +717,21 @@ function loadGame(game = null, color = null) {
                 }
                 return;
             }
-            setGameId(game);
+            setGameId(game); 
+            setOrientation(data['color']);
             gameIsOver = false;
             if (data['winner']) {
                 board.position(data['board']);
                 processGameOver(data['winner']);
             } else {
-                setOrientation(data['color']);
                 board.position(data['board']);
                 setWhoseTurn(data['whoseTurn']);
                 getHandicap();
                 gameIdInput.value = '';
                 showToast('Game loaded', 3);
-                most_recent_move = data['mostRecentMove'];
-                if (most_recent_move) {
-                    updateMostRecentMove(most_recent_move['from'], most_recent_move['to']);
+                mostRecentMove = data['mostRecentMove'];
+                if (mostRecentMove) {
+                    updateMostRecentMove(mostRecentMove['from'], mostRecentMove['to']);
                     firstMove = false;
                 } else {
                     firstMove = true;
@@ -867,6 +871,10 @@ function copyToClipboard(text) {
     document.execCommand("copy");
     document.body.removeChild(textarea);
 }
+
+showOpponentsHandicapButton.addEventListener('click', () => {
+    showOpponentsHandicap();
+});
 
 function showOpponentsHandicap() {
     fetchWrapper(URL + 'handicap', { 'gameId': gameId, 'color': color == 'White' ? 'Black' : 'White' }, 'GET')

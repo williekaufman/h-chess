@@ -1051,5 +1051,5 @@ def get_handicaps(white_diff, black_diff):
     if not LOCAL:
         return [random.choice(white_hs), random.choice(black_hs)]
     else:
-        #return [random.choice(white_hs), random.choice(black_hs)]
-        return descriptions[cant_move_specific_piece_type_at_random], descriptions[no_handicap]
+        # return [random.choice(white_hs), random.choice(black_hs)]
+        return descriptions[no_handicap], descriptions[no_handicap]
