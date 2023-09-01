@@ -679,7 +679,7 @@ def final_countdown(start, stop, inputs):
         inputs.board.game_id,
         lambda : whiteboard(f'{10 - moves}', history.whose_turn(), inputs.board.game_id),
     )
-    return moves < 9
+    return moves < 10
 
 
 def lead_by_example(start, stop, inputs):
@@ -978,7 +978,7 @@ tested_handicaps = {
     "Hold them Back: If your opponent moves a pawn onto your side of the board, you lose": (hold_them_back, 8),
     "X-ray defense: If an opposing piece would be attacking your king on an otherwise empty board, you lose": (xray_defense, 7),
     "Outcast: You can't move into the middle two ranks and files": (outcast, 7),
-    "Final Countdown: At the start of move 10, you lose the game": (final_countdown, 8),
+    "Final Countdown: At the end of move 10, you lose the game": (final_countdown, 8),
     "Lead by example: You can't move a non-pawn, non-king piece to a rank ahead of your king": (lead_by_example, 8),
     "Knight errant: You can only move knights and pieces adjacent to knights": (knight_errant, 7),
     "Slippery: You can't move a piece less far than it could move": (slippery, 7),
