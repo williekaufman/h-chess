@@ -168,18 +168,22 @@
             Some handicaps reference the values of different pieces. Pawns are worth 1, knights and bishops 3, rooks 5, queens 9, and kings infinity.
     </div>
 </div>
-<div class="hotkeys">
-    <div> Hotkeys </div>
-    <div> <b> h </b> - display how to play text </div>
-    <div> <b> n (N) </b> - new game (skip dialog, use defaults) </div>
-    <div> <b> j </b> - join game </div>
-    <div> <b> o (O) </b> - offer draw (skip confirm) </div>
-    <div> <b> c </b> - copy game id </div>
-    <div> Toggle </div>
-    <div> <b> f </b> - display friends list </div>
-    <div> <b> p </b> - display promotion options </div>
-    <div> <b> a </b> - allow moving opponent's pieces <!--/ pieces in a one player game--> </div>
-    <div> <b> d </b> - toggle dark mode </div>
+<div class="hotkeys-outer">
+    <div style="margin-bottom: 8px"> Hotkeys 
+        <button style="padding: 5px" id="hotkeysVisibilityButton"> Hide </button>
+    </div>
+    <div class="hotkeys-inner" id="hotkeys">
+        <div> <b> h </b> - display how to play text </div>
+        <div> <b> n (N) </b> - new game (skip dialog, use defaults) </div>
+        <div> <b> j </b> - join game </div>
+        <div> <b> o (O) </b> - offer draw (skip confirm) </div>
+        <div> <b> c </b> - copy game id </div>
+        <div> Toggle </div>
+        <div> <b> f </b> - display friends list </div>
+        <div> <b> p </b> - display promotion options </div>
+        <div> <b> a </b> - allow moving opponent's pieces <!--/ pieces in a one player game--> </div>
+        <div> <b> d </b> - toggle dark mode </div>
+    </div>
 </div>
 </div>
 <div class="active-games-wrapper" id="activeGamesWrapper" style="visibility: hidden"></div>

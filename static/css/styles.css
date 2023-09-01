@@ -145,15 +145,18 @@ input::placeholder {
   width: 100%;
 }
 
-.hotkeys {
-  position: fixed;
+.hotkeys-outer {
+  position: absolute;
+  max-height: 50%;
+  left: 20px;
+  bottom: 20px;
+}
+
+.hotkeys-inner {
   display: grid;
   grid-template-columns: repeat(1, 1fr);
   grid-gap: 8px;
   overflow: auto;
-  max-height: 50%;
-  left: 20px;
-  bottom: 20px;
 }
 
 .container {

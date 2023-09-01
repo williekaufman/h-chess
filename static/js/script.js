@@ -24,6 +24,9 @@ shiftKeyIsDown = false;
 newGameModal = document.getElementById('newGameModal');
 newGameModalOverlay = document.getElementById('newGameModalOverlay');
 
+hotkeysElement = document.getElementById('hotkeys');
+hotkeysVisibilityButton = document.getElementById('hotkeysVisibilityButton');
+
 rulesButton = document.getElementById('rulesButton');
 newGameButton = document.getElementById('newGameButton');
 openJoinDialogButton = document.getElementById('openJoinDialogButton');
@@ -224,8 +227,6 @@ for (var i = 0; i < 10; i++) {
 
     whiteboard.appendChild(e);
 }
-
-updateWhiteboard();
 
 function updateWhiteboard(flash=false) {
     for (var i = 0; i < whiteboard_messages.length; i++) {
@@ -1121,8 +1122,6 @@ function displayFriends(online, offline) {
     });
 }
 
-admin() && (whiteKingElement.click() || toggleOtherPlayerCheck());
-
 setInterval(() => {
     if (currentWidth != window.innerWidth || currentHeight != window.innerHeight) {
         currentWidth = window.innerWidth;
@@ -1131,10 +1130,6 @@ setInterval(() => {
         highlightMostRecentMove();
     }
 }, 100);
-
-if (localStorage.getItem('hchess-dark-mode') == 'true') {
-    toggleTheme();
-}
 
 function rejoin() {
     fetchWrapper('rejoin', {username}, 'GET')
@@ -1147,6 +1142,19 @@ function rejoin() {
             }
         });
 }
+
+hotkeysVisibilityButton.addEventListener('click', () => {
+    hotkeysElement.style.display = hotkeysElement.style.display == 'none' ? 'grid' : 'none';
+    hotkeysVisibilityButton.textContent = hotkeysElement.style.display == 'none' ? 'Show' : 'Hide';
+});
+
+if (localStorage.getItem('hchess-dark-mode') == 'true') {
+    toggleTheme();
+}
+
+admin() && (whiteKingElement.click() || toggleOtherPlayerCheck());
+
+updateWhiteboard();
 
 rejoin();
 populateFriendsList();
