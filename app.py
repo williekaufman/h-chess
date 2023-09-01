@@ -202,7 +202,17 @@ def join_game():
     if winner:
         return {'success': True, 'board': board.to_dict(), 'winner': winner}
     set_other_player and rset('other_player', '', game_id=game_id)
-    return {'success': True, 'color': color, 'board': board.to_dict(), 'whoseTurn': rget('turn', game_id=game_id), 'firstMove': last_move is None}
+    return {
+        'success': True, 
+        'color': color, 
+        'board': board.to_dict(), 
+        'whoseTurn': rget('turn', game_id=game_id), 
+        'mostRecentMove': 
+        {
+            'from': board.cache.most_recent_move.start.value,
+            'to': board.cache.most_recent_move.stop.value
+        } if board.cache.most_recent_move else None, 
+         **times(game_id, Color.whose_turn(game_id))}
 
 
 @app.route('/handicap', methods=['GET'])
@@ -233,8 +243,17 @@ def get_board():
         return {'success': False, 'error': 'Invalid game id'}
     if winner:
         return {'success': True, 'board': board.to_dict(), 'winner': winner}
-    return {'success': True, 'board': board.to_dict(), 'whoseTurn': whose_turn.value, **times(game_id, whose_turn)}
-
+    return {
+        'success': True, 
+        'board': board.to_dict(), 
+        'whoseTurn': whose_turn.value, 
+        'mostRecentMove': 
+        {
+            'from': board.cache.most_recent_move.start.value,
+            'to': board.cache.most_recent_move.stop.value
+        } if board.cache.most_recent_move else None,
+        **times(game_id, whose_turn), 
+    }
 
 @app.route("/history", methods=['GET'])
 def get_history():
@@ -417,6 +436,10 @@ def on_join(data):
     # Might not always work if there isn't a knight at home but 
     # whatever, just pick up a piece or something. Shouldn't have a lot
     # of cases of people joining games that are already in progress
+
+    # TODO
+    # This comment is somewhat out of date, since when you refresh you join
+    # whatever game you used to be in. Could come up with something better.
     square = Square('B1') if whose_turn == Color.WHITE else Square('B8')
     board.legal_moves(square, history, whose_turn, handicap)
 

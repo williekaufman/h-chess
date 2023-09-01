@@ -242,7 +242,11 @@ def colorify_dict(d):
 # If we want to remember something forever, it should be in Move, but if
 # we just might use it many times to check handicaps in a single move, it should be here
 class Cache():
-    def __init__(self, kings, rand, rooks_have_connected, king_has_reached_last_rank, reached_positions):
+    def __init__(self, most_recent_move, kings, rand, rooks_have_connected, king_has_reached_last_rank, reached_positions):
+        # Could always just use the History.of_game_id(board.game_id) or whatever but we weren't even getting 
+        # the history in /board and this felt easier 
+        # Not worth rewriting the handicaps that use history[-1] or whatever though
+        self.most_recent_move = most_recent_move
         self.kings = kings
         self.rand = rand
         self.rooks_have_connected = rooks_have_connected
@@ -251,6 +255,7 @@ class Cache():
 
     def dict(self):
         return {
+            'most_recent_move': self.most_recent_move.to_string() if self.most_recent_move else None,
             'kings': {k.value: v and v.value for k, v in self.kings.items()},
             'rand': self.rand,
             'rooks_have_connected': decolorify_dict(self.rooks_have_connected),
@@ -261,6 +266,7 @@ class Cache():
     def of_string(s):
         try:
             cache = json.loads(s)
+            cache['most_recent_move'] = Move.of_string(cache['most_recent_move']) if cache['most_recent_move'] else None
             cache['kings'] = {Color(k): v and Square(v) for k, v in cache['kings'].items()}
             cache['rooks_have_connected'] = colorify_dict(cache['rooks_have_connected']) 
             cache['king_has_reached_last_rank'] = colorify_dict(cache['king_has_reached_last_rank'])
@@ -271,6 +277,7 @@ class Cache():
         
     def copy(self):
         return Cache(
+            self.most_recent_move,
             {k: v for k, v in self.kings.items()},
             self.rand,
             {k: v for k, v in self.rooks_have_connected.items()},
@@ -359,7 +366,7 @@ class Board():
             return None
         return loc[0]
 
-    def make_cache(self, history):
+    def make_cache(self, history, move):
         rooks_have_connected = { c : False for c in Color }
         for c in Color:
             rooks_have_connected[c] = self.cache.rooks_have_connected[c] or rooks_are_connected(self, c)
@@ -375,7 +382,7 @@ class Board():
         if x == 1 and self.game_id:
             whiteboard(f'Position reached before - one more will be threefold repetition', game_id=self.game_id)
         self.cache.reached_positions[history.whose_turn().other()][self.to_string()] = x + 1
-        self.cache = Cache(kings, random.random(), rooks_have_connected, king_has_reached_last_rank, self.cache.reached_positions)
+        self.cache = Cache(move, kings, random.random(), rooks_have_connected, king_has_reached_last_rank, self.cache.reached_positions)
 
     def get(self, square):
         rank, file = square.to_coordinates()
@@ -495,7 +502,7 @@ class Board():
         # napking = self.loc(ColoredPiece(whose_turn), Piece.KING)
         check = 'f'
         # This sets all the values that only change on a move
-        self.make_cache(history)
+        self.make_cache(history, move)
         return move, extra, None
 
     def legal_moves(self, start, history, whose_turn, handicap=None):
@@ -593,6 +600,7 @@ starting_str = (
 
 def starting_cache():
     return Cache(
+        None,
         {Color.WHITE: Square('E1'), Color.BLACK: Square('E8')}, 
         random.random(),
         {Color.WHITE: False, Color.BLACK: False},

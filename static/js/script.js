@@ -725,7 +725,14 @@ function loadGame(game = null, color = null) {
                 getHandicap();
                 gameIdInput.value = '';
                 showToast('Game loaded', 3);
-                firstMove = true;
+                most_recent_move = data['mostRecentMove'];
+                if (most_recent_move) {
+                    updateMostRecentMove(most_recent_move['from'], most_recent_move['to']);
+                    firstMove = false;
+                } else {
+                    firstMove = true;
+                }
+                updateTimes(data['whiteTime'], data['blackTime']);
             }
             updateState();
             whiteboard_messages = [];
@@ -1032,6 +1039,9 @@ function updateState() {
                 return;
             }
             board.position(data['board']);
+            if (data['mostRecentMove']) {
+                updateMostRecentMove(data['mostRecentMove']['from'], data['mostRecentMove']['to']);
+            }
             updateTimes(data['whiteTime'], data['blackTime']);
             if (data['winner']) {
                 processGameOver(data['winner']);
@@ -1045,14 +1055,6 @@ setInterval(function () {
     retry_move && retry_move();
     !holdingPiece && unhighlightSquares();
 }, 200);
-
-// // This is the stupid constant polling solution
-// setInterval(function () {
-//     if (gameIsOver) {
-//         return;
-//     }
-// updateState();
-// }, 1000);
 
 function populateFriendsList() {
     fetchWrapper(URL + 'friends', { 'username': username }, 'GET')
