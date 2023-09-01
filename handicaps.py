@@ -91,6 +91,26 @@ def cant_move_to_one_color_at_random(start, stop, inputs):
     )
     return stop.color() == color
 
+def cant_move_specific_piece_type_at_random(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    random.seed(board.cache.rand)
+    has_legal_moves = {p: False for p in Piece}
+    for square in Square:
+        if board.get(square) and board.get(square).color == inputs.history.whose_turn():
+            if board.legal_moves(square, inputs.history, inputs.history.whose_turn()):
+                has_legal_moves[board.get(square).piece] = True
+    pieces = [p for p in has_legal_moves.keys() if has_legal_moves[p]]
+    if not pieces:
+        return False
+    if len(pieces) == 1:
+        return True
+    piece = random.choice(pieces)
+    try_opt(
+        history.whose_turn(),
+        board.game_id,
+        lambda : whiteboard(f'Can\'t move a {piece.name.lower()}', history.whose_turn(), board.game_id),
+        )
+    return board.get(start).piece != piece
 
 def must_move_specific_piece_type_at_random(start, stop, inputs):
     board, history = inputs.board, inputs.history
@@ -898,6 +918,7 @@ tested_handicaps = {
     "Home Base: Can't move to opponent's side of board": (cant_move_to_opponents_side_of_board, 5),
     "Unlucky: Can't move to half of squares, re-randomized every move": (cant_move_to_half_of_squares_at_random, 5),
     "Colorblind: Can't move to squares of one color, re-randomized every move": (cant_move_to_one_color_at_random, 5),
+    "Gambler: Can't move a specific piece type, re-randomized every move": (cant_move_specific_piece_type_at_random, 4),
     "Flavor of the month: Must move a specific piece type, re-randomized every move": (must_move_specific_piece_type_at_random, 8),
     "Peons First: Can't move pieces that are directly behind one of your pawns": (peons_first, 2),
     "True Gentleman: You cannot capture your opponent's queen": (true_gentleman, 2),
@@ -1035,4 +1056,4 @@ def get_handicaps(white_diff, black_diff):
         return [random.choice(white_hs), random.choice(black_hs)]
     else:
         #return [random.choice(white_hs), random.choice(black_hs)]
-        return descriptions[respectful], descriptions[no_handicap]
+        return descriptions[cant_move_specific_piece_type_at_random], descriptions[no_handicap]

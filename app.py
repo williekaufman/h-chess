@@ -417,6 +417,10 @@ def on_join(data):
     # Might not always work if there isn't a knight at home but 
     # whatever, just pick up a piece or something. Shouldn't have a lot
     # of cases of people joining games that are already in progress
+
+    # TODO
+    # This comment is somewhat out of date, since when you refresh you join
+    # whatever game you used to be in. Could come up with something better.
     square = Square('B1') if whose_turn == Color.WHITE else Square('B8')
     board.legal_moves(square, history, whose_turn, handicap)
 
