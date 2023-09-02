@@ -311,13 +311,10 @@ def move():
             rset('winner', winner.value, game_id=game_id)
             ret['winner'] = winner.value
         # This tells the frontend to pull down the new state
-        socketio.emit('update', {'color': whose_turn.value}, room=game_id)
+        socketio.emit('update', { 'color': whose_turn.value }, room=game_id)
         return {**ret, **times(game_id, whose_turn)}
     else:
-        # It's bad if we end up here since the UI board will be out of sync with the server board
-        # That's why we snapback the board on the UI side for moves not in the legal_moves list
-        # It's ok for moves that aren't requested via dragging pieces around, e.g. via retry
-        return {'success': False, 'error': error, 'whose_turn': whose_turn.value}
+        return {'success': False, 'error': error }
 
 
 @app.route("/legal_moves", methods=['GET'])
