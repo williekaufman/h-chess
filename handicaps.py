@@ -3,6 +3,7 @@ from squares import Square, Rank, File
 from chess import Color, Piece, ColoredPiece, HandicapInputs, starting_board, empty_board, History, CaptureType, queen_moved_like
 from settings import LOCAL
 from helpers import toast, whiteboard, try_move, get_adjacent_squares, get_orthogonally_adjacent_squares, get_diagonally_adjacent_squares, two_letter_words, try_opt 
+from enum import Enum
 from collections import defaultdict, Counter
 import random
 
@@ -28,6 +29,9 @@ def die_after_moving_pawn(start, stop, inputs):
         return True
     last_move = history[-2]
     return not last_move.piece.piece.value == 'P'
+
+def number_of_the_beast(start, stop, inputs):
+    return stop.rank != Rank.Sixth
 
 def checkers(start, stop, inputs):
     board, history = inputs.board, inputs.history
@@ -1022,6 +1026,7 @@ tested_handicaps = {
     "Mind the Middle: You can't attack the central four squares": (mind_the_middle, 9),
     "Femme Fatale: Only your queen can take their king": (femme_fatale, 3),
     "H-phile: You can't move to the h file": (h_file_phobe, 3),
+    "The number of the beast: You can't move onto the sixth rank": (number_of_the_beast, 3),
     "Respectful: Can't give check": (respectful, 4),
     "Checkers: You can only capture forward": (checkers, 4),
     "Disguised queen: Your queen is secretly either a bishop or a rook. Once you move it like one, you can't move it like the other": (queen_disguise, 2),
@@ -1045,6 +1050,29 @@ handicaps = dict(tested_handicaps, **untested_handicaps)
 
 descriptions = {v[0]: k for k, v in handicaps.items()}
 
+class Difficulty(Enum):
+    EASY = 'easy'
+    MEDIUM = 'medium'
+    HARD = 'hard'
+
+    def offset(self):
+        if self == Difficulty.EASY:
+            return 1
+        elif self == Difficulty.MEDIUM:
+            return 4
+        else:
+            return 7
+
+def pick_handicap(difficulty):
+    if not difficulty:
+        return "No handicap"
+    n = random.choice([0, 0, 1, 1, 1, 1, 2, 2]) + difficulty.offset()
+    if (handicaps := [k for k, v in tested_handicaps.items() if v[1] == n]):
+        return random.choice(handicaps)
+    # This shouldn't really be happening
+    print('No handicap found for difficulty', difficulty)
+    return "No handicap"
+
 # This just checks that none of them throw errors when called
 # Doesn't check logic or anything
 # Hopefully just catches stupid things like calling piece.piece.piece.piece
@@ -1059,21 +1087,11 @@ def test_all_handicaps():
         v[0](s1, s2, inputs)
 
 
-def get_handicaps(white_diff, black_diff):
+def get_handicaps(config):
     # So I can't forget to undo anything weird
-    handicaps.update(untested_handicaps)
-    dd = {0: 'easy', 1: 'easy', 2: 'easy', 3: 'easy', 4: 'medium',
-          5: 'medium', 6: 'medium', 7: 'hard', 8: 'hard', 9: 'hard', 10: 'hard'}
-    white_hs = ['No handicap']
-    black_hs = ['No handicap']
-    if white_diff:
-        white_hs = [
-            x for x in tested_handicaps if dd[tested_handicaps[x][1]] == white_diff]
-    if black_diff:
-        black_hs = [
-            x for x in tested_handicaps if dd[tested_handicaps[x][1]] == black_diff]
+    white_difficulty, black_difficulty = config[Color.WHITE], config[Color.BLACK]
     if not LOCAL:
-        return [random.choice(white_hs), random.choice(black_hs)]
+        return [pick_handicap(white_difficulty), pick_handicap(black_difficulty)]
     else:
-        # return [random.choice(white_hs), random.choice(black_hs)]
-        return descriptions[rook_buddies], descriptions[no_handicap]
+        return [pick_handicap(white_difficulty), pick_handicap(black_difficulty)]
+        # return descriptions[rook_buddies], descriptions[no_handicap]

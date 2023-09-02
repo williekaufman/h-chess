@@ -9,7 +9,7 @@ from settings import LOCAL
 from secrets import compare_digest, token_hex
 from chess import Color, Result, Board, History, starting_board
 from squares import Square
-from handicaps import handicaps, get_handicaps, tested_handicaps, test_all_handicaps
+from handicaps import handicaps, get_handicaps, tested_handicaps, test_all_handicaps, Difficulty
 import time
 import random
 import json
@@ -150,12 +150,20 @@ def new_game():
     if (timeControl := request.json.get('timeControl')):
         for color in Color:
             rset(f'{color.value}_time', timeControl, game_id=game_id)   
-    hs = {Color.WHITE: None, Color.BLACK: None}
+    handicap_config = {Color.WHITE: None, Color.BLACK: None}
     if (yourHandicap := request.json.get('yourHandicap')):
-        hs[playerColor] = yourHandicap
+        try:
+            yourHandicap = Difficulty(yourHandicap)
+        except:
+            return {'success': False, 'error': 'Invalid handicap difficulty'}
+        handicap_config[playerColor] = yourHandicap
     if (theirHandicap := request.json.get('theirHandicap')):
-        hs[playerColor.other()] = theirHandicap
-    handicaps = get_handicaps(hs[Color.WHITE], hs[Color.BLACK])
+        try:
+            theirHandicap = Difficulty(theirHandicap)
+        except:
+            return {'success': False, 'error': 'Invalid handicap difficulty'}
+        handicap_config[playerColor.other()] = theirHandicap
+    handicaps = get_handicaps(handicap_config)
 
     starting_board().write_to_redis(game_id)
     rset('history', History().to_string(), game_id=game_id)
