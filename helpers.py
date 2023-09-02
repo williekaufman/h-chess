@@ -75,3 +75,20 @@ two_letter_words = [
     're', 'sh', 'si', 'so', 'ta', 'te', 'ti', 'to', 'uh', 'um', 'un', 'up',
     'us', 'ut', 'we', 'wo', 'xi', 'xu', 'ya', 'ye', 'yo', 'za'
 ]
+
+def rooks_are_connected(board, color):
+    rooks = board.loc(ColoredPiece(color, Piece.ROOK))
+    for rook1 in rooks:
+        for rook2 in rooks:
+            if rook1 == rook2:
+                continue
+            if not [sq for sq in rook1.between(rook2) if board.get(sq)]:
+                return True
+    return False
+
+def queen_moved_like(move):
+    if move.piece.piece != Piece.QUEEN:
+        return None
+    if move.start.rank() == move.stop.rank() or move.start.file() == move.stop.file():
+        return Piece.ROOK
+    return Piece.BISHOP

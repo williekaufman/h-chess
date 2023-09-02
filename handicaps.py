@@ -1,6 +1,6 @@
 from redis_utils import rset, rget
 from squares import Square, Rank, File
-from chess import Color, Piece, ColoredPiece, HandicapInputs, starting_board, empty_board, History, CaptureType
+from chess import Color, Piece, ColoredPiece, HandicapInputs, starting_board, empty_board, History, CaptureType, queen_moved_like
 from settings import LOCAL
 from helpers import toast, whiteboard, try_move, get_adjacent_squares, get_orthogonally_adjacent_squares, get_diagonally_adjacent_squares, two_letter_words, try_opt 
 from collections import defaultdict, Counter
@@ -29,6 +29,28 @@ def die_after_moving_pawn(start, stop, inputs):
     last_move = history[-2]
     return not last_move.piece.piece.value == 'P'
 
+def checkers(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    if board.capture(start, stop, history):
+        return stop.rank().more_adv_than(start.rank(), history.whose_turn())
+    return True
+
+def queen_disguise(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    if board.get(start).piece != Piece.QUEEN:
+        return True
+    if (disguise := board.cache.queen_disguise[history.whose_turn()]):
+        return queen_moved_like(start, stop) == disguise
+    return True
+
+def blood_scent(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    if board.capture(start, stop, history):
+        return True
+    for square in board.legal_moves(start, history, history.whose_turn()):
+        if board.capture(start, Square(square), history):
+            return False
+    return True
 
 def lose_if_no_queen(start, stop, inputs):
     board, history = inputs.board, inputs.history
@@ -835,7 +857,6 @@ def bloodthirsty(start, stop, inputs):
         )
         return board.capture(start, stop, history)
     return True
-    
 
 def scrabble(start, stop, inputs):
     history = inputs.history
@@ -966,7 +987,7 @@ tested_handicaps = {
     "Chain of command: Unless you just moved your king, you cannot move a less valuable piece than last move": (chain_of_command, 7),
     "Pioneer: You cannot move onto a rank that you already occupy": (pioneer, 9),
     "X Marks the Spot: Any non-pawn, non-capture moves must be to one of the long diagonals": (x_marks_the_spot, 8),
-    "Flight over Flight: When your opponent captures, you must move backwards": (flight_over_fight, 9),
+    "Flight over fight: When your opponent captures, you must move backwards": (flight_over_fight, 8),
     "Helicopter parent: You lose if your opponent captures 3 of your pieces": (helicopter_parent, 8),
     "Octomom: You lose if your opponent captures 8 of your pieces": (octomom, 3),
     "Deer in the headlights: Your pieces under attack can't move": (deer_in_the_headlights, 8),
@@ -995,12 +1016,15 @@ tested_handicaps = {
     "Reflective: You can only move non-pawns to squares whose opposite square reflected across the center line is occupied": (reflective, 6),
     "Tower Defense: You can't move your rooks. If you lose all your rooks, you lose": (tower_defense, 7),
     "Bloodthirsty: After the first 3 turns, if you go 2 turns without capturing, you must capture on the third (or lose)": (bloodthirsty, 5),
+    "The scent of blood: You can't make non-capturing moves with pieces that could capture": (blood_scent, 3),
     "Fearless Leader: You can only capture when your king is in front of one of your pawns": (fearless_leader, 8),
     "Protect the Peons: You lose if you have an undefended pawn": (protect_the_peons, 8), 
     "Mind the Middle: You can't attack the central four squares": (mind_the_middle, 9),
     "Femme Fatale: Only your queen can take their king": (femme_fatale, 3),
     "H-phile: You can't move to the h file": (h_file_phobe, 3),
     "Respectful: Can't give check": (respectful, 4),
+    "Checkers: You can only capture forward": (checkers, 4),
+    "Disguised queen: Your queen is secretly either a bishop or a rook. Once you move it like one, you can't move it like the other": (queen_disguise, 2),
 }
 
 # Stuff in here won't randomly get assigned but you can interact with it by changing get_handicaps
@@ -1052,4 +1076,4 @@ def get_handicaps(white_diff, black_diff):
         return [random.choice(white_hs), random.choice(black_hs)]
     else:
         # return [random.choice(white_hs), random.choice(black_hs)]
-        return descriptions[no_handicap], descriptions[no_handicap]
+        return descriptions[rook_buddies], descriptions[no_handicap]

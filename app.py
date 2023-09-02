@@ -449,4 +449,5 @@ def on_leave(data):
     leave_room(data['room'])
 
 if __name__ == '__main__':
+    test_all_handicaps()
     socketio.run(app, host='0.0.0.0', port=5001 if LOCAL else 5003)

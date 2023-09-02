@@ -242,7 +242,7 @@ def colorify_dict(d):
 # If we want to remember something forever, it should be in Move, but if
 # we just might use it many times to check handicaps in a single move, it should be here
 class Cache():
-    def __init__(self, most_recent_move, kings, rand, rooks_have_connected, king_has_reached_last_rank, reached_positions):
+    def __init__(self, most_recent_move, kings, rand, rooks_have_connected, king_has_reached_last_rank, reached_positions, queen_disguise):
         # Could always just use the History.of_game_id(board.game_id) or whatever but we weren't even getting 
         # the history in /board and this felt easier 
         # Not worth rewriting the handicaps that use history[-1] or whatever though
@@ -252,6 +252,7 @@ class Cache():
         self.rooks_have_connected = rooks_have_connected
         self.king_has_reached_last_rank = king_has_reached_last_rank
         self.reached_positions = reached_positions
+        self.queen_disguise = queen_disguise
 
     def dict(self):
         return {
@@ -260,7 +261,8 @@ class Cache():
             'rand': self.rand,
             'rooks_have_connected': decolorify_dict(self.rooks_have_connected),
             'king_has_reached_last_rank': decolorify_dict(self.king_has_reached_last_rank),
-            'reached_positions': decolorify_dict(self.reached_positions)
+            'reached_positions': decolorify_dict(self.reached_positions),
+            'queen_disguise': {k.value: v and v.value for k, v in self.queen_disguise.items()}
         }
     
     def of_string(s):
@@ -271,6 +273,7 @@ class Cache():
             cache['rooks_have_connected'] = colorify_dict(cache['rooks_have_connected']) 
             cache['king_has_reached_last_rank'] = colorify_dict(cache['king_has_reached_last_rank'])
             cache['reached_positions'] = colorify_dict(cache['reached_positions'])
+            cache['queen_disguise'] = {Color(k): v and Piece(v) for k, v in cache['queen_disguise'].items()}
             return Cache(**cache)
         except:
             return None
@@ -282,7 +285,8 @@ class Cache():
             self.rand,
             {k: v for k, v in self.rooks_have_connected.items()},
             {k: v for k, v in self.king_has_reached_last_rank.items()},
-            {k: {kk: vv for kk, vv in v.items()} for k, v in self.reached_positions.items()}
+            {k: {kk: vv for kk, vv in v.items()} for k, v in self.reached_positions.items()},
+            {k: v for k, v in self.queen_disguise.items()}
         )
         
 class History():
@@ -374,6 +378,9 @@ class Board():
         king_has_reached_last_rank = {c : False for c in Color}
         for c in Color:
             king_has_reached_last_rank[c] = king_has_reached_last_rank[c] or (kings[c] and kings[c].rank() == Rank.home(c.other()))
+        queen_disguise = {c : None for c in Color}
+        for c in Color:
+            queen_disguise[c] = self.cache.queen_disguise[c] or (queen_moved_like(move.start, move.stop) if move.piece.piece == Piece.QUEEN else None) 
         # Random is a function of the game_id plus number of moves
         # so you get the same number if you call legal_moves again
         # This could theoretically collide but it never will
@@ -382,7 +389,7 @@ class Board():
         if x == 1 and self.game_id:
             whiteboard(f'Position reached before - one more will be threefold repetition', game_id=self.game_id)
         self.cache.reached_positions[history.whose_turn().other()][self.to_string()] = x + 1
-        self.cache = Cache(move, kings, random.random(), rooks_have_connected, king_has_reached_last_rank, self.cache.reached_positions)
+        self.cache = Cache(move, kings, random.random(), rooks_have_connected, king_has_reached_last_rank, self.cache.reached_positions, queen_disguise)
 
     def get(self, square):
         rank, file = square.to_coordinates()
@@ -605,7 +612,8 @@ def starting_cache():
         random.random(),
         {Color.WHITE: False, Color.BLACK: False},
         {Color.WHITE: False, Color.BLACK: False},
-        {Color.WHITE: {starting_str: 1}, Color.BLACK: {}}
+        {Color.WHITE: {starting_str: 1}, Color.BLACK: {}},
+        {Color.WHITE: None, Color.BLACK: None}
         )
 
 def starting_board(game_id=None):
@@ -619,7 +627,6 @@ def empty_board():
         '0', starting_cache()
     )
 
-
 def rooks_are_connected(board, color):
     rooks = board.loc(ColoredPiece(color, Piece.ROOK))
     for rook1 in rooks:
@@ -629,3 +636,8 @@ def rooks_are_connected(board, color):
             if not [sq for sq in rook1.between(rook2) if board.get(sq)]:
                 return True
     return False
+
+def queen_moved_like(start, stop):
+    if start.rank() == stop.rank() or start.file() == stop.file():
+        return Piece.ROOK
+    return Piece.BISHOP
