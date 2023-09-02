@@ -56,6 +56,12 @@ def blood_scent(start, stop, inputs):
             return False
     return True
 
+def nurturer(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    if (captured_piece := board.capture(start, stop, history)):
+        return captured_piece.piece != Piece.KING or board.cache.has_promoted[history.whose_turn()]
+    return True 
+
 def lose_if_no_queen(start, stop, inputs):
     board, history = inputs.board, inputs.history
     return board.loc(ColoredPiece(history.whose_turn(), Piece.QUEEN))
@@ -1021,6 +1027,7 @@ tested_handicaps = {
     "Tower Defense: You can't move your rooks. If you lose all your rooks, you lose": (tower_defense, 7),
     "Bloodthirsty: After the first 3 turns, if you go 2 turns without capturing, you must capture on the third (or lose)": (bloodthirsty, 5),
     "The scent of blood: You can't make non-capturing moves with pieces that could capture": (blood_scent, 3),
+    "Nurturer: You can't capture their king until you've promoted a pawn": (nurturer, 3), 
     "Fearless Leader: You can only capture when your king is in front of one of your pawns": (fearless_leader, 8),
     "Protect the Peons: You lose if you have an undefended pawn": (protect_the_peons, 8), 
     "Mind the Middle: You can't attack the central four squares": (mind_the_middle, 9),
@@ -1093,5 +1100,5 @@ def get_handicaps(config):
     if not LOCAL:
         return [pick_handicap(white_difficulty), pick_handicap(black_difficulty)]
     else:
-        return [pick_handicap(white_difficulty), pick_handicap(black_difficulty)]
-        # return descriptions[rook_buddies], descriptions[no_handicap]
+        # return [pick_handicap(white_difficulty), pick_handicap(black_difficulty)]
+        return descriptions[nurturer], descriptions[no_handicap]
