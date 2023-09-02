@@ -3,9 +3,18 @@ from redis_utils import rget, rset
 import datetime
 
 
-def try_move(board, start, stop, history):
+def try_move(board, start, stop, history, promote_to=None):
     new_board = board.copy()
-    new_board.move(start, stop, history.whose_turn(), None, history)
+    args = {
+        'start': start,
+        'stop': stop,
+        'whose_turn': history.whose_turn(),
+        'handicap': None,
+        'history': history,
+    }
+    if promote_to:
+        args['promote_to'] = promote_to
+    new_board.move(**args)
     return new_board
 
 
@@ -76,19 +85,4 @@ two_letter_words = [
     'us', 'ut', 'we', 'wo', 'xi', 'xu', 'ya', 'ye', 'yo', 'za'
 ]
 
-def rooks_are_connected(board, color):
-    rooks = board.loc(ColoredPiece(color, Piece.ROOK))
-    for rook1 in rooks:
-        for rook2 in rooks:
-            if rook1 == rook2:
-                continue
-            if not [sq for sq in rook1.between(rook2) if board.get(sq)]:
-                return True
-    return False
 
-def queen_moved_like(move):
-    if move.piece.piece != Piece.QUEEN:
-        return None
-    if move.start.rank() == move.stop.rank() or move.start.file() == move.stop.file():
-        return Piece.ROOK
-    return Piece.BISHOP

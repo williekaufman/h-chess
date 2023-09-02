@@ -70,10 +70,10 @@ def h_file_phobe(start, stop, inputs):
     return stop.file() != File.H
 
 def respectful(start, stop, inputs):
-    board, history = inputs.board, inputs.history
+    board, history, promote_to = inputs.board, inputs.history, inputs.promote_to
     if board.is_attacked(board.cache.kings[history.whose_turn().other()], history.whose_turn(), history):
         return True
-    new_board = try_move(board, start, stop, history)
+    new_board = try_move(board, start, stop, history, promote_to)
     return not new_board.is_attacked(board.cache.kings[history.whose_turn().other()], history.whose_turn(), history)
 
 def skittish(start, stop, inputs):
@@ -256,10 +256,10 @@ def royal_berth(start, stop, inputs):
 
 
 def protected_pawns(start, stop, inputs):
-    board, history = inputs.board, inputs.history
+    board, history, promote_to = inputs.board, inputs.history, inputs.promote_to
     if board.get(start).piece != Piece.PAWN:
         return True
-    new_board = try_move(board, start, stop, history)
+    new_board = try_move(board, start, stop, history, promote_to)
     return new_board.is_attacked(stop, history.whose_turn(), history)
 
 
@@ -446,6 +446,7 @@ def left_for_dead(start, stop, inputs):
 
 def taking_turns(start, stop, inputs):
     piece_counter = inputs.history.pieces_moved(include_zero=True)
+    piece_counter = {p: piece_counter[p] for p in piece_counter if inputs.board.loc(ColoredPiece(inputs.history.whose_turn(), p))}
     can_move = str([p.value for p in piece_counter.keys() if piece_counter[p] == min(piece_counter.values())]).replace("'", "")
     try_opt(
         inputs.history.whose_turn(),
@@ -905,9 +906,9 @@ def protect_the_peons(start, stop, inputs):
     return not [s for s in board.loc(ColoredPiece(c, Piece.PAWN)) if not board.is_attacked(s, c, history)]
 
 def mind_the_middle(start, stop, inputs):
-    board, history = inputs.board, inputs.history
+    board, history, promote_to = inputs.board, inputs.history, inputs.promote_to
     center = [Square('E4'), Square('E5'), Square('D4'), Square('D5')]
-    new_board = try_move(board, start, stop, history)
+    new_board = try_move(board, start, stop, history, promote_to)
     return not [s for s in center if new_board.is_attacked(s, history.whose_turn(), history)]
 
 def monkey_dont(start, stop, inputs):
@@ -1004,7 +1005,7 @@ tested_handicaps = {
     "Impulsive: If you can capture something, you must": (impulsive, 7),
     "Spread Out: You cannot move a pieces next to another one of your pieces": (spread_out, 8),
     "Left to Right: Unless you just moved to the rightmost file, you must move further to the right than where you last moved": (left_to_right, 7),
-    "Leaps and Bounds: You cannot move a pieces adjacent to where it was": (leaps_and_bounds, 8),
+        "Leaps and Bounds: You cannot move a pieces adjacent to where it was": (leaps_and_bounds, 8),
     "Friendly Fire: You can only move onto squares defended by another one of your pieces": (friendly_fire, 7),
     "Hold them Back: If your opponent moves a pawn onto your side of the board, you lose": (hold_them_back, 8),
     "X-ray defense: If an opposing piece would be attacking your king on an otherwise empty board, you lose": (xray_defense, 7),
@@ -1021,7 +1022,6 @@ tested_handicaps = {
     "Bottled lightning: If you can move your king, you must": (bottled_lightning, 8),
     "Pilgrimage: Until your king reached their home row, you can only capture kings and pawns": (pilgrimage, 8),
     "Leveling up: You can't capture a piece until you've captured its predecessor in the list [pawn, knight, bishop, rook, queen, king]": (leveling_up, 8),
-    "Flatterer: If you can mirror your opponent's move, you must (same piece, same stop square reflected over the midline)": (flatterer, 4),
     "Covering fire: You can only capture a piece if you could capture it two different ways": (covering_fire, 6),
     "Reflective: You can only move non-pawns to squares whose opposite square reflected across the center line is occupied": (reflective, 6),
     "Tower Defense: You can't move your rooks. If you lose all your rooks, you lose": (tower_defense, 7),
@@ -1051,6 +1051,8 @@ untested_handicaps = {
     # It turns out this is quite close to "you have to move to the a or e file on even numbered turns". Kinda lame
     "Scrabble: For each pair of moves, the files that your piece stops on must spell a 2-letter word. E.g. you could do H file, A file (ha) and then B file, E file (be) for your first 4 moves.": (scrabble, 7),
     "Monkey Don't: If your opponent moves the same piece as you just moved 3 times over the course of the game, you lose": (monkey_dont, 9),
+    # We played a playtest game and it was stupid
+    "Flatterer: If you can mirror your opponent's move, you must (same piece, same stop square reflected over the midline)": (flatterer, 4),
 }
 
 handicaps = dict(tested_handicaps, **untested_handicaps)
@@ -1101,4 +1103,4 @@ def get_handicaps(config):
         return [pick_handicap(white_difficulty), pick_handicap(black_difficulty)]
     else:
         # return [pick_handicap(white_difficulty), pick_handicap(black_difficulty)]
-        return descriptions[nurturer], descriptions[no_handicap]
+        return descriptions[mind_the_middle], descriptions[yin_and_yang]

@@ -204,6 +204,7 @@ function offerDraw() {
             }
             else {
                 showToast('You offered a draw', 5);
+                cancelDrawButton.click();
             }
         });
 }
@@ -682,6 +683,7 @@ function newGame(toast = true) {
             firstMove = true;
         });
         initGame();
+        closeModals();
 }
 
 function invite(friend) {
@@ -771,6 +773,8 @@ function closeModals() {
     joinGameModalOverlay.style.display = 'none';
     rulesModal.style.display = 'none';
     rulesModalOverlay.style.display = 'none';
+    noDrawButton.click();
+    cancelDrawButton.click();
 }
 
 function flipVisibility(element) {
@@ -966,7 +970,7 @@ function onPickup(source, piece) {
     legal_destinations = [];
     on_pickup_in_flight = true;
 
-    fetchWrapper(URL + 'legal_moves', { 'start': source, 'gameId': gameId, ignoreOtherPlayerCheck }, 'GET')
+    fetchWrapper(URL + 'legal_moves', { 'start': source, 'gameId': gameId, ignoreOtherPlayerCheck , 'promotion': promotionPiece || 'Q'}, 'GET')
         .then((response) => response.json())
         .then((data) => {
             if (!data['success']) {
@@ -996,6 +1000,10 @@ function sendMove(from, to) {
         .then((response) => response.json())
         .then((data) => {
             if (!data['success']) {
+                console.log(data['error']);
+                showToast(data['error'], 5);
+                // If we get an error, we need to pull down the state to undo the move on the frontend
+                updateState();
                 return;
             }
             else {

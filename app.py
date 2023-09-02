@@ -7,7 +7,7 @@ from threading import Thread
 from redis_utils import rget, rset, redis
 from settings import LOCAL
 from secrets import compare_digest, token_hex
-from chess import Color, Result, Board, History, starting_board
+from chess import Color, Piece, Result, Board, History, starting_board
 from squares import Square
 from handicaps import handicaps, get_handicaps, tested_handicaps, test_all_handicaps, Difficulty
 import time
@@ -74,6 +74,12 @@ def times(game_id, whose_turn):
         'blackTime': blackTime,
     }
 
+def make_promotion_arg(promotion):
+    try:
+        promotion = Piece(promotion.upper())
+    except:
+        promotion = Piece.QUEEN
+    return promotion
 
 @app.route("/", methods=['GET'])
 def index():
@@ -276,7 +282,7 @@ def get_history():
 def move():
     game_id = request.json.get('gameId')
     ignore_other_player_check = request.json.get('ignoreOtherPlayerCheck')
-    promotion = request.json.get('promotion')
+    promotion = make_promotion_arg(request.json.get('promotion'))
     if rget('other_player', game_id=game_id) and not ignore_other_player_check:
         return {'success': False, 'error': 'Other player has not joined'}
     start = Square(request.json.get('start').upper())
@@ -325,9 +331,10 @@ def legal_moves():
     board = Board.of_game_id(game_id)
     history = History.of_game_id(game_id)
     whose_turn = Color.whose_turn(game_id)
+    promotion = make_promotion_arg(request.args.get('promotion'))
     handicap = handicaps[rget(
         f'{whose_turn.value}_handicap', game_id=game_id)][0]
-    return {'success': True, 'moves': board.legal_moves(start, history, whose_turn, handicap)}
+    return {'success': True, 'moves': board.legal_moves(start, history, whose_turn, handicap, promotion)}
 
 
 @app.route("/add_friend", methods=['POST'])

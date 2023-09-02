@@ -60,6 +60,8 @@ def piece_or_none(s):
 def bool_to_char(b):
     return 't' if b else 'f'
 
+# This is getting kinda messy. I wish I had just used json.dumps and json.loads instead of all 
+# the constant-length-string nonsense, but not that high priority to fix
 class Move():
     def __init__(self, piece, start, stop, capture, check, castle, promotion, capture_type):
         self.piece = piece
@@ -75,11 +77,12 @@ class Move():
         assert type(board) == Board
         assert type(history) == History
         assert type(whose_turn) == Color
+        promote_to = Piece(self.promotion) if self.promotion != 'x' else Piece.QUEEN
         if self.piece is None:
             return False
         if board.get(self.stop) and board.get(self.start).color == board.get(self.stop).color:
             return False
-        if self.stop.value not in board.legal_moves(self.start, history, whose_turn, handicap):
+        if self.stop.value not in board.legal_moves(self.start, history, whose_turn, handicap, promote_to):
             return False
         return True
 
@@ -342,9 +345,10 @@ class History():
         return [move.to_string() for move in self.history]
 
 class HandicapInputs():
-    def __init__(self, board, history):
+    def __init__(self, board, history, promote_to=Piece.QUEEN):
         self.board = board
         self.history = history
+        self.promote_to = promote_to
 
 class CaptureType(Enum):
     NOT = 'f'
@@ -448,7 +452,7 @@ class Board():
     def capture(self, start, stop, history):
         return self.capture_outer(start, stop, history)[0]
 
-    def move(self, start, stop, whose_turn, handicap, history=History(), promote_to=None):
+    def move(self, start, stop, whose_turn, handicap, history=History(), promote_to=Piece.QUEEN):
         assert type(start) == Square
         assert type(stop) == Square
         assert type(whose_turn) == Color
@@ -468,7 +472,7 @@ class Board():
                 castle = 'q'
             else:
                 castle = 'k'
-        promotion = promote_to.upper() or 'Q' if piece and piece.piece == Piece.PAWN and stop.to_coordinates()[
+        promotion = promote_to.value if piece and piece.piece == Piece.PAWN and stop.to_coordinates()[
             0] in [0, 7] else 'x'
         move = Move(piece, start, stop, captured_piece, check, castle, promotion, capture_type)
         # if this validates, then the move will actually happen
@@ -516,7 +520,7 @@ class Board():
         self.make_cache(history, move)
         return move, extra, None
 
-    def legal_moves(self, start, history, whose_turn, handicap=None):
+    def legal_moves(self, start, history, whose_turn, handicap=None, promote_to=Piece.QUEEN):
         assert type(start) == Square
         assert type(history) == History
         assert type(whose_turn) == Color
@@ -540,7 +544,7 @@ class Board():
         elif piece.piece == Piece.KING:
             moves += king_moves(self, start, whose_turn, history.history) 
         handicap = handicap or (lambda start, stop, inputs: True)
-        handicap_inputs = HandicapInputs(self, history)
+        handicap_inputs = HandicapInputs(self, history, promote_to)
         return [square.value for square in moves if square and handicap(start, square, handicap_inputs)]
 
     def draw(self, whose_turn, history):
