@@ -61,6 +61,9 @@ def whiteboard(message, color=None, game_id=None, really_broadcast_to_all=False)
         socketio.emit('whiteboard', payload, room=game_id)
 
 
+def whiteboardify_pieces(pieces):
+    return str([p.value for p in set(pieces)]).replace("'", "")
+
 def opt_key(color):
     return f'{color.value}_opt'
 

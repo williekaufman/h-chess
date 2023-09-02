@@ -2,7 +2,7 @@ from redis_utils import rset, rget
 from squares import Square, Rank, File
 from chess import Color, Piece, ColoredPiece, HandicapInputs, starting_board, empty_board, History, CaptureType, queen_moved_like
 from settings import LOCAL
-from helpers import toast, whiteboard, try_move, get_adjacent_squares, get_orthogonally_adjacent_squares, get_diagonally_adjacent_squares, two_letter_words, try_opt 
+from helpers import toast, whiteboard, try_move, get_adjacent_squares, get_orthogonally_adjacent_squares, get_diagonally_adjacent_squares, two_letter_words, try_opt, whiteboardify_pieces 
 from enum import Enum
 from collections import defaultdict, Counter
 import random
@@ -13,7 +13,6 @@ def no_handicap(start, stop, inputs):
 def cant_move_pawns(start, stop, inputs):
     board = inputs.board
     return not (board.get(start) and board.get(start).piece == Piece.PAWN)
-
 
 def cant_move_pawn_and_then_rook(start, stop, inputs):
     board, history = inputs.board, inputs.history.history
@@ -536,7 +535,7 @@ def ego_clash(start, stop, inputs):
 def in_mourning(start, stop, inputs):
     board, history = inputs.board, inputs.history
     pieces_captured = history.pieces_captured()
-    whiteboard_str = str([p.value for p in pieces_captured.keys()]).replace("'", "")
+    whiteboard_str = whiteboardify_pieces(pieces_captured.keys())
     pieces_captured and try_opt(
         history.whose_turn(),
         board.game_id,
@@ -549,7 +548,7 @@ def cowering_in_fear(start, stop, inputs):
     board, history = inputs.board, inputs.history
     if (pieces_captured := history.pieces_captured(history.whose_turn().other())):
         min_points_to_move = max([piece.points() for piece in pieces_captured.keys()])
-        whiteboard_str = str([p.value for p in Piece if p.points() >= min_points_to_move]).replace("'", "")
+        whiteboard_str = whiteboardify_pieces([p for p in Piece if p.points() >= min_points_to_move])
         pieces_captured and try_opt(
             history.whose_turn(),
             board.game_id,
@@ -741,7 +740,7 @@ def slippery(start, stop, inputs):
 def monkey_see(start, stop, inputs):
     board, history = inputs.board, inputs.history
     pieces_captured = history.pieces_captured_with(history.whose_turn().other())
-    whiteboard_str = str([p.value for p in pieces_captured.keys()]).replace("'", "")
+    whiteboard_str = whiteboardify_pieces(pieces_captured.keys())
     try_opt(
         history.whose_turn(),
         board.game_id,
@@ -805,7 +804,7 @@ def leveling_up(start, stop, inputs):
         Piece.QUEEN: Piece.ROOK,
         Piece.KING: Piece.QUEEN}
     can_capture = [p for p in Piece if p == Piece.PAWN or d[p] in pieces_captured]
-    whiteboard_str = str([p.value for p in can_capture]).replace("'", "")
+    whiteboard_str = whiteboardify_pieces(can_capture) 
     try_opt(
         history.whose_turn(),
         board.game_id,
@@ -832,7 +831,7 @@ def flatterer(start, stop, inputs):
             history.whose_turn(),
             board.game_id,
             lambda: whiteboard(
-                f'Must mirror', history.whose_turn(), board.game_id),
+                f'Must mirror!', history.whose_turn(), board.game_id),
         )
         return stop == target_square and board.get(start).piece == piece
     return True
@@ -935,19 +934,41 @@ def femme_fatale(start, stop, inputs):
     cap_pc, cap_type = board.capture_outer(start, stop, history)
     return (not cap_pc) or cap_pc.piece != Piece.KING or board.get(start).piece == Piece.QUEEN
 
+def noble_steed(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    for knight in board.loc(ColoredPiece(history.whose_turn(), Piece.KNIGHT)):
+        if start in get_adjacent_squares(knight) or start == knight:
+            return True
+    return False
+
+def velociraptor(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    opponent_moves = history.player_moves(history.whose_turn().other())
+    can_capture = [move.piece.piece for move in opponent_moves[-3:]]
+    whiteboard_str = whiteboardify_pieces(can_capture)
+    try_opt(
+        history.whose_turn(),
+        board.game_id,
+        lambda: whiteboard(
+            f'Can capture: {whiteboard_str}', history.whose_turn(), board.game_id),
+    )
+    if (captured_piece := board.capture(start, stop, history)):
+        return captured_piece.piece in [move.piece.piece for move in opponent_moves[-3:]]
+    return True
+
 # Comment so I can search for the bottom of the handicaps
 
 
 # number is how bad the handicap is, 1-10
 tested_handicaps = {
-    "Simp: Lose if you have no queen": (lose_if_no_queen, 6),
+    "Simp: Lose if you have no queen": (lose_if_no_queen, 4),
     "Skittish: While in check, you must move your king": (skittish, 2),
     "Bongcloud: When your king is on the back rank, you can only move pawns and kings": (bongcloud, 2),
     "Home Base: Can't move to opponent's side of board": (cant_move_to_opponents_side_of_board, 5),
     "Unlucky: Can't move to half of squares, re-randomized every move": (cant_move_to_half_of_squares_at_random, 5),
     "Colorblind: Can't move to squares of one color, re-randomized every move": (cant_move_to_one_color_at_random, 5),
-    "Gambler: Can't move a specific piece type, re-randomized every move": (cant_move_specific_piece_type_at_random, 4),
-    "Flavor of the month: Must move a specific piece type, re-randomized every move": (must_move_specific_piece_type_at_random, 8),
+    "Gambler: Can't move a specific piece type, re-randomized every move": (cant_move_specific_piece_type_at_random, 3),
+    "Flavor of the month: Must move a specific piece type, re-randomized every move": (must_move_specific_piece_type_at_random, 7),
     "Peons First: Can't move pieces that are directly behind one of your pawns": (peons_first, 2),
     "True Gentleman: You cannot capture your opponent's queen": (true_gentleman, 2),
     "Forward March: Your pieces cannot move backwards": (forward_march, 4),
@@ -1005,7 +1026,7 @@ tested_handicaps = {
     "Impulsive: If you can capture something, you must": (impulsive, 7),
     "Spread Out: You cannot move a pieces next to another one of your pieces": (spread_out, 8),
     "Left to Right: Unless you just moved to the rightmost file, you must move further to the right than where you last moved": (left_to_right, 7),
-        "Leaps and Bounds: You cannot move a pieces adjacent to where it was": (leaps_and_bounds, 8),
+    "Leaps and Bounds: You cannot move a pieces adjacent to where it was": (leaps_and_bounds, 8),
     "Friendly Fire: You can only move onto squares defended by another one of your pieces": (friendly_fire, 7),
     "Hold them Back: If your opponent moves a pawn onto your side of the board, you lose": (hold_them_back, 8),
     "X-ray defense: If an opposing piece would be attacking your king on an otherwise empty board, you lose": (xray_defense, 7),
@@ -1013,15 +1034,15 @@ tested_handicaps = {
     "Final Countdown: At the end of move 10, you lose the game": (final_countdown, 8),
     "Lead by example: You can't move a non-pawn, non-king piece to a rank ahead of your king": (lead_by_example, 8),
     "Knight errant: You can only move knights and pieces adjacent to knights": (knight_errant, 7),
-    "Slippery: You can't move a piece less far than it could move": (slippery, 7),
+    "Slippery: You can't move a piece less far than it could move": (slippery, 6),
     "Monkey see: You can't capture with pieces that your opponent hasn't captured with yet": (monkey_see, 7),
-    "Rook buddies: You can't move your rooks until you've connected them": (rook_buddies, 4),
+    "Rook buddies: You can't move your rooks until you've connected them": (rook_buddies, 3),
     "Stop stalling: Your pieces can't move laterally": (stop_stalling, 3),
     "Remorseful: You can't capture twice in a row": (remorseful, 4),
     "Get down Mr. President: You can't move your king when in check": (get_down_mr_president, 5),
     "Bottled lightning: If you can move your king, you must": (bottled_lightning, 8),
-    "Pilgrimage: Until your king reached their home row, you can only capture kings and pawns": (pilgrimage, 8),
-    "Leveling up: You can't capture a piece until you've captured its predecessor in the list [pawn, knight, bishop, rook, queen, king]": (leveling_up, 8),
+    "Pilgrimage: Until your king reaches their home row, you can only capture kings and pawns": (pilgrimage, 8),
+    "Leveling up: You can't capture a piece until you've captured its predecessor in the list [pawn, knight, bishop, rook, queen, king]": (leveling_up, 6),
     "Covering fire: You can only capture a piece if you could capture it two different ways": (covering_fire, 6),
     "Reflective: You can only move non-pawns to squares whose opposite square reflected across the center line is occupied": (reflective, 6),
     "Tower Defense: You can't move your rooks. If you lose all your rooks, you lose": (tower_defense, 7),
@@ -1037,7 +1058,13 @@ tested_handicaps = {
     "Respectful: Can't give check": (respectful, 4),
     "Checkers: You can only capture forward": (checkers, 4),
     "Disguised queen: Your queen is secretly either a bishop or a rook. Once you move it like one, you can't move it like the other": (queen_disguise, 2),
+    "Noble steed: Your non-Knight pieces can only move if they're next to one of your knights": (noble_steed, 8),
+    "Velociraptor: You can only capture a piece if your opponent has moved a piece of that type in the last 3 moves": (velociraptor, 4),
 }
+
+white_only_handicaps = {}
+    
+black_only_handicaps = {}
 
 # Stuff in here won't randomly get assigned but you can interact with it by changing get_handicaps
 # So you can push new handicaps without worrying about breaking the game
@@ -1072,11 +1099,13 @@ class Difficulty(Enum):
         else:
             return 7
 
-def pick_handicap(difficulty):
+def pick_handicap(difficulty, color):
+    relevant_handicaps = tested_handicaps
+    relevant_handicaps.update(white_only_handicaps if color == Color.WHITE else black_only_handicaps)
     if not difficulty:
         return "No handicap"
     n = random.choice([0, 0, 1, 1, 1, 1, 2, 2]) + difficulty.offset()
-    if (handicaps := [k for k, v in tested_handicaps.items() if v[1] == n]):
+    if (handicaps := [k for k, v in relevant_handicaps.items() if v[1] == n]):
         return random.choice(handicaps)
     # This shouldn't really be happening
     print('No handicap found for difficulty', difficulty)
@@ -1098,9 +1127,8 @@ def test_all_handicaps():
 
 def get_handicaps(config):
     # So I can't forget to undo anything weird
-    white_difficulty, black_difficulty = config[Color.WHITE], config[Color.BLACK]
     if not LOCAL:
-        return [pick_handicap(white_difficulty), pick_handicap(black_difficulty)]
+        return [pick_handicap(config[color], color) for color in Color]
     else:
-        # return [pick_handicap(white_difficulty), pick_handicap(black_difficulty)]
-        return descriptions[mind_the_middle], descriptions[yin_and_yang]
+        # return [pick_handicap(config[color], color) for color in Color]
+        return descriptions[taking_turns], descriptions[no_handicap]
