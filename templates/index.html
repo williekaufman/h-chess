@@ -35,8 +35,7 @@
         <button class="one-char-button" id="offerDrawButton">o</button>
         <button class="one-char-button" id="resignButton">r</button>
         <button class="one-char-button" id="copyGameIdButton">c</button>
-        <!-- commented out until I finish this -->
-        <!-- <button class="one-char-button" id="publicGamesButton">p</button> -->
+        <button class="one-char-button" id="publicGamesButton">g</button>
         <div class="username">
             <input id="usernameInput" type="text" placeholder="username" size="15">
             <div style="margin-top: 5px">
@@ -164,7 +163,7 @@
 </div>
 <div id="publicGamesModalOverlay" class="modal-overlay">
     <div id="publicGamesModal" class="public-games-modal"> 
-        <div id="publicGamesList"> Loading... </div> 
+        <div class="public-games-wrapper" id="publicGamesWrapper"></div>
     </div>
 </div>
 <div id="rulesModalOverlay" class="modal-overlay">
@@ -206,10 +205,11 @@
         <div> <b> o (O) </b> - offer draw (confirm) </div>
         <div> <b> r (R) </b> - resign (confirm) </div>
         <div> <b> c </b> - copy game id </div>
+        <div> <b> g </b> - display public games </div>
         <div> Toggle </div>
         <div> <b> f </b> - display friends list </div>
         <div> <b> p </b> - display promotion options </div>
-        <div> <b> a </b> - allow moving opponent's pieces <!--/ pieces in a one player game--> </div>
+        <div> <b> a </b> - single player mode - allows moving opponent's pieces </div>
         <div> <b> d </b> - toggle dark mode </div>
     </div>
 </div>

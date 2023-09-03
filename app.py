@@ -110,9 +110,13 @@ def get_friends(username):
 def is_online(username):
     return redis.sismember('online_players', username)
 
+def online_players():
+    return [p.decode('utf-8') for p in redis.smembers('online_players')]
+
 # We're going to call this a lot unnecessarily but that's fine
 # Just make sure it's idempotent
 def logon(username):
+    rset(f'{username}:last_seen', time.time(), game_id=None)
     redis.sadd('online_players', username)
 
 # Called whenever you change your username or close a window
@@ -122,12 +126,28 @@ def logon(username):
 def logoff(username):
     redis.srem('online_players', username)
 
+def last_seen(username):
+    try:
+        return float(rget(f'{username}:last_seen', game_id=None))
+    except:
+        return 0
+
+# I think this shouldn't really be necessary since we have the socket.on disconnect logic 
+# but better safe than sorry, don't want weird ghost users piling up
+def sweep():
+    now = time.time()
+    for username in online_players():
+        if now - last_seen(username) > 3600:
+            print(f'Logging off {username} due to inactivity')
+            logoff(username)
+
 def get_public_games():
-    for player in redis.smembers('online_players'):
-        player = player.decode('utf-8')
+    for player in online_players():
         game_id = rget(last_game_key(player), game_id=None)
-        if game_id and rget('public', game_id=game_id):
-            yield {'username': player, 'gameId': game_id}
+        if game_id and rget('public', game_id=game_id) and (color := rget('other_player', game_id=game_id)):
+            difficulty = Difficulty.of_number(handicaps[rget(
+                f'{color}_handicap', game_id=game_id)][1])
+            yield {'username': player, 'gameId': game_id, 'color': color, 'difficulty': difficulty.value}
 
 def add_friend(username, friend):
     friends = get_friends(username)
@@ -524,10 +544,16 @@ def on_join(data):
 def on_leave(data):
     leave_room(data['room'])
 
+def run_sweep():
+    while True:
+        sweep()
+        time.sleep(1800)
+
 if __name__ == '__main__':
     try:
         test_all_handicaps()
     except Exception as e:
         print(e)
         print('Handicap tests failed')
+    Thread(target=run_sweep).start()
     socketio.run(app, host='0.0.0.0', port=5001 if LOCAL else 5003)

@@ -1087,17 +1087,30 @@ handicaps = dict(tested_handicaps, **untested_handicaps)
 descriptions = {v[0]: k for k, v in handicaps.items()}
 
 class Difficulty(Enum):
+    NONE = 'none'
     EASY = 'easy'
     MEDIUM = 'medium'
     HARD = 'hard'
 
     def offset(self):
+        if self == Difficulty.NONE:
+            return 0
         if self == Difficulty.EASY:
             return 1
         elif self == Difficulty.MEDIUM:
             return 4
         else:
             return 7
+    
+    def of_number(n):
+        if n == 0:
+            return Difficulty.NONE
+        if n < 4:
+            return Difficulty.EASY
+        elif n < 7:
+            return Difficulty.MEDIUM
+        else:
+            return Difficulty.HARD
 
 def pick_handicap(difficulty, color):
     relevant_handicaps = tested_handicaps
@@ -1130,5 +1143,5 @@ def get_handicaps(config):
     if not LOCAL:
         return [pick_handicap(config[color], color) for color in Color]
     else:
-        # return [pick_handicap(config[color], color) for color in Color]
-        return descriptions[no_handicap], descriptions[no_handicap]
+        return [pick_handicap(config[color], color) for color in Color]
+        # return descriptions[no_handicap], descriptions[no_handicap]

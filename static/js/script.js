@@ -19,6 +19,7 @@ addFriendInputElement = document.getElementById('addFriendInput');
 addFriendButton = document.getElementById('addFriendButton');
 
 activeGamesWrapper = document.getElementById('activeGamesWrapper');
+publicGamesWrapper = document.getElementById('publicGamesWrapper');
 
 shiftKeyIsDown = false;
 newGameModal = document.getElementById('newGameModal');
@@ -433,8 +434,13 @@ function setUsername() {
     socket.emit('join', { room: username });
     socket.emit('logon', { username });
     populateFriendsList();
-
 }
+
+setInterval(() => {
+    if (username) {
+        socket.emit('logon', { username });
+    }
+}, 5000);
 
 promotionElements = document.querySelectorAll('.promotion-piece');
 
@@ -779,21 +785,25 @@ function loadGame(game = null, color = null) {
 }
 
 function openNewGameModal() {
+    closeModals(false);
     newGameModal.style.display = 'flex';
     newGameModalOverlay.style.display = 'block';
 }
 
 function openJoinGameModal() {
+    closeModals(false);
     joinGameModal.style.display = 'flex';
     joinGameModalOverlay.style.display = 'block';
 }
 
 function openRulesModal() {
+    closeModals(false);
     rulesModal.style.display = 'flex';
     rulesModalOverlay.style.display = 'block';
 }
 
 function openPublicGamesModal() {
+    closeModals(false);
     publicGamesModal.style.display = 'flex';
     publicGamesModalOverlay.style.display = 'block';
 }
@@ -813,10 +823,8 @@ function closeModals(closeToasts=true) {
     joinGameModalOverlay.style.display = 'none';
     rulesModal.style.display = 'none';
     rulesModalOverlay.style.display = 'none';
-    // Commented out until I finish this
-    // publicGamesModal.style.display = 'none';
-    // publicGamesModalOverlay.style.display = 'none';
-    console.log(closeToasts);
+    publicGamesModal.style.display = 'none';
+    publicGamesModalOverlay.style.display = 'none';
     if (closeToasts) {
         noDrawButton.click();
         cancelDrawButton.click();
@@ -866,6 +874,8 @@ function handleKeyDown(event) {
         offerDrawButton.click();
     } else if (k == 'r') {
         resignButton.click();
+    } else if (k == 'g') {
+        publicGamesButton.click();
     }
 }
 
@@ -878,7 +888,6 @@ function handleKeyUp(event) {
 
 document.addEventListener("click", function (event) {
     if (event.target === newGameModalOverlay || event.target === joinGameModalOverlay || event.target == rulesModalOverlay || event.target == publicGamesModalOverlay) {
-        console.log('asdf');
         closeModals(false);
     }
 });
@@ -891,11 +900,10 @@ rulesButton.addEventListener('click', () => {
     openRulesModal();
 });
 
-// Commented out until I finish this
-// publicGamesButton.addEventListener('click', () => {
-//     getPublicGames();
-//     openPublicGamesModal();
-// });
+publicGamesButton.addEventListener('click', () => {
+    getPublicGames();
+    openPublicGamesModal();
+});
 
 openJoinDialogButton.addEventListener('click', () => {
     openJoinGameModal();
@@ -1164,15 +1172,6 @@ setInterval(function () {
     }
 }, 3000);
 
-function toggleGameButtons() {
-    document.querySelectorAll('.game-button').forEach(element => {
-        element.classList.toggle('dark');
-    });
-    document.querySelectorAll('.remove-friend-button').forEach(element => {
-        element.classList.toggle('dark');
-    });
-}
-
 function toggleTheme() {
     document.body.classList.toggle('dark');
     currentThemeIsDark = document.body.classList.contains('dark');
@@ -1234,14 +1233,49 @@ function getPublicGames() {
         });
 }
 
-// TODO
+function makePublicGameElement(game) {
+    pgusername = game['username'];
+    if (pgusername.length > 20) {
+        pgusername = pgusername.substring(0, 20) + '...';
+    }
+    pggameId = game['gameId'];
+    pgcolor = game['color'];
+    pgdifficulty = game['difficulty'];
+    onClick = `onclick="loadGame('${pggameId}')"`;
+    content = `<button class="game-button small active ${currentThemeIsDark ? 'dark' : ''}" ${onClick}>Join as ${pgcolor.toLowerCase()} (Handicap: ${pgdifficulty})</button>`
+    return `
+        <div class="friend">
+            <span class="public-game-username"> ${pgusername} </span>
+            ${content}
+        </div> 
+    `;
+}
+
+setInterval(() => {
+    if (publicGamesModal.style.display == 'flex') {
+        getPublicGames();
+    }
+}, 3000);
+
 function displayPublicGames(games) {
-    console.log(games);
+    publicGamesWrapper.innerHTML = '<h4> Public Games </h4>';
+
+    games = games.filter(game => game['gameId'] != gameId);
+
+    games.forEach(game => {
+        publicGamesWrapper.innerHTML += makePublicGameElement(game);
+    });
+
+    if (games.length == 0) {
+        publicGamesWrapper.innerHTML += '<span> No public games </span>';
+    }
+
 }
 
 hotkeysVisibilityButton.addEventListener('click', () => {
     hotkeysElement.style.display = hotkeysElement.style.display == 'none' ? 'grid' : 'none';
     hotkeysVisibilityButton.textContent = hotkeysElement.style.display == 'none' ? 'Show' : 'Hide';
+    localStorage.setItem('hchess-hotkeys', hotkeysElement.style.display);
 });
 
 if (localStorage.getItem('hchess-dark-mode') == 'true') {
@@ -1258,4 +1292,8 @@ populateFriendsList();
 if (!localStorage.getItem('hchess-cookie')) {
     openRulesModal();    
     localStorage.setItem('hchess-cookie', 'true');
+}
+
+if (localStorage.getItem('hchess-hotkeys') == 'none') {
+    hotkeysVisibilityButton.click();
 }

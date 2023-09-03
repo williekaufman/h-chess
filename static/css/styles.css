@@ -375,6 +375,24 @@ input::placeholder {
   background-color: darkslategray;
 }
 
+.public-games-wrapper {
+  position: relative;
+  width: 50%;
+  flex-direction: column;
+  text-align: center;
+  z-index: 1;
+  padding: 20px;
+  border-radius: 10px;
+}
+
+.public-game-username {
+  font-size: 20px;
+  width: 50%;
+  white-space: nowrap;
+  overflow: hidden;
+  margin-right: 20px;
+}
+
 .game-button {
   width: 80%;
   white-space: nowrap;
@@ -533,8 +551,9 @@ input::placeholder {
   width: 100%;
   max-width: 1000px;
   transform: translate(-50%, -50%);
-  height: 80%;
-  padding: 20px;
+  min-height: 30%;
+  max-height: 80%;
+  overflow: auto;
   border-radius: 10px;
   background: radial-gradient(circle, #e9dfcb, #ebd3a3);
   box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
