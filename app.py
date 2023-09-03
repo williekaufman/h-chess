@@ -122,6 +122,13 @@ def logon(username):
 def logoff(username):
     redis.srem('online_players', username)
 
+def get_public_games():
+    for player in redis.smembers('online_players'):
+        player = player.decode('utf-8')
+        game_id = rget(last_game_key(player), game_id=None)
+        if game_id and rget('public', game_id=game_id):
+            yield {'username': player, 'gameId': game_id}
+
 def add_friend(username, friend):
     friends = get_friends(username)
     if friend in friends:
@@ -170,6 +177,8 @@ def new_game():
         rset(last_game_key(username), game_id, game_id=None)
         rset(last_color_key(username), playerColor.value, game_id=None)
         rset('username', username, game_id=game_id)
+        if request.json.get('public'):
+            rset('public', 'True', game_id=game_id)
     if (timeControl := float_arg(request.json.get('timeControl'))):
         for color in Color:
             rset(f'{color.value}_time', timeControl, game_id=game_id)
@@ -189,7 +198,6 @@ def new_game():
             return {'success': False, 'error': 'Invalid handicap difficulty'}
         handicap_config[playerColor.other()] = theirHandicap
     handicaps = get_handicaps(handicap_config)
-
     starting_board().write_to_redis(game_id)
     rset('history', History().to_string(), game_id=game_id)
     rset('turn', f'{Color.WHITE.value}', game_id=game_id)
@@ -199,6 +207,10 @@ def new_game():
         rset(opt_key(color), 'True', game_id=game_id)
     rset('other_player', playerColor.other().value, game_id=game_id)
     return {'success': True, 'gameId': game_id, 'color': playerColor.value}
+
+@app.route("/public_games", methods=['GET'])
+def public_games():
+    return {'success': True, 'games': list(get_public_games())}
 
 @app.route("/friends", methods=['GET'])
 def get_friends_list():

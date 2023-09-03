@@ -34,6 +34,8 @@
         <button class="one-char-button" id="openJoinDialogButton">j</button>
         <button class="one-char-button" id="offerDrawButton">o</button>
         <button class="one-char-button" id="copyGameIdButton">c</button>
+        <!-- commented out until I finish this -->
+        <!-- <button class="one-char-button" id="publicGamesButton">p</button> -->
         <div class="username">
             <input id="usernameInput" type="text" placeholder="username" size="15">
             <div style="margin-top: 5px">
@@ -139,7 +141,12 @@
                 </div>
             </div>
         </div>
+        <div> 
+            <!-- commenting out until I finish this -->
+            <!-- Make game public -->
+            <!-- <input type="checkbox" id="publicCheckbox"> -->
         <button id="createGameButton" class="create-game-button">Start Game</button>
+        </div>
     </div>
 </div>
 <div id="joinGameModalOverlay" class="modal-overlay">
@@ -150,6 +157,11 @@
                 <button id="joinGameButton" class="create-game-button">Join Game</button>
             </div>
         </div>
+    </div>
+</div>
+<div id="publicGamesModalOverlay" class="modal-overlay">
+    <div id="publicGamesModal" class="public-games-modal"> 
+        <div id="publicGamesList"> Loading... </div> 
     </div>
 </div>
 <div id="rulesModalOverlay" class="modal-overlay">

@@ -37,6 +37,8 @@ displayFriendsListButton = document.getElementById('displayFriendsListButton');
 displayPromotionOptionsButton = document.getElementById('displayPromotionOptionsButton');
 ignoreOtherPlayerCheckButton = document.getElementById('ignoreOtherPlayerCheckButton');
 
+publicCheckbox = document.getElementById('publicCheckbox');
+
 unlimitedTimeCheckbox = document.getElementById('unlimitedTimeCheckbox');
 timeControlMinutes = document.getElementById('timeControlMinutes');
 timeControlSeconds = document.getElementById('timeControlSeconds');
@@ -51,6 +53,9 @@ joinGameModalOverlay = document.getElementById('joinGameModalOverlay');
 
 rulesModal = document.getElementById('rulesModal');
 rulesModalOverlay = document.getElementById('rulesModalOverlay');
+
+publicGamesModalOverlay = document.getElementById('publicGamesModalOverlay');
+publicGamesModal = document.getElementById('publicGamesModal');
 
 gameIdInput = document.getElementById('gameIdInput');
 
@@ -642,6 +647,8 @@ function newGameBody() {
         ret['theirHandicap'] = theirHandicapSelection;
     } if (username) {
         ret['username'] = username;
+    } if (publicCheckbox.checked) {
+        ret['public'] = true;
     }
     ret = updateTimeControls(ret);
     return ret
@@ -756,6 +763,11 @@ function openRulesModal() {
     rulesModalOverlay.style.display = 'block';
 }
 
+function openPublicGamesModal() {
+    publicGamesModal.style.display = 'flex';
+    publicGamesModalOverlay.style.display = 'block';
+}
+
 function confirmDraw() {
     confirmDrawElement.style.display = 'inline-block';
 }
@@ -767,6 +779,9 @@ function closeModals() {
     joinGameModalOverlay.style.display = 'none';
     rulesModal.style.display = 'none';
     rulesModalOverlay.style.display = 'none';
+    // Commented out until I finish this
+    // publicGamesModal.style.display = 'none';
+    // publicGamesModalOverlay.style.display = 'none';
     noDrawButton.click();
     cancelDrawButton.click();
 }
@@ -819,7 +834,7 @@ function handleKeyUp(event) {
 }
 
 document.addEventListener("click", function (event) {
-    if (event.target === newGameModalOverlay || event.target === joinGameModalOverlay || event.target == rulesModalOverlay) {
+    if (event.target === newGameModalOverlay || event.target === joinGameModalOverlay || event.target == rulesModalOverlay || event.target == publicGamesModalOverlay) {
         closeModals();
     }
 });
@@ -831,6 +846,12 @@ newGameButton.addEventListener('click', () => {
 rulesButton.addEventListener('click', () => {
     openRulesModal();
 });
+
+// Commented out until I finish this
+// publicGamesButton.addEventListener('click', () => {
+//     getPublicGames();
+//     openPublicGamesModal();
+// });
 
 openJoinDialogButton.addEventListener('click', () => {
     openJoinGameModal();
@@ -1148,6 +1169,21 @@ function rejoin() {
                 initGame() || loadGame(data['gameId'], data['color'])
             }
         });
+}
+
+function getPublicGames() {
+    fetchWrapper('public_games', {}, 'GET')
+        .then((response) => response.json())
+        .then((data) => {
+            if (!data['success']) {
+                return;
+            }
+            displayPublicGames(data['games']);
+        });
+}
+
+function displayPublicGames(games) {
+    console.log(games);
 }
 
 hotkeysVisibilityButton.addEventListener('click', () => {
