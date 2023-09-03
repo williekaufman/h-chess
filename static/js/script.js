@@ -371,10 +371,10 @@ setInterval(() => {
     if (gameIsOver || !ticking) {
         return;
     }
-    whiteTime = (typeof (whiteTime) != 'string' && whoseTurn === 'White') ? whiteTime - 1 : whiteTime;
-    blackTime = (typeof (blackTime) != 'string' && whoseTurn === 'Black') ? blackTime - 1 : blackTime;
+    whiteTime = (typeof (whiteTime) != 'string' && whoseTurn === 'White') ? whiteTime - .2 : whiteTime;
+    blackTime = (typeof (blackTime) != 'string' && whoseTurn === 'Black') ? blackTime - .2 : blackTime;
     updateTimes(whiteTime, blackTime);
-}, 1000);
+}, 200);
 
 
 function setGameId(id) {
