@@ -100,7 +100,8 @@ def get_friends(username):
 def is_online(username):
     return redis.sismember('online_players', username)
 
-# We're going to call this a lot unnecessarily
+# We're going to call this a lot unnecessarily but that's fine
+# Just make sure it's idempotent
 def logon(username):
     redis.sadd('online_players', username)
 
@@ -277,9 +278,7 @@ def get_history():
         return {'success': False, 'error': 'Invalid game id'}
     return {'success': True, 'history': history.to_list()}
 
-
-@app.route("/move", methods=['POST'])
-def move():
+def move_inner():
     game_id = request.json.get('gameId')
     ignore_other_player_check = request.json.get('ignoreOtherPlayerCheck')
     promotion = make_promotion_arg(request.json.get('promotion'))
@@ -316,9 +315,15 @@ def move():
     else:
         return {'success': False, 'error': error }
 
+@app.route("/move", methods=['POST'])
+def move():
+    try:
+        return move_inner()
+    except Exception as e:
+        print(f'Exception on /move: {e}')
+        return {'success': False, 'error': 'Invalid request', 'exception': str(e)}
 
-@app.route("/legal_moves", methods=['GET'])
-def legal_moves():
+def legal_moves_inner():
     game_id = request.args.get('gameId')
     ignore_other_player_check = request.args.get('ignoreOtherPlayerCheck')
     ignore_other_player_check = ignore_other_player_check and ignore_other_player_check.lower() == 'true'
@@ -334,6 +339,15 @@ def legal_moves():
     return {'success': True, 'moves': board.legal_moves(start, history, whose_turn, handicap, promotion)}
 
 
+@app.route("/legal_moves", methods=['GET'])
+def legal_moves():
+    try:
+        return legal_moves_inner()
+    except Exception as e:
+        print(f'Exception on /legal_moves: {e}')
+        return {'success': False, 'error': 'Invalid request, probably due to a bug...', 'exception': str(e)}
+
+
 @app.route("/add_friend", methods=['POST'])
 def befriend():
     username = request.json.get('username')
@@ -347,8 +361,6 @@ def befriend():
     return {'success': True}
 
 # Ya this should probably be DELETE type but whatever
-
-
 @app.route("/remove_friend", methods=['POST'])
 def unfriend():
     username = request.json.get('username')

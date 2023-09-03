@@ -73,18 +73,19 @@ class Move():
         self.promotion = promotion
         self.capture_type = CaptureType(capture_type)
 
+    # Returns error if there's an error, else None
     def validate(self, board, history, whose_turn, handicap):
         assert type(board) == Board
         assert type(history) == History
         assert type(whose_turn) == Color
         promote_to = Piece(self.promotion) if self.promotion != 'x' else Piece.QUEEN
         if self.piece is None:
-            return False
+            return 'No piece'
         if board.get(self.stop) and board.get(self.start).color == board.get(self.stop).color:
-            return False
+            return 'Can\'t capture own piece'
         if self.stop.value not in board.legal_moves(self.start, history, whose_turn, handicap, promote_to):
-            return False
-        return True
+            return 'Illegal move'
+        return None
 
     def to_string(self):
         return f'{self.piece}{self.start.value}{self.stop.value}{self.capture if self.capture else "f"}{bool_to_char(self.check)}{self.castle}{self.promotion}{self.capture_type.value}'
@@ -476,8 +477,8 @@ class Board():
             0] in [0, 7] else 'x'
         move = Move(piece, start, stop, captured_piece, check, castle, promotion, capture_type)
         # if this validates, then the move will actually happen
-        if not move.validate(self, history, whose_turn, handicap):
-            return None, None, 'invalid move'
+        if (error := move.validate(self, history, whose_turn, handicap)):
+            return None, None, error
         if castle == 'k':
             self.set(stop.shift(0, 1), None)
             self.set(stop.shift(0, -1), ColoredPiece(

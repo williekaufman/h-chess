@@ -974,9 +974,7 @@ function onPickup(source, piece) {
         .then((response) => response.json())
         .then((data) => {
             if (!data['success']) {
-                if (data['error'] === 'Other player has not joined') {
-                    showToast("Can't move until other player joins", 3);
-                }
+                showToast(data['error'], 5);
                 return;
             }
             on_pickup_in_flight = false;
