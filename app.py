@@ -25,22 +25,30 @@ CORS(app)
 def new_game_id():
     return token_hex(16)
 
+def get_increment(game_id):
+    try:
+        return float(rget('increment', game_id=game_id))
+    except:
+        return 0
+
 def update_time(whose_turn, game_id):
     now = time.time()
     key = f'{whose_turn.value}_time'
     current_time = rget(key, game_id=game_id)
+    increment = get_increment(game_id)
     if not current_time:
         return
     current_time = float(current_time)
     last_move = rget('last_move', game_id=game_id)
     if last_move:
         time_since_last_move = now - float(last_move)
-        rset(key, current_time - time_since_last_move, game_id=game_id)
+        rset(key, current_time - time_since_last_move + increment, game_id=game_id)
         rset('last_move', now, game_id=game_id)
         if time_since_last_move > current_time:
             return whose_turn.other()
-    else:
+    elif whose_turn == Color.BLACK:
         rset('last_move', now, game_id=game_id)
+
 
 
 def times(game_id, whose_turn):
@@ -52,6 +60,7 @@ def times(game_id, whose_turn):
         return {
             'whiteTime': 'White',
             'blackTime': 'Black',
+            'ticking': False,
         }
     whiteTime = float(whiteTime)
     blackTime = float(blackTime)
@@ -72,6 +81,7 @@ def times(game_id, whose_turn):
     return {
         'whiteTime': whiteTime,
         'blackTime': blackTime,
+        'ticking': bool(last_move),
     }
 
 def make_promotion_arg(promotion):
@@ -139,6 +149,12 @@ def rejoin():
         return {'success': False, 'error': 'No game to rejoin'}
     return {'success': True, 'gameId': game_id, 'color': color}
 
+def float_arg(arg, default=0):
+    try:
+        return float(arg)
+    except:
+        return default
+
 @app.route("/new_game", methods=['POST'])
 def new_game():
     game_id = request.json.get('gameId') or new_game_id()
@@ -154,9 +170,11 @@ def new_game():
         rset(last_game_key(username), game_id, game_id=None)
         rset(last_color_key(username), playerColor.value, game_id=None)
         rset('username', username, game_id=game_id)
-    if (timeControl := request.json.get('timeControl')):
+    if (timeControl := float_arg(request.json.get('timeControl'))):
         for color in Color:
-            rset(f'{color.value}_time', timeControl, game_id=game_id)   
+            rset(f'{color.value}_time', timeControl, game_id=game_id)
+    if (increment := float_arg(request.json.get('increment'))):
+        rset('increment', increment, game_id=game_id) 
     handicap_config = {Color.WHITE: None, Color.BLACK: None}
     if (yourHandicap := request.json.get('yourHandicap')):
         try:

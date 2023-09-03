@@ -37,6 +37,12 @@ displayFriendsListButton = document.getElementById('displayFriendsListButton');
 displayPromotionOptionsButton = document.getElementById('displayPromotionOptionsButton');
 ignoreOtherPlayerCheckButton = document.getElementById('ignoreOtherPlayerCheckButton');
 
+unlimitedTimeCheckbox = document.getElementById('unlimitedTimeCheckbox');
+timeControlMinutes = document.getElementById('timeControlMinutes');
+timeControlSeconds = document.getElementById('timeControlSeconds');
+incrementMinutes = document.getElementById('incrementMinutes');
+incrementSeconds = document.getElementById('incrementSeconds');
+
 holdingPiece = false;
 
 joinGameButton = document.getElementById('joinGameButton');
@@ -84,7 +90,10 @@ untimedString = 'No time controls';
 whiteTime = untimedString;
 blackTime = untimedString;
 
-firstMove = false;
+// For tracking if the clocks should be counting down
+// Strictly frontend, we don't sync the times up except in a move so this just controls the loop
+// that decrements the active player's time
+ticking = null;
 
 currentWidth = window.innerWidth;
 currentHeight = window.innerHeight;
@@ -92,7 +101,6 @@ currentHeight = window.innerHeight;
 yourTimeElement = document.getElementById('yourTime');
 opponentTimeElement = document.getElementById('opponentTime');
 
-timeSelection = null;
 yourHandicapSelection = null;
 theirHandicapSelection = null;
 
@@ -112,7 +120,6 @@ socket.on('message', (data) => {
 });
 
 socket.on('update', (data) => {
-    firstMove = false;
     if (data['color'] === 'both' || data['color'] === color) {
         updateState();
     }
@@ -361,7 +368,7 @@ function updateTimes(white, black) {
 }
 
 setInterval(() => {
-    if (gameIsOver || firstMove) {
+    if (gameIsOver || !ticking) {
         return;
     }
     whiteTime = (typeof (whiteTime) != 'string' && whoseTurn === 'White') ? whiteTime - 1 : whiteTime;
@@ -484,23 +491,6 @@ blackKingElement.addEventListener('click', function () {
         blackKingElement.classList.add('selected');
         whiteKingElement.classList.remove('selected');
     }
-});
-
-timeSelectionElements = document.querySelectorAll('.time-selection');
-
-timeSelectionElements.forEach(element => {
-    element.addEventListener('click', function () {
-        if (element.classList.contains('selected-time')) {
-            element.classList.remove('selected-time');
-            timeSelection = null;
-            return;
-        }
-        timeSelectionElements.forEach(element => {
-            element.classList.remove('selected-time');
-        });
-        element.classList.add('selected-time');
-        timeSelection = element.getAttribute('seconds');
-    });
 });
 
 yourHandicapSelectionElements = document.querySelectorAll('.handicap-selection[yours="t"]')
@@ -631,14 +621,21 @@ function fetchWrapper(url, body, method = 'POST') {
     return fetch(url, makeRequestOptions(body, method));
 }
 
+function updateTimeControls(body) {
+    if (unlimitedTimeCheckbox.checked) {
+        return body
+    } if (incrementMinutes || incrementSeconds) {
+        body['increment'] = parseInt(incrementMinutes.value) * 60 + parseInt(incrementSeconds.value);
+    } body['timeControl'] = parseInt(timeControlMinutes.value) * 60 + parseInt(timeControlSeconds.value);
+    return body;
+}
+
 function newGameBody() {
     ret = {};
     if (gameIdInput.value) {
         ret['gameId'] = gameIdInput.value;
     } if (colorSelection != 'random') {
         ret['color'] = colorSelection;
-    } if (timeSelection) {
-        ret['timeControl'] = timeSelection;
     } if (yourHandicapSelection){
         ret['yourHandicap'] = yourHandicapSelection;
     } if (theirHandicapSelection){
@@ -646,6 +643,7 @@ function newGameBody() {
     } if (username) {
         ret['username'] = username;
     }
+    ret = updateTimeControls(ret);
     return ret
 }
 
@@ -680,7 +678,7 @@ function newGame(toast = true) {
             getHandicap();
             toast && showToast('Successfully created game', 5);
             updateState();
-            firstMove = true;
+            ticking = False;
         });
         initGame();
         closeModals();
@@ -733,12 +731,8 @@ function loadGame(game = null, color = null) {
                 gameIdInput.value = '';
                 showToast('Game loaded', 3);
                 mostRecentMove = data['mostRecentMove'];
-                if (mostRecentMove) {
-                    updateMostRecentMove(mostRecentMove['from'], mostRecentMove['to']);
-                    firstMove = false;
-                } else {
-                    firstMove = true;
-                }
+                ticking = data['ticking'];
+                mostRecentMove && updateMostRecentMove(mostRecentMove['from'], mostRecentMove['to']);
                 updateTimes(data['whiteTime'], data['blackTime']);
             }
             updateState();
@@ -1014,6 +1008,7 @@ function sendMove(from, to) {
                 updateMostRecentMove(from, to);
                 data['whoseTurn'] && setWhoseTurn(data['whoseTurn']);
                 data['winner'] && processGameOver(data['winner']);
+                updateTimes(data['whiteTime'], data['blackTime']);
                 data['extra'].forEach(x => {
                     square = x[0].toLowerCase()
                     piece = x[1]
@@ -1062,6 +1057,7 @@ function updateState() {
             if (data['mostRecentMove']) {
                 updateMostRecentMove(data['mostRecentMove']['from'], data['mostRecentMove']['to']);
             }
+            ticking = data['ticking'];
             updateTimes(data['whiteTime'], data['blackTime']);
             if (data['winner']) {
                 processGameOver(data['winner']);

@@ -450,14 +450,15 @@ input::placeholder {
   margin-top: 10px;
 }
 
-.time-selection {
-  width: 50px;
-  height: 35px;
-  box-sizing: border-box;
+.time-input {
+  width: 65px;
   text-align: center;
   justify-content: center;
   display: inline-block;
-  cursor: pointer;
+}
+
+.time-input::placeholder {
+  text-align: center;
 }
 
 .selected {
@@ -614,7 +615,7 @@ input::placeholder {
   display: flex;
   /* If you comment this back in, it'll center the modal boxes, but it looks bad...I think */
   /* min-width: 33%; */
-  height: 60%;
+  height: 70%;
   flex-direction: column;
   align-items: center;
   text-align: center;

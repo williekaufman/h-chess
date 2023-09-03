@@ -1131,4 +1131,4 @@ def get_handicaps(config):
         return [pick_handicap(config[color], color) for color in Color]
     else:
         # return [pick_handicap(config[color], color) for color in Color]
-        return descriptions[taking_turns], descriptions[no_handicap]
+        return descriptions[no_handicap], descriptions[no_handicap]

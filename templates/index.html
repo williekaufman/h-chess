@@ -108,10 +108,19 @@
             </div>
             <div class="label-container">
                 <div id="timeSelector" class="grid-container">
-                    <button class="time-selection" seconds="5"> 5s </button>
-                    <button class="time-selection" seconds="180"> 3m </button>
-                    <button class="time-selection" seconds="300"> 5m </button>
-                    <button class="time-selection" seconds="900"> 15m </button>
+                    <h1 class="title" style="display: flex; justify-content: center"> Unlimited time
+                        <input checked type="checkbox" id="unlimitedTimeCheckbox" style="margin-left: 10px">
+                    </h1>
+                    <!-- The empty div is for grid spacing - kinda stupid -->
+                    <div> </div>
+                    <div> Starting </div>
+                    <div> Increment </div>
+                    <div class="label">Minutes</div>
+                    <input class="time-input" id="timeControlMinutes" value="5">
+                    <input class="time-input" id="incrementMinutes" value="0">
+                    <div class="label">Seconds</div>
+                    <input class="time-input" id="timeControlSeconds" value="0">
+                    <input class="time-input" id="incrementSeconds" value="5">
                 </div>
             </div>
             <div class="label-container">
