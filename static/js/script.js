@@ -31,6 +31,7 @@ rulesButton = document.getElementById('rulesButton');
 newGameButton = document.getElementById('newGameButton');
 openJoinDialogButton = document.getElementById('openJoinDialogButton');
 offerDrawButton = document.getElementById('offerDrawButton');
+resignButton = document.getElementById('resignButton');
 copyGameIdButton = document.getElementById('copyGameIdButton');
 toggleThemeButton = document.getElementById('toggleThemeButton');
 displayFriendsListButton = document.getElementById('displayFriendsListButton');
@@ -75,12 +76,14 @@ whoseTurnElement = document.getElementById('whoseTurn');
 
 stateToastElement = document.getElementById('stateToast');
 
+// Very few of these things with toast in the name are really toast related anymore...so it goes
+
 gameIsOver = false;
 gameResultToastElement = document.getElementById('gameResult');
 showOpponentsHandicapButton = document.getElementById('showOpponentsHandicapButton');
 drawToastElement = document.getElementById('drawToast');
 confirmDrawElement = document.getElementById('confirmDrawToast');
-
+confirmResignElement = document.getElementById('confirmResignToast');
 inviteToastElement = document.getElementById('inviteToast');
 acceptInviteButton = document.getElementById('acceptInviteButton');
 declineInviteButton = document.getElementById('declineInviteButton');
@@ -177,6 +180,11 @@ noDrawButton = document.getElementById('noDrawButton');
 confirmDrawButton = document.getElementById('confirmDrawButton');
 cancelDrawButton = document.getElementById('cancelDrawButton');
 
+confirmResignButton = document.getElementById('confirmResignButton');
+cancelResignButton = document.getElementById('cancelResignButton');
+
+
+
 drawButton.addEventListener('click', () => {
     fetchWrapper(URL + 'accept_draw', { 'gameId': gameId, 'color': color }, 'POST')
         .then((response) => response.json())
@@ -202,6 +210,16 @@ cancelDrawButton.addEventListener('click', () => {
     confirmDrawElement.style.display = 'none';
 });
 
+confirmResignButton.addEventListener('click', () => {
+    resign();
+    confirmResignElement.style.display = 'none';
+});
+
+cancelResignButton.addEventListener('click', () => {
+    confirmResignElement.style.display = 'none';
+});
+
+
 function opponentOfferedDraw() {
     drawToastElement.style.display = 'inline-block';
 }
@@ -217,6 +235,20 @@ function offerDraw() {
             else {
                 showToast('You offered a draw', 5);
                 cancelDrawButton.click();
+            }
+        });
+}
+
+function resign() {
+    fetchWrapper(URL + 'resign', { 'gameId': gameId, 'color': color }, 'POST')
+        .then((response) => response.json())
+        .then((data) => {
+            if (!data['success']) {
+                showToast(data['error'], 5)
+                return;
+            }
+            else {
+                cancelResignButton.click();
             }
         });
 }
@@ -685,7 +717,7 @@ function newGame(toast = true) {
             getHandicap();
             toast && showToast('Successfully created game', 5);
             updateState();
-            ticking = False;
+            ticking = false;
         });
         initGame();
         closeModals();
@@ -772,7 +804,11 @@ function confirmDraw() {
     confirmDrawElement.style.display = 'inline-block';
 }
 
-function closeModals() {
+function confirmResign() {
+    confirmResignElement.style.display = 'inline-block';
+}
+
+function closeModals(closeToasts=true) {
     newGameModal.style.display = 'none';
     newGameModalOverlay.style.display = 'none';
     joinGameModal.style.display = 'none';
@@ -782,8 +818,12 @@ function closeModals() {
     // Commented out until I finish this
     // publicGamesModal.style.display = 'none';
     // publicGamesModalOverlay.style.display = 'none';
-    noDrawButton.click();
-    cancelDrawButton.click();
+    console.log(closeToasts);
+    if (closeToasts) {
+        noDrawButton.click();
+        cancelDrawButton.click();
+        cancelResignButton.click();
+    }
 }
 
 function flipVisibility(element) {
@@ -795,14 +835,17 @@ function handleKeyDown(event) {
     if (event.shiftKey) {
         shiftKeyIsDown = true;
     }
-    if (k == 'c') {
+    if (event.ctrlKey) {
+        return
+    }
+    else if (k == 'c') {
         if (admin() && event.ctrlKey) {
             showOpponentsHandicap();
         } else {
             copyGameIdButton.click();
         }
     } else if (k == 'escape') {
-        closeModals();
+        closeModals(false);
     } else if (k == 'enter' && newGameModal.style.display == 'flex') {
         event.preventDefault();
         createGameButton.click();
@@ -823,6 +866,8 @@ function handleKeyDown(event) {
         toggleThemeButton.click();
     } else if (k == 'o') {
         offerDrawButton.click();
+    } else if (k == 'r') {
+        resignButton.click();
     }
 }
 
@@ -835,7 +880,8 @@ function handleKeyUp(event) {
 
 document.addEventListener("click", function (event) {
     if (event.target === newGameModalOverlay || event.target === joinGameModalOverlay || event.target == rulesModalOverlay || event.target == publicGamesModalOverlay) {
-        closeModals();
+        console.log('asdf');
+        closeModals(false);
     }
 });
 
@@ -862,6 +908,14 @@ joinGameButton.addEventListener('click', () => {
     loadGame();
 });
 
+resignButton.addEventListener('click', () => {
+    if (gameIsOver) {
+        showToast('Game is over, can\'t resign', 5);
+        return ;
+    }
+    shiftKeyIsDown && confirmResignElement.style.display == 'inline-block' ? resign() : confirmResign();
+});
+
 offerDrawButton.addEventListener('click', () => {
     if (gameIsOver) {
         showToast('Game is over, can\'t offer draw', 5);
@@ -871,7 +925,7 @@ offerDrawButton.addEventListener('click', () => {
         showToast('Respond to your opponent\'s draw offer first', 5);
         return ;
     }
-    shiftKeyIsDown ? offerDraw() : confirmDraw();
+    shiftKeyIsDown && confirmDrawElement.style.display == 'inline-block' ? offerDraw() : confirmDraw();
 });
 
 toggleThemeButton.addEventListener('click', () => {
@@ -1182,6 +1236,7 @@ function getPublicGames() {
         });
 }
 
+// TODO
 function displayPublicGames(games) {
     console.log(games);
 }

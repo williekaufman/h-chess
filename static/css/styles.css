@@ -198,7 +198,7 @@ input::placeholder {
   color: white;
 }
 
-.draw-toast {
+.two-button-toast {
   display: none;
   justify-content: space-around;
   padding: 10px;
@@ -209,12 +209,12 @@ input::placeholder {
   z-index: 9999;
 }
 
-.dark .draw-toast {
+.dark .two-button-toast {
   /* background-color: brown; */
   color: white;
 }
 
-.draw-button {
+.toast-button {
   background-color: yellow;
   color: black;
   border-color: black;
@@ -223,17 +223,17 @@ input::placeholder {
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
 }
 
-.draw-button:hover {
+.toast-button:hover {
   background-color: lightblue;
 }
 
-.dark .draw-button {
+.dark .toast-button {
   background-color: darkred;
   color: white;
   border-color: white;
 }
 
-.dark .draw-button:hover {
+.dark .toast-button:hover {
   background-color: darkblue;
 }
 

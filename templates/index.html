@@ -33,6 +33,7 @@
         <button class="one-char-button" id="newGameButton">n</button>
         <button class="one-char-button" id="openJoinDialogButton">j</button>
         <button class="one-char-button" id="offerDrawButton">o</button>
+        <button class="one-char-button" id="resignButton">r</button>
         <button class="one-char-button" id="copyGameIdButton">c</button>
         <!-- commented out until I finish this -->
         <!-- <button class="one-char-button" id="publicGamesButton">p</button> -->
@@ -56,21 +57,24 @@
         <button class="one-char-button" id="toggleThemeButton">d</button>
     </div>
     <div> <span class="toast" id="toast"> </span> </div>
-    <!-- Intentional - draw and invite formatting can be the same  -->
-    <div> <span class="draw-toast" id="inviteToast">
-            <button class="draw-button" id="acceptInviteButton"> Join Game </button>
-            <button class="draw-button" id="declineInviteButton"> Decline Invite </button>
+    <div> <span class="state-toast" id="stateToast"> </span> </div>
+    <div> <span class="two-button-toast" id="inviteToast">
+            <button class="toast-button" id="acceptInviteButton"> Join Game </button>
+            <button class="toast-button" id="declineInviteButton"> Decline Invite </button>
         </span>
     </div>
-    <div> <span class="draw-toast" id="drawToast">
-            <button class="draw-button" id="drawButton">Draw</button>
-            <button class="draw-button" id="noDrawButton">No draw</button>
+    <div> <span class="two-button-toast" id="drawToast">
+            <button class="toast-button" id="drawButton">Draw</button>
+            <button class="toast-button" id="noDrawButton">No draw</button>
         </span> </div>
-    <div> <span class="state-toast" id="stateToast"> </span> </div>
-
-    <div> <span class="draw-toast" id="confirmDrawToast">
-            <button class="draw-button" id="confirmDrawButton">Offer Draw</button>
-            <button class="draw-button" id="cancelDrawButton">Cancel</button>
+    <div> <span class="two-button-toast" id="confirmResignToast">
+            <button class="toast-button" id="confirmResignButton">Resign</button>
+            <button class="toast-button" id="cancelResignButton">Cancel</button>
+        </span> </div>
+    </span>
+    <div> <span class="two-button-toast" id="confirmDrawToast">
+            <button class="toast-button" id="confirmDrawButton">Offer Draw</button>
+            <button class="toast-button" id="cancelDrawButton">Cancel</button>
         </span> </div>
     <div> <span class="state-toast" id="stateToast"> </span>
     </div>
@@ -142,9 +146,8 @@
             </div>
         </div>
         <div> 
-            <!-- commenting out until I finish this -->
-            <!-- Make game public -->
-            <!-- <input type="checkbox" id="publicCheckbox"> -->
+            Make game public
+            <input type="checkbox" id="publicCheckbox">
         <button id="createGameButton" class="create-game-button">Start Game</button>
         </div>
     </div>
@@ -200,7 +203,8 @@
         <div> <b> h </b> - display how to play text </div>
         <div> <b> n (N) </b> - new game (skip dialog, use defaults) </div>
         <div> <b> j </b> - join game </div>
-        <div> <b> o (O) </b> - offer draw (skip confirm) </div>
+        <div> <b> o (O) </b> - offer draw (confirm) </div>
+        <div> <b> r (R) </b> - resign (confirm) </div>
         <div> <b> c </b> - copy game id </div>
         <div> Toggle </div>
         <div> <b> f </b> - display friends list </div>

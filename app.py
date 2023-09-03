@@ -440,6 +440,23 @@ def accept_draw():
     socketio.emit('update', {'color': 'both'}, room=game_id)
     return {'success': True}
 
+@app.route("/resign", methods=['POST'])
+def resign():
+    game_id = request.json.get('gameId')
+    color = request.json.get('color')
+    try:
+        color = Color(color)
+    except:
+        return {'success': False, 'error': 'Invalid color'}
+    if not game_id or not color:
+        return {'success': False, 'error': 'No game id or color provided'}
+    if rget('winner', game_id=game_id):
+        return {'success': False, 'error': 'Game already over'}
+    rset('winner', color.other().value, game_id=game_id)
+    whiteboard(f'{color.value} resigned', color.other(), game_id=game_id)
+    socketio.emit('update', {'color': 'both'}, room=game_id)
+    return { 'success': True }
+
 @app.route("/invite", methods=['POST'])
 def invite():
     friend = request.json.get('friend')
