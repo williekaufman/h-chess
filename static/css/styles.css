@@ -454,6 +454,13 @@ input::placeholder {
   cursor: pointer;
 }
 
+.human-or-ai-image {
+  height: 80px;
+  width: auto;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
 .promotion-piece {
   width: 15%;
   box-sizing: border-box;
@@ -526,7 +533,7 @@ input::placeholder {
   left: 50%;
   top: 50%;
   width: 100%;
-  max-width: 1000px;
+  max-width: 1500px;
   transform: translate(-50%, -50%);
   height: 300px;
   overflow: auto;

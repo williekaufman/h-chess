@@ -10,6 +10,7 @@ from secrets import compare_digest, token_hex
 from chess import Color, Piece, Result, Board, History, starting_board
 from squares import Square
 from handicaps import handicaps, get_handicaps, tested_handicaps, test_all_handicaps, Difficulty
+from stockfish import Stockfish
 import time
 import random
 import json

@@ -105,6 +105,7 @@
         <div class="grid">
             <div class="label-container">
                 <div class="grid-container" id="colorSelection">
+                    <h1 class="title">Your Color</h1>
                     <img class="piece-image" id="whiteKing"
                         src="https://chessboardjs.com/img/chesspieces/wikipedia/wK.png">
                     <img class="piece-image" id="blackKing"
@@ -141,6 +142,13 @@
                     <button class="handicap-selection" diff="easy" yours="f">Easy</button>
                     <button class="handicap-selection" diff="medium" yours="f">Medium</button>
                     <button class="handicap-selection" diff="hard" yours="f">Hard</button>
+                </div>
+            </div>
+            <div class="label-container">
+                <div class="grid-container" id="humanOrAIOpp">
+                    <h1 class="title">Human or AI Opponent</h1>
+                    <img class="human-or-ai-image" id="humanImg" src="{{ url_for('static', filename='images/human.png') }}">
+                    <img class="human-or-ai-image" id="aiImg" src="{{ url_for('static', filename='images/robot-2.png') }}">
                 </div>
             </div>
         </div>
