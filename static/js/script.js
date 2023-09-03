@@ -672,7 +672,7 @@ function newGame(toast = true) {
         .then((response) => response.json())
         .then((data) => {
             if (!data['success']) {
-                showToast(data['error'], 10);
+                addToWhiteboard(data['error'])
                 return;
             }
             setGameId(data['gameId']);
@@ -974,7 +974,9 @@ function onPickup(source, piece) {
         .then((response) => response.json())
         .then((data) => {
             if (!data['success']) {
-                showToast(data['error'], 5);
+                // This is pretty weird, so always display the error
+                addToWhiteboard(data['error']);
+                data['exception'] && console.log(`Exception: ${data['exception']}`)
                 return;
             }
             on_pickup_in_flight = false;
@@ -998,8 +1000,11 @@ function sendMove(from, to) {
         .then((response) => response.json())
         .then((data) => {
             if (!data['success']) {
-                console.log(data['error']);
-                showToast(data['error'], 5);
+                // If there's an exception field, something went really wrong. If there's not, you might have just dragged a piece to an illegal square or something.
+                if (data['exception']) {
+                    console.log(`Exception: ${data['exception']}`)
+                    addToWhiteboard(data['error'])
+                }
                 // If we get an error, we need to pull down the state to undo the move on the frontend
                 updateState();
                 return;

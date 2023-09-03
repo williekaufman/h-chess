@@ -315,13 +315,19 @@ def move_inner():
     else:
         return {'success': False, 'error': error }
 
+def error_handler(e):
+    print(f'Exception on /move: {e}')
+    return {
+        'success': False, 
+        'error': 'Invalid request, probably due to a bug. If convenient, please report it. The console should have a log of the actual error. Sorry!', 
+        'exception': str(e)}
+
 @app.route("/move", methods=['POST'])
 def move():
     try:
         return move_inner()
     except Exception as e:
-        print(f'Exception on /move: {e}')
-        return {'success': False, 'error': 'Invalid request', 'exception': str(e)}
+        return error_handler(e)
 
 def legal_moves_inner():
     game_id = request.args.get('gameId')
@@ -344,8 +350,7 @@ def legal_moves():
     try:
         return legal_moves_inner()
     except Exception as e:
-        print(f'Exception on /legal_moves: {e}')
-        return {'success': False, 'error': 'Invalid request, probably due to a bug...', 'exception': str(e)}
+        return error_handler(e)
 
 
 @app.route("/add_friend", methods=['POST'])
