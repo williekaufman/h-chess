@@ -234,9 +234,9 @@ function offerDraw() {
             }
             else {
                 showToast('You offered a draw', 5);
-                cancelDrawButton.click();
             }
         });
+    cancelDrawButton.click();
 }
 
 function resign() {
@@ -247,10 +247,8 @@ function resign() {
                 showToast(data['error'], 5)
                 return;
             }
-            else {
-                cancelResignButton.click();
-            }
         });
+    cancelResignButton.click();
 }
 
 whiteboard.addEventListener('click', (e) => {
