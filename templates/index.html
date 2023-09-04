@@ -144,18 +144,20 @@
                     <button class="handicap-selection" diff="hard" yours="f">Hard</button>
                 </div>
             </div>
-            <div class="label-container">
-                <div class="grid-container" id="humanOrAIOpp">
-                    <h1 class="title">Human or AI Opponent</h1>
-                    <img class="human-or-ai-image" id="humanImg" src="{{ url_for('static', filename='images/human.png') }}">
-                    <img class="human-or-ai-image" id="aiImg" src="{{ url_for('static', filename='images/robot-2.png') }}">
+        </div>
+        <div class="flex-parent">
+            <div class="checkbox-container">
+                <div class="checkbox-item">
+                    <label for="publicCheckbox">Make game public</label>
+                    <input type="checkbox" id="publicCheckbox">
+                </div>
+                <div class="checkbox-item">
+                    <label for="AICheckbox">Play against AI</label>
+                    <input type="checkbox" id="AICheckbox">
                 </div>
             </div>
+            <button id="createGameButton" class="create-game-button">Start Game</button>
         </div>
-        <div> 
-            Make game public
-            <input type="checkbox" id="publicCheckbox">
-        <button id="createGameButton" class="create-game-button">Start Game</button>
         </div>
     </div>
 </div>

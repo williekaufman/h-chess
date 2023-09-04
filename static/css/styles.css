@@ -330,27 +330,27 @@ input::placeholder {
 
 .recent-move {
   box-sizing: border-box;
-  border: 5px solid green;
+  border: 5px solid rgb(132, 131, 131);
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
 .dark .recent-move {
-  border: 5px solid blue;
+  border: 5px solid rgb(132, 131, 131);
 }
 
 .highlight {
-  background-color: lightblue;
+  background-color:  rgba(69, 157, 69, 0.903);
   box-sizing: border-box;
-  border: 5px solid red;
+  border: 5px solid rgb(206, 206, 206);
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
 .dark .highlight {
-  background-color: rgb(91, 91, 91);
+  background-color: rgb(49, 70, 134);
   border: 5px solid rgb(206, 206, 206);
 }
 
@@ -669,11 +669,27 @@ input::placeholder {
   text-align: center;
 }
 
+.flex-parent {
+  display: flex;
+  align-items: center; /* This will vertically align the items in the center */
+}
+
+.checkbox-container {
+  margin-right: 20px; /* Add space between the checkbox container and the button */
+}
+
+/* New Styles for Aligning Checkboxes */
+.checkbox-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center; /* for vertical alignment of text and checkbox */
+}
+
 .create-game-button {
   height: 75px;
   width: 300px;
   border-radius: 10px;
-  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+  /* box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2); */
   cursor: pointer;
   font-size: 30px;
 }
