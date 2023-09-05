@@ -1145,3 +1145,7 @@ def get_handicaps(config):
     else:
         return [pick_handicap(config[color], color) for color in Color]
         # return descriptions[no_handicap], descriptions[no_handicap]
+
+def lookup_handicap(game_id, color):
+    assert color in Color
+    return handicaps[rget(f'{color.value}_handicap', game_id=game_id)][0]

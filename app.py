@@ -9,7 +9,7 @@ from settings import LOCAL
 from secrets import compare_digest, token_hex
 from chess import Color, Piece, Result, Board, History, starting_board
 from squares import Square
-from handicaps import handicaps, get_handicaps, tested_handicaps, test_all_handicaps, Difficulty
+from handicaps import handicaps, lookup_handicap, get_handicaps, tested_handicaps, test_all_handicaps, Difficulty
 from stockfish import Stockfish
 import time
 import random
@@ -342,8 +342,7 @@ def move_inner():
     board = Board.of_game_id(game_id)
     history = History.of_game_id(game_id)
     whose_turn = Color.whose_turn(game_id)
-    handicap = handicaps[rget(
-        f'{whose_turn.value}_handicap', game_id=game_id)][0]
+    handicap = lookup_handicap(game_id, whose_turn)
     move, extra, error = board.move(
         start, stop, whose_turn, handicap, history, promotion)
     if move:
@@ -352,8 +351,7 @@ def move_inner():
         history.add(move)
         rset(opt_key(whose_turn), 'True', game_id=game_id)
         whose_turn = whose_turn.other()
-        handicap = handicaps[rget(
-            f'{whose_turn.value}_handicap', game_id=game_id)][0]
+        handicap = lookup_handicap(game_id, whose_turn)
         rset('history', history.to_string(), game_id=game_id)
         board.write_to_redis()
         rset('turn', whose_turn.value, game_id=game_id)
@@ -391,8 +389,7 @@ def ai_move(game_id):
     whose_turn = Color.whose_turn(game_id)
     # TO DO: This should update with the promotion setting on the board
     promotion = Piece.QUEEN
-    handicap = handicaps[rget(
-        f'{whose_turn.value}_handicap', game_id=game_id)][0]
+    handicap = lookup_handicap(game_id, whose_turn)
     # TO DO: Initialize sotckfish and set the position correctly -- this is broken right now
     stockfish = Stockfish()
     fen_str = ''
@@ -419,8 +416,7 @@ def ai_move(game_id):
                     history.add(move)
                     rset(opt_key(whose_turn), 'True', game_id=game_id)
                     whose_turn = whose_turn.other()
-                    handicap = handicaps[rget(
-                        f'{whose_turn.value}_handicap', game_id=game_id)][0]
+                    handicap = lookup_handicap(game_id, whose_turn)
                     rset('history', history.to_string(), game_id=game_id)
                     board.write_to_redis()
                     rset('turn', whose_turn.value, game_id=game_id)
@@ -462,8 +458,7 @@ def legal_moves_inner():
     history = History.of_game_id(game_id)
     whose_turn = Color.whose_turn(game_id)
     promotion = make_promotion_arg(request.args.get('promotion'))
-    handicap = handicaps[rget(
-        f'{whose_turn.value}_handicap', game_id=game_id)][0]
+    handicap = lookup_handicap(game_id, whose_turn)
     return {'success': True, 'moves': board.legal_moves(start, history, whose_turn, handicap, promotion)}
 
 
@@ -596,8 +591,7 @@ def on_join(data):
         return 
     history = History.of_game_id(game_id)
     whose_turn = Color.whose_turn(game_id)
-    handicap = handicaps[rget(
-        f'{whose_turn.value}_handicap', game_id=game_id)][0]
+    handicap = lookup_handicap(game_id, whose_turn)
     # so we try once-per-turn events when the frontend 
     # joins the room in the call to /new_game
 
