@@ -40,6 +40,7 @@ displayPromotionOptionsButton = document.getElementById('displayPromotionOptions
 ignoreOtherPlayerCheckButton = document.getElementById('ignoreOtherPlayerCheckButton');
 
 publicCheckbox = document.getElementById('publicCheckbox');
+aiCheckbox = document.getElementById('aiCheckbox');
 
 unlimitedTimeCheckbox = document.getElementById('unlimitedTimeCheckbox');
 timeControlMinutes = document.getElementById('timeControlMinutes');
@@ -685,6 +686,8 @@ function newGameBody() {
         ret['username'] = username;
     } if (publicCheckbox.checked) {
         ret['public'] = true;
+    } if (aiCheckbox.checked) {
+        ret['aiOpp'] = true;
     }
     ret = updateTimeControls(ret);
     return ret

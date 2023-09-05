@@ -205,6 +205,8 @@ def new_game():
             rset(f'{color.value}_time', timeControl, game_id=game_id)
     if (increment := float_arg(request.json.get('increment'))):
         rset('increment', increment, game_id=game_id) 
+    if request.json.get('aiOpp'):
+        rset('ai', playerColor.other().value, game_id=game_id)
     handicap_config = {Color.WHITE: None, Color.BLACK: None}
     if (yourHandicap := request.json.get('yourHandicap')):
         try:
@@ -380,6 +382,75 @@ def move():
     except Exception as e:
         return error_handler(e)
 
+# WIP
+# This should be called after a player moves when they are playing against an AI
+# The function queries stockfish for the best move(s), picks the best legal one, and makes it
+def ai_move(game_id):
+    board = Board.of_game_id(game_id)
+    history = History.of_game_id(game_id)
+    whose_turn = Color.whose_turn(game_id)
+    # TO DO: This should update with the promotion setting on the board
+    promotion = Piece.QUEEN
+    handicap = handicaps[rget(
+        f'{whose_turn.value}_handicap', game_id=game_id)][0]
+    # TO DO: Initialize sotckfish and set the position correctly -- this is broken right now
+    stockfish = Stockfish()
+    fen_str = ''
+    stockfish.is_fen_valid(fen_str)
+    stockfish.set_fen_position(fen_str)
+    # This function should only be called when it's the AI's turn
+    assert rget('ai', game_id=game_id) == whose_turn.value()
+
+    # Now we generate stockfish's top moves
+    found = False
+    start = 0
+    end = 5
+    while(True):
+        # These are formatted like 'e2e4' 
+        moves = [(m['Move'][:1].upper(), m['Move'][2:].upper()) for m in stockfish.get_top_moves(end)[start:]]
+        for (start, stop) in moves:
+            if stop in board.legal_moves(start, history, whose_turn, handicap):
+                # We've found a legal stockfish move
+                move, extra, error = board.move(
+                    start, stop, whose_turn, handicap, history, promotion)
+                if move:
+                    rset('draw', '', game_id=game_id)
+                    winner_on_time = update_time(whose_turn, game_id)
+                    history.add(move)
+                    rset(opt_key(whose_turn), 'True', game_id=game_id)
+                    whose_turn = whose_turn.other()
+                    handicap = handicaps[rget(
+                        f'{whose_turn.value}_handicap', game_id=game_id)][0]
+                    rset('history', history.to_string(), game_id=game_id)
+                    board.write_to_redis()
+                    rset('turn', whose_turn.value, game_id=game_id)
+                    winner = winner_on_time or board.winner(whose_turn, history, handicap)
+                    ret = {'success': True, 'extra': extra, 'whoseTurn': whose_turn.value}
+                    if winner:
+                        rset('winner', winner.value, game_id=game_id)
+                        ret['winner'] = winner.value
+                    # This tells the frontend to pull down the new state
+                    socketio.emit('update', { 'color': whose_turn.value }, room=game_id)
+                    return {**ret, **times(game_id, whose_turn)}
+                else:
+                    return {'success': False, 'error': error }
+        # We didn't find a legal stockfish move, so we look deeper 
+        if moves:
+            start += 5
+            end += 5
+        # If we can't look deeper b/c we ran out of stockfish moves, then stockfish has no legal moves
+        else:
+            winner_on_time = update_time(whose_turn, game_id)
+            winner = winner_on_time or board.winner(whose_turn, history, handicap)
+            assert winner == whose_turn
+            rset('winner', winner.value, game_id=game_id)
+            ret['winner'] = winner.value
+            # This tells the frontend to pull down the new state
+            socketio.emit('update', { 'color': whose_turn.value }, room=game_id)
+            return {**ret, **times(game_id, whose_turn)}
+    
+    
+    
 def legal_moves_inner():
     game_id = request.args.get('gameId')
     ignore_other_player_check = request.args.get('ignoreOtherPlayerCheck')

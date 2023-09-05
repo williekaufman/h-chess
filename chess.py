@@ -93,7 +93,6 @@ class Move():
     def of_string(s):
         return Move(ColoredPiece.of_string(s[0]), s[1:3], s[3:5], None if s[5] == 'f' else ColoredPiece.of_string(s[5]), s[6], s[7], s[8], s[9])
 
-# All this actual logic is untested. It'll be easier to test once we get a UI set up so I'm just gonna wait on that.
 
 
 def get_castling_rights(history):
