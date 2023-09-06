@@ -1,5 +1,6 @@
 import copy
 import random
+from stockfish import Stockfish
 from redis_utils import rget, rset
 from enum import Enum
 from color import Color, Result
@@ -98,7 +99,7 @@ class Move():
 def get_castling_rights(history):
     ret = {'K': True, 'Q': True, 'k': True, 'q': True}
     d = {'a1': 'Q', 'h1': 'K', 'a8': 'q', 'h8': 'k'}
-    for move in history:
+    for move in history.history:
         if move.start.value in d:
             ret[d[move.start.value]] = False
         elif move.piece.piece == Piece.KING:
@@ -112,6 +113,7 @@ def get_castling_rights(history):
 
 
 def enPassant(history):
+    history = history.history
     if history:
         most_recent_move = history[-1]
         if most_recent_move.piece.piece == Piece.PAWN and abs(most_recent_move.start.to_coordinates()[0] - most_recent_move.stop.to_coordinates()[0]) == 2:
@@ -121,6 +123,7 @@ def enPassant(history):
 
 
 def kingEnPassant(history):
+    history = history.history
     if history:
         most_recent_move = history[-1]
         if most_recent_move.castle in ['k', 'q']:
@@ -440,14 +443,57 @@ class Board():
         ret = None, CaptureType.NOT
         if self.get(stop):
             ret = self.get(stop), CaptureType.NORMAL
-        enPassantSquares = enPassant(history.history)
-        kingEnPassantSquares = kingEnPassant(history.history)
+        enPassantSquares = enPassant(history)
+        kingEnPassantSquares = kingEnPassant(history)
         if piece.piece == Piece.PAWN and stop in enPassantSquares:
             return ColoredPiece(piece.color.other(), Piece.PAWN), CaptureType.EN_PASSANT
         if stop in kingEnPassantSquares:
             # King en passant always captures a rook
             return ColoredPiece(piece.color.other(), Piece.KING), CaptureType.KING_EN_PASSANT
         return ret
+
+    def to_fen(self, history):
+        s = self.to_string(True)
+        print(s)
+        fen = []
+        empty_count = 0
+
+        for i, char in enumerate(s):
+            if char == ' ':  # assuming empty square is represented by a dot
+                empty_count += 1
+            else:
+                if empty_count:
+                    fen.append(str(empty_count))
+                    empty_count = 0
+                fen.append(char)
+
+            # Check if at the end of a rank or at the end of the string
+            if (i + 1) % 8 == 0:
+                if empty_count:
+                    fen.append(str(empty_count))
+                    empty_count = 0
+                if i != 63:
+                    fen.append('/')
+
+        ret = [''.join(fen)]
+
+        # append color, castling, and en passant
+        ret.append('w' if history.whose_turn() == Color.WHITE else 'b')
+        c = get_castling_rights(history)
+        c_str = ''.join([x for x in 'KQkq' if c[x]])
+        ret.append(c_str or '-')
+
+        e_list = enPassant(history)
+        if e_list:
+            ret.append(e_list[0].value.lower())
+        else:
+            ret.append('-')
+
+        ret.append('0 0')
+
+        return ' '.join(ret)
+
+        
 
     def capture(self, start, stop, history):
         return self.capture_outer(start, stop, history)[0]
@@ -519,6 +565,45 @@ class Board():
         # This sets all the values that only change on a move
         self.make_cache(history, move)
         return move, extra, None
+    
+    # WIP
+    # This should be called after a player moves when they are playing against an AI
+    # The function queries stockfish for the best move(s), picks the best legal one, and makes it
+    def ai_move(self, history, handicap):
+        # TO DO: This should update with the promotion setting on the board
+        promotion = Piece.QUEEN
+        game_id = self.game_id
+        whose_turn = history.whose_turn()
+        # TO DO: Initialize sotckfish and set the position correctly -- this is broken right now
+        stockfish = Stockfish()
+        fen_str = self.to_fen(history)
+        stockfish.is_fen_valid(fen_str)
+        stockfish.set_fen_position(fen_str)
+        # This function should only be called when it's the AI's turn
+        assert rget('ai', game_id=game_id) == whose_turn.value
+
+        # Now we generate stockfish's top moves
+        found = False
+        i = 0
+        j = 5
+        while(True):
+            # These are formatted like 'e2e4' 
+            moves = [(m['Move'][:2].upper(), m['Move'][2:4].upper()) for m in stockfish.get_top_moves(j)[i:]]
+            for (start, stop) in moves:
+                start, stop = Square(start), Square(stop)
+                print(i, start.value, stop.value)
+                if stop.value in self.legal_moves(start, history, whose_turn, handicap):
+                    # We've found a legal stockfish move
+                    return self.move(
+                        start, stop, whose_turn, handicap, history, promotion)
+                    
+            # We didn't find a legal stockfish move, so we look deeper 
+            if moves:
+                i += 5
+                j += 5
+            # If we can't look deeper b/c we ran out of stockfish moves, then stockfish has no legal moves
+            else:
+                return None, None, 'no move'
 
     def legal_moves(self, start, history, whose_turn, handicap=None, promote_to=Piece.QUEEN):
         assert type(start) == Square
@@ -532,7 +617,7 @@ class Board():
             return moves
         if piece.piece == Piece.PAWN:
             moves += pawn_moves(self, start, whose_turn)
-            moves += pawn_captures(self, start, whose_turn, history.history)
+            moves += pawn_captures(self, start, whose_turn, history)
         elif piece.piece == Piece.ROOK:
             moves += rook_moves(self, start, whose_turn)
         elif piece.piece == Piece.KNIGHT:
@@ -542,7 +627,7 @@ class Board():
         elif piece.piece == Piece.QUEEN:
             moves += queen_moves(self, start, whose_turn)
         elif piece.piece == Piece.KING:
-            moves += king_moves(self, start, whose_turn, history.history) 
+            moves += king_moves(self, start, whose_turn, history) 
         handicap = handicap or (lambda start, stop, inputs: True)
         handicap_inputs = HandicapInputs(self, history, promote_to)
         return [square.value for square in moves if square and handicap(start, square, handicap_inputs)]
@@ -575,9 +660,13 @@ class Board():
                 return self.draw(whose_turn, history)
         return whose_turn.other()
 
-    def to_string(self):
+    def to_string(self, reverse=False):
         ret = ''
-        for i in range(8):
+        rank_ind = range(8)
+        if reverse:
+            rank_ind = reversed(rank_ind) 
+
+        for i in rank_ind:
             for j in range(8):
                 piece = self.board[i][j]
                 ret += ' ' if piece is None else piece.to_string()

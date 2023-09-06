@@ -10,7 +10,6 @@ from secrets import compare_digest, token_hex
 from chess import Color, Piece, Result, Board, History, starting_board
 from squares import Square
 from handicaps import handicaps, lookup_handicap, get_handicaps, tested_handicaps, test_all_handicaps, Difficulty
-from stockfish import Stockfish
 import time
 import random
 import json
@@ -21,6 +20,7 @@ import sys
 
 
 CORS(app)
+
 
 
 def new_game_id():
@@ -331,6 +331,28 @@ def get_history():
         return {'success': False, 'error': 'Invalid game id'}
     return {'success': True, 'history': history.to_list()}
 
+# Only call this if you've validated the move already
+def make_move(game_id, move, board, history, extra):
+    rset('draw', '', game_id=game_id)
+    whose_turn = history.whose_turn()
+    winner_on_time = update_time(whose_turn, game_id)
+    history.add(move)
+    rset(opt_key(whose_turn), 'True', game_id=game_id)
+    whose_turn = whose_turn.other()
+    handicap = lookup_handicap(game_id, whose_turn)
+    rset('history', history.to_string(), game_id=game_id)
+    board.write_to_redis()
+    rset('turn', whose_turn.value, game_id=game_id)
+    winner = winner_on_time or board.winner(whose_turn, history, handicap)
+    ret = {'success': True, 'extra': extra, 'whoseTurn': whose_turn.value}
+    if winner:
+        rset('winner', winner.value, game_id=game_id)
+        ret['winner'] = winner.value
+    
+    # This tells the frontend to pull down the new state
+    socketio.emit('update', { 'color': whose_turn.value }, room=game_id)
+    return ret
+
 def move_inner():
     game_id = request.json.get('gameId')
     ignore_other_player_check = request.json.get('ignoreOtherPlayerCheck')
@@ -346,22 +368,13 @@ def move_inner():
     move, extra, error = board.move(
         start, stop, whose_turn, handicap, history, promotion)
     if move:
-        rset('draw', '', game_id=game_id)
-        winner_on_time = update_time(whose_turn, game_id)
-        history.add(move)
-        rset(opt_key(whose_turn), 'True', game_id=game_id)
+        ret = make_move(game_id, move, board, history, extra)
         whose_turn = whose_turn.other()
-        handicap = lookup_handicap(game_id, whose_turn)
-        rset('history', history.to_string(), game_id=game_id)
-        board.write_to_redis()
-        rset('turn', whose_turn.value, game_id=game_id)
-        winner = winner_on_time or board.winner(whose_turn, history, handicap)
-        ret = {'success': True, 'extra': extra, 'whoseTurn': whose_turn.value}
-        if winner:
-            rset('winner', winner.value, game_id=game_id)
-            ret['winner'] = winner.value
-        # This tells the frontend to pull down the new state
-        socketio.emit('update', { 'color': whose_turn.value }, room=game_id)
+        if ('winner' not in ret) and rget('ai', game_id=game_id) == whose_turn.value:
+            # TO DO: If they're playing against an AI, make the AI move
+            if (m := board.ai_move(history, lookup_handicap(game_id, whose_turn))):
+                make_move(game_id, move, board, history, extra)
+
         return {**ret, **times(game_id, whose_turn)}
     else:
         return {'success': False, 'error': error }
@@ -375,77 +388,11 @@ def error_handler(e):
 
 @app.route("/move", methods=['POST'])
 def move():
-    try:
-        return move_inner()
-    except Exception as e:
-        return error_handler(e)
+    #try:
+    return move_inner()
+    #except Exception as e:
+    #    return error_handler(e)
 
-# WIP
-# This should be called after a player moves when they are playing against an AI
-# The function queries stockfish for the best move(s), picks the best legal one, and makes it
-def ai_move(game_id):
-    board = Board.of_game_id(game_id)
-    history = History.of_game_id(game_id)
-    whose_turn = Color.whose_turn(game_id)
-    # TO DO: This should update with the promotion setting on the board
-    promotion = Piece.QUEEN
-    handicap = lookup_handicap(game_id, whose_turn)
-    # TO DO: Initialize sotckfish and set the position correctly -- this is broken right now
-    stockfish = Stockfish()
-    fen_str = ''
-    stockfish.is_fen_valid(fen_str)
-    stockfish.set_fen_position(fen_str)
-    # This function should only be called when it's the AI's turn
-    assert rget('ai', game_id=game_id) == whose_turn.value()
-
-    # Now we generate stockfish's top moves
-    found = False
-    start = 0
-    end = 5
-    while(True):
-        # These are formatted like 'e2e4' 
-        moves = [(m['Move'][:1].upper(), m['Move'][2:].upper()) for m in stockfish.get_top_moves(end)[start:]]
-        for (start, stop) in moves:
-            if stop in board.legal_moves(start, history, whose_turn, handicap):
-                # We've found a legal stockfish move
-                move, extra, error = board.move(
-                    start, stop, whose_turn, handicap, history, promotion)
-                if move:
-                    rset('draw', '', game_id=game_id)
-                    winner_on_time = update_time(whose_turn, game_id)
-                    history.add(move)
-                    rset(opt_key(whose_turn), 'True', game_id=game_id)
-                    whose_turn = whose_turn.other()
-                    handicap = lookup_handicap(game_id, whose_turn)
-                    rset('history', history.to_string(), game_id=game_id)
-                    board.write_to_redis()
-                    rset('turn', whose_turn.value, game_id=game_id)
-                    winner = winner_on_time or board.winner(whose_turn, history, handicap)
-                    ret = {'success': True, 'extra': extra, 'whoseTurn': whose_turn.value}
-                    if winner:
-                        rset('winner', winner.value, game_id=game_id)
-                        ret['winner'] = winner.value
-                    # This tells the frontend to pull down the new state
-                    socketio.emit('update', { 'color': whose_turn.value }, room=game_id)
-                    return {**ret, **times(game_id, whose_turn)}
-                else:
-                    return {'success': False, 'error': error }
-        # We didn't find a legal stockfish move, so we look deeper 
-        if moves:
-            start += 5
-            end += 5
-        # If we can't look deeper b/c we ran out of stockfish moves, then stockfish has no legal moves
-        else:
-            winner_on_time = update_time(whose_turn, game_id)
-            winner = winner_on_time or board.winner(whose_turn, history, handicap)
-            assert winner == whose_turn
-            rset('winner', winner.value, game_id=game_id)
-            ret['winner'] = winner.value
-            # This tells the frontend to pull down the new state
-            socketio.emit('update', { 'color': whose_turn.value }, room=game_id)
-            return {**ret, **times(game_id, whose_turn)}
-    
-    
     
 def legal_moves_inner():
     game_id = request.args.get('gameId')

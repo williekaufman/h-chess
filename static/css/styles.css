@@ -159,6 +159,10 @@ input::placeholder {
   overflow: auto;
 }
 
+.hotkey-list {
+  max-width: 200px
+}
+
 .container {
   display: flex;
   flex-direction: row;
