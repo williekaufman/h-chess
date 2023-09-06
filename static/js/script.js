@@ -3,6 +3,7 @@ URL = CONFIG.URL;
 previousToast = null;
 toastElement = document.getElementById('toast');
 
+spectating = false;
 gameId = null;
 lastGameId = null;
 inviteId = null;
@@ -34,10 +35,29 @@ openJoinDialogButton = document.getElementById('openJoinDialogButton');
 offerDrawButton = document.getElementById('offerDrawButton');
 resignButton = document.getElementById('resignButton');
 copyGameIdButton = document.getElementById('copyGameIdButton');
+publicGamesButton = document.getElementById('publicGamesButton');
 toggleThemeButton = document.getElementById('toggleThemeButton');
 displayFriendsListButton = document.getElementById('displayFriendsListButton');
 displayPromotionOptionsButton = document.getElementById('displayPromotionOptionsButton');
 ignoreOtherPlayerCheckButton = document.getElementById('ignoreOtherPlayerCheckButton');
+
+buttons = [
+    rulesButton, newGameButton, openJoinDialogButton, offerDrawButton, resignButton, copyGameIdButton, publicGamesButton, toggleThemeButton, displayFriendsListButton, displayPromotionOptionsButton, ignoreOtherPlayerCheckButton
+]
+
+titles = {
+    'rulesButton': 'Rules',
+    'newGameButton': 'New Game',
+    'openJoinDialogButton': 'Join Game',
+    'offerDrawButton': 'Offer Draw',
+    'resignButton': 'Resign',
+    'copyGameIdButton': 'Copy Game ID',
+    'publicGamesButton': 'Public Games',
+    'toggleThemeButton': 'Toggle Dark Mode',
+    'displayFriendsListButton': 'Display Friends List',
+    'displayPromotionOptionsButton': 'Display Promotion Options',
+    'ignoreOtherPlayerCheckButton': 'Allow Moving Opponent\'s Pieces',
+}
 
 publicCheckbox = document.getElementById('publicCheckbox');
 aiCheckbox = document.getElementById('aiCheckbox');
@@ -340,6 +360,7 @@ function highlightMostRecentMove() {
     getSquareElement(mostRecentTo).classList.add('recent-move');
 }
 
+// Maybe change the class if you're spectating?
 function processGameOver(result) {
     setWhoseTurn('');
     gameIsOver = true;
@@ -414,7 +435,8 @@ setInterval(() => {
 }, 200);
 
 
-function setGameId(id) {
+function setGameId(id, spectator = false) {
+    spectating = spectator 
     gameId && socket.emit('leave', { room: gameId })
     gameId = id;
     socket.emit('join', { room: id });
@@ -701,6 +723,16 @@ function getHandicap() {
         });
 }
 
+function getBothHandicaps() {
+    fetchWrapper(URL + 'both_handicaps', { 'gameId': gameId }, 'GET')
+        .then((response) => response.json())
+        .then((data) => {
+            handicapInfo.textContent = ''
+            handicapInfo.textContent += `White: ${data['White']}\n`;
+            handicapInfo.textContent += `Black: ${data['Black']}`;
+        });
+}
+
 function initGame() {
     gameResultToastElement.style.display = 'none';
     showOpponentsHandicapButton.style.display = 'none';
@@ -735,6 +767,47 @@ function invite(friend) {
         .then((response) => response.json())
         .then((data) => {
             showToast(data.success ? `Successfully invited ${friend}` : data.error);
+        });
+}
+
+// The logic in here and loadGame should probably be more factored out
+function watchGame(game = null, color = 'White', showBothHandicaps = true) {
+    game = game || gameIdInput.value;
+    gameIdInput.value = '';
+    if (!game) {
+        showToast('Enter the game ID', 3);
+        return;
+    }
+    closeModals();
+    gameResultToastElement.style.display = 'none';
+    showOpponentsHandicapButton.style.display = 'none';
+    fetchWrapper(URL + 'watch_game', { 'gameId': game }, 'GET')
+        .then((response) => response.json())
+        .then((data) => {
+            if (!data['success']) {
+                showToast(data['error'], 5);
+                return;
+            };
+            setGameId(game, true);
+            setOrientation(color);
+            gameIsOver = false;
+            if (data['winner']) {
+                board.position(data['board']);
+                processGameOver(data['winner']);
+            } else {
+                board.position(data['board']);
+                setWhoseTurn(data['whoseTurn']);
+                showBothHandicaps ? getBothHandicaps() : getHandicap();
+                gameIdInput.value = '';
+                showToast('Game loaded', 3);
+                mostRecentMove = data['mostRecentMove'];
+                ticking = data['ticking'];
+                mostRecentMove && updateMostRecentMove(mostRecentMove['from'], mostRecentMove['to']);
+                updateTimes(data['whiteTime'], data['blackTime']);
+            }
+            updateState();
+            whiteboard_messages = [];
+            updateWhiteboard();
         });
 }
 
@@ -844,15 +917,11 @@ function handleKeyDown(event) {
     if (event.shiftKey) {
         shiftKeyIsDown = true;
     }
-    if (event.ctrlKey) {
-        return
+    if (event.ctrlKey && admin() && event.key == 'c') {
+        showOpponentsHandicap();
     }
     else if (k == 'c') {
-        if (admin() && event.ctrlKey) {
-            showOpponentsHandicap();
-        } else {
-            copyGameIdButton.click();
-        }
+        copyGameIdButton.click();
     } else if (k == 'escape') {
         closeModals(false);
     } else if (k == 'enter' && newGameModal.style.display == 'flex') {
@@ -894,6 +963,10 @@ document.addEventListener("click", function (event) {
         closeModals(false);
     }
 });
+
+buttons.forEach(button => {
+    button.title = titles[button.id];
+})
 
 newGameButton.addEventListener('click', () => {
     shiftKeyIsDown ? newGame() : openNewGameModal();
@@ -1039,6 +1112,9 @@ function activePiece(piece) {
 }
 
 function onPickup(source, piece) {
+    if (spectating) {
+        return false;
+    }
     holdingPiece = true;
     unhighlightSquares();
     if (!yourPiece(piece) || !activePiece(piece) || gameIsOver) {
