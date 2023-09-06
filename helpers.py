@@ -17,6 +17,9 @@ def try_move(board, start, stop, history, promote_to=None):
     new_board.move(**args)
     return new_board
 
+def lookup_handicap(game_id, color):
+    assert color in Color
+    return handicaps[rget(f'{color.value}_handicap', game_id=game_id)][0]
 
 def get_adjacent_squares(square):
     adj_sqs = []

@@ -7,6 +7,10 @@ from enum import Enum
 from collections import defaultdict, Counter
 import random
 
+def lookup_handicap(game_id, color):
+    assert color in Color
+    return handicaps[rget(f'{color.value}_handicap', game_id=game_id)][0]
+
 def no_handicap(start, stop, inputs):
     return True
 
@@ -1143,9 +1147,6 @@ def get_handicaps(config):
     if not LOCAL:
         return [pick_handicap(config[color], color) for color in Color]
     else:
-        #return [pick_handicap(config[color], color) for color in Color]
-        return descriptions[queen_disguise], descriptions[no_handicap]
+        return [pick_handicap(config[color], color) for color in Color]
+        # return descriptions[queen_disguise], descriptions[no_handicap]
 
-def lookup_handicap(game_id, color):
-    assert color in Color
-    return handicaps[rget(f'{color.value}_handicap', game_id=game_id)][0]
