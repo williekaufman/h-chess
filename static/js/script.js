@@ -919,6 +919,8 @@ function handleKeyDown(event) {
     }
     if (event.ctrlKey && admin() && event.key == 'c') {
         showOpponentsHandicap();
+    } else if (event.ctrlKey) {
+        return ;
     }
     else if (k == 'c') {
         copyGameIdButton.click();
