@@ -34,10 +34,29 @@ openJoinDialogButton = document.getElementById('openJoinDialogButton');
 offerDrawButton = document.getElementById('offerDrawButton');
 resignButton = document.getElementById('resignButton');
 copyGameIdButton = document.getElementById('copyGameIdButton');
+publicGamesButton = document.getElementById('publicGamesButton');
 toggleThemeButton = document.getElementById('toggleThemeButton');
 displayFriendsListButton = document.getElementById('displayFriendsListButton');
 displayPromotionOptionsButton = document.getElementById('displayPromotionOptionsButton');
 ignoreOtherPlayerCheckButton = document.getElementById('ignoreOtherPlayerCheckButton');
+
+buttons = [
+    rulesButton, newGameButton, openJoinDialogButton, offerDrawButton, resignButton, copyGameIdButton, publicGamesButton, toggleThemeButton, displayFriendsListButton, displayPromotionOptionsButton, ignoreOtherPlayerCheckButton
+]
+
+titles = {
+    'rulesButton': 'Rules',
+    'newGameButton': 'New Game',
+    'openJoinDialogButton': 'Join Game',
+    'offerDrawButton': 'Offer Draw',
+    'resignButton': 'Resign',
+    'copyGameIdButton': 'Copy Game ID',
+    'publicGamesButton': 'Public Games',
+    'toggleThemeButton': 'Toggle Dark Mode',
+    'displayFriendsListButton': 'Display Friends List',
+    'displayPromotionOptionsButton': 'Display Promotion Options',
+    'ignoreOtherPlayerCheckButton': 'Allow Moving Opponent\'s Pieces',
+}
 
 publicCheckbox = document.getElementById('publicCheckbox');
 aiCheckbox = document.getElementById('aiCheckbox');
@@ -894,6 +913,10 @@ document.addEventListener("click", function (event) {
         closeModals(false);
     }
 });
+
+buttons.forEach(button => {
+    button.title = titles[button.id];
+})
 
 newGameButton.addEventListener('click', () => {
     shiftKeyIsDown ? newGame() : openNewGameModal();
