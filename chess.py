@@ -387,7 +387,7 @@ class Board():
         for c in Color:
             rooks_have_connected[c] = self.cache.rooks_have_connected[c] or rooks_are_connected(self, c)
             king_has_reached_last_rank[c] = king_has_reached_last_rank[c] or (kings[c] and kings[c].rank() == Rank.home(c.other()))
-            queen_disguise[c] = self.cache.queen_disguise[c] or (queen_moved_like(move.start, move.stop) if move.piece.piece == Piece.QUEEN else None) 
+            queen_disguise[c] = self.cache.queen_disguise[c] or (queen_moved_like(move.start, move.stop) if move.piece.equals(ColoredPiece(c, Piece.QUEEN)) else None) 
             has_promoted[c] = self.cache.has_promoted[c] or move.promotion != 'x'
         # Random is a function of the game_id plus number of moves
         # so you get the same number if you call legal_moves again
