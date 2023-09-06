@@ -917,15 +917,11 @@ function handleKeyDown(event) {
     if (event.shiftKey) {
         shiftKeyIsDown = true;
     }
-    if (event.ctrlKey) {
-        return
+    if (event.ctrlKey && admin() && event.key == 'c') {
+        showOpponentsHandicap();
     }
     else if (k == 'c') {
-        if (admin() && event.ctrlKey) {
-            showOpponentsHandicap();
-        } else {
-            copyGameIdButton.click();
-        }
+        copyGameIdButton.click();
     } else if (k == 'escape') {
         closeModals(false);
     } else if (k == 'enter' && newGameModal.style.display == 'flex') {
