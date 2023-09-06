@@ -16,7 +16,7 @@ def try_move(board, start, stop, history, promote_to=None, return_move=False):
     if promote_to:
         args['promote_to'] = promote_to
     move , _ , _ = new_board.move(**args)
-    return (new_board, move if return_move) else new_board
+    return (new_board, move) if return_move else new_board
 
 
 def get_adjacent_squares(square):
