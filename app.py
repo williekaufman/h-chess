@@ -282,6 +282,26 @@ def join_game():
         } if board.cache.most_recent_move else None, 
          **times(game_id, Color.whose_turn(game_id))}
 
+@app.route("/watch_game", methods=['GET'])
+def watch_game():
+    game_id = request.args.get('gameId')
+    board = Board.of_game_id(game_id)
+    winner = rget('winner', game_id=game_id)
+    last_move = rget('last_move', game_id=game_id)
+    if not board:
+        return {'success': False, 'error': 'Invalid game id'}
+    if winner:
+        return {'success': True, 'board': board.to_dict(), 'winner': winner}
+    return {
+        'success': True,
+        'board': board.to_dict(),
+        'whoseTurn': rget('turn', game_id=game_id),
+        'mostRecentMove': 
+        {
+            'from': board.cache.most_recent_move.start.value,
+            'to': board.cache.most_recent_move.stop.value
+        } if board.cache.most_recent_move else None,
+        **times(game_id, Color.whose_turn(game_id))}
 
 @app.route('/handicap', methods=['GET'])
 def get_handicap():
@@ -295,6 +315,11 @@ def get_handicap():
     else:
         return {'success': False, 'error': 'Invalid game id'}
 
+@app.route('/both_handicaps', methods=['GET'])
+def get_both_handicaps():
+    game_id = request.args.get('gameId')
+    if (white_handicap := rget(f'{Color.WHITE.value}_handicap', game_id=game_id)) and (black_handicap := rget(f'{Color.BLACK.value}_handicap', game_id=game_id)):
+        return {'success': True, 'White': white_handicap, 'Black': black_handicap}
 
 @app.route("/all_handicaps", methods=['GET'])
 def get_all_handicaps():
