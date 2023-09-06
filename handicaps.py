@@ -170,7 +170,7 @@ def peons_first(start, stop, inputs):
     above_rank = pr + 1 if piece.color == Color.WHITE else pr - 1
     if above_rank >= 0 and above_rank < 8:
         above_piece = board.board[above_rank][start.file().to_index()]
-        if above_piece and above_piece.piece == Piece.PAWN:
+        if above_piece and above_piece.equals(ColoredPiece(piece.color, Piece.PAWN)):
             return False
     return True
 
@@ -1150,3 +1150,6 @@ def get_handicaps(config):
         return [pick_handicap(config[color], color) for color in Color]
         # return descriptions[queen_disguise], descriptions[no_handicap]
 
+def lookup_handicap(game_id, color):
+    assert color in Color
+    return handicaps[rget(f'{color.value}_handicap', game_id=game_id)][0]

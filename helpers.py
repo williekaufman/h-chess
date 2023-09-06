@@ -3,7 +3,8 @@ from redis_utils import rget, rset
 import datetime
 
 
-def try_move(board, start, stop, history, promote_to=None):
+
+def try_move(board, start, stop, history, promote_to=None, return_move=False):
     new_board = board.copy()
     args = {
         'start': start,
@@ -14,12 +15,9 @@ def try_move(board, start, stop, history, promote_to=None):
     }
     if promote_to:
         args['promote_to'] = promote_to
-    new_board.move(**args)
-    return new_board
+    move , _ , _ = new_board.move(**args)
+    return new_board, move if return_move else new_board
 
-def lookup_handicap(game_id, color):
-    assert color in Color
-    return handicaps[rget(f'{color.value}_handicap', game_id=game_id)][0]
 
 def get_adjacent_squares(square):
     adj_sqs = []
@@ -90,5 +88,3 @@ two_letter_words = [
     're', 'sh', 'si', 'so', 'ta', 'te', 'ti', 'to', 'uh', 'um', 'un', 'up',
     'us', 'ut', 'we', 'wo', 'xi', 'xu', 'ya', 'ye', 'yo', 'za'
 ]
-
-

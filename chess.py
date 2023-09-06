@@ -1,11 +1,10 @@
-import copy
-import random
 from stockfish import Stockfish
+import random
 from redis_utils import rget, rset
 from enum import Enum
 from color import Color, Result
 from squares import Square, Rank, File
-from helpers import toast, whiteboard
+from helpers import toast, whiteboard, try_move
 from collections import Counter
 import json
 import math
@@ -347,6 +346,9 @@ class History():
     def to_list(self):
         return [move.to_string() for move in self.history]
 
+    def copy(self):
+        return History(self.to_string())
+
 class HandicapInputs():
     def __init__(self, board, history, promote_to=Piece.QUEEN):
         self.board = board
@@ -423,7 +425,7 @@ class Board():
                 continue
             piece = self.get(square)
             if piece and piece.color == color and target_square.value in new_board.legal_moves(square, history, color):
-                return True
+                return square
         return False
 
     def can_move_to(self, target_square, color, history, filter=lambda board, square: True):
@@ -454,7 +456,6 @@ class Board():
 
     def to_fen(self, history):
         s = self.to_string(True)
-        print(s)
         fen = []
         empty_count = 0
 
@@ -570,15 +571,35 @@ class Board():
     # This should be called after a player moves when they are playing against an AI
     # The function queries stockfish for the best move(s), picks the best legal one, and makes it
     def ai_move(self, history, handicap):
-        # TO DO: This should update with the promotion setting on the board
+        # TODO
         promotion = Piece.QUEEN
         game_id = self.game_id
         whose_turn = history.whose_turn()
-        # TO DO: Initialize sotckfish and set the position correctly -- this is broken right now
+        king_pos = self.cache.kings[whose_turn.other()]
+        f = lambda board, square: king_pos.value in board.legal_moves(square, history, whose_turn, handicap)
+        if (x := self.is_attacked(self.cache.kings[whose_turn.other()], whose_turn, history, filter=f)):
+            return self.move(x, king_pos, whose_turn, handicap, history, promote_to=Piece.KNIGHT)
+        # TO DO: Initialize stockfish and set the position correctly -- this is broken right now
         stockfish = Stockfish()
+        stockfish.set_depth(8)
         fen_str = self.to_fen(history)
-        stockfish.is_fen_valid(fen_str)
-        stockfish.set_fen_position(fen_str)
+        if stockfish.is_fen_valid(fen_str):
+            stockfish.set_fen_position(fen_str) 
+        else:
+            stockfish.set_depth(5)
+            potential_moves = [] 
+            for square in Square:
+                potential_moves.extend([(square, Square(x)) for x in self.legal_moves(square, history, whose_turn, handicap)])
+            potential_moves = [evaluate_move(self, move, history.copy(), stockfish) for move in potential_moves]
+            potential_moves = [move for move in potential_moves if move]
+            stockfish.set_depth(8)
+            assert potential_moves
+            potential_moves.sort(key=lambda x: x[1], reverse=(whose_turn==Color.WHITE))
+            best_move = potential_moves[0][0]
+            return self.move(best_move.start, best_move.stop, whose_turn, handicap, history)
+            # Shouldn't be reachable
+            assert False
+
         # This function should only be called when it's the AI's turn
         assert rget('ai', game_id=game_id) == whose_turn.value
 
@@ -591,7 +612,6 @@ class Board():
             moves = [(m['Move'][:2].upper(), m['Move'][2:4].upper()) for m in stockfish.get_top_moves(j)[i:]]
             for (start, stop) in moves:
                 start, stop = Square(start), Square(stop)
-                print(i, start.value, stop.value)
                 if stop.value in self.legal_moves(start, history, whose_turn, handicap):
                     # We've found a legal stockfish move
                     return self.move(
@@ -603,7 +623,8 @@ class Board():
                 j += 5
             # If we can't look deeper b/c we ran out of stockfish moves, then stockfish has no legal moves
             else:
-                return None, None, 'no move'
+                # shouldn't be reachable
+                assert False
 
     def legal_moves(self, start, history, whose_turn, handicap=None, promote_to=Piece.QUEEN):
         assert type(start) == Square
@@ -739,3 +760,15 @@ def queen_moved_like(start, stop):
     if start.rank() == stop.rank() or start.file() == stop.file():
         return Piece.ROOK
     return Piece.BISHOP
+
+def evaluate_move(board, move, history, stockfish):
+    board, move = try_move(board, move[0], move[1], history, return_move=True)
+    history.add(move)
+    fen_str = board.to_fen(history)
+    if stockfish.is_fen_valid(fen_str):
+        stockfish.set_fen_position(fen_str)
+        evaluation = stockfish.get_evaluation()
+        n = 10000 if 'cp' in evaluation else 1
+        return move, evaluation['value']/n
+    return None
+

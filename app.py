@@ -397,9 +397,8 @@ def move_inner():
         whose_turn = whose_turn.other()
         if ('winner' not in ret) and rget('ai', game_id=game_id) == whose_turn.value:
             # TO DO: If they're playing against an AI, make the AI move
-            if (m := board.ai_move(history, lookup_handicap(game_id, whose_turn))):
+            if board.ai_move(history, lookup_handicap(game_id, whose_turn)):
                 make_move(game_id, move, board, history, extra)
-
         return {**ret, **times(game_id, whose_turn)}
     else:
         return {'success': False, 'error': error }
