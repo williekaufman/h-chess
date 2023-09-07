@@ -767,7 +767,10 @@ def evaluate_move(board, move, history, stockfish):
     fen_str = board.to_fen(history)
     if stockfish.is_fen_valid(fen_str):
         stockfish.set_fen_position(fen_str)
+        stockfish.get_board_visual()
+        print("evaluating above board")
         evaluation = stockfish.get_evaluation()
+        print("done evaluating")
         n = 10000 if 'cp' in evaluation else 1
         return move, evaluation['value']/n
     return None

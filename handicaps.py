@@ -1148,7 +1148,7 @@ def get_handicaps(config):
         return [pick_handicap(config[color], color) for color in Color]
     else:
         return [pick_handicap(config[color], color) for color in Color]
-        # return descriptions[queen_disguise], descriptions[no_handicap]
+        # return descriptions[hipster], descriptions[no_handicap]
 
 def lookup_handicap(game_id, color):
     assert color in Color

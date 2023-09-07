@@ -396,8 +396,7 @@ def move_inner():
         ret = make_move(game_id, move, board, history, extra)
         whose_turn = whose_turn.other()
         if ('winner' not in ret) and rget('ai', game_id=game_id) == whose_turn.value:
-            # TO DO: If they're playing against an AI, make the AI move
-            if board.ai_move(history, lookup_handicap(game_id, whose_turn)):
+            if (move := board.ai_move(history, lookup_handicap(game_id, whose_turn))[0]):
                 make_move(game_id, move, board, history, extra)
         return {**ret, **times(game_id, whose_turn)}
     else:
@@ -412,10 +411,10 @@ def error_handler(e):
 
 @app.route("/move", methods=['POST'])
 def move():
-    try:
+    #try:
         return move_inner()
-    except Exception as e:
-       return error_handler(e)
+    #except Exception as e:
+    #   return error_handler(e)
 
     
 def legal_moves_inner():
