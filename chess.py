@@ -566,11 +566,9 @@ class Board():
         self.make_cache(history, move)
         return move, extra, None
 
-    # WIP
     # This should be called after a player moves when they are playing against an AI
     # The function queries stockfish for the best move(s), picks the best legal one, and makes it
     def ai_move(self, history, handicap):
-        # TODO
         promotion = Piece.QUEEN
         game_id = self.game_id
         whose_turn = history.whose_turn()
@@ -757,7 +755,6 @@ def evaluate_move(board, move, history, stockfish):
     try:
         stockfish.set_fen_position(fen_str)
         stockfish.get_board_visual()
-        print("evaluating above board")
         evaluation = stockfish.get_evaluation()
         n = 10000 if evaluation['type'] == 'cp' else 1
         return move, evaluation['value']/n

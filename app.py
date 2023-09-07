@@ -229,6 +229,11 @@ def new_game():
     for color in Color:
         rset(opt_key(color), 'True', game_id=game_id)
     rset('other_player', playerColor.other().value, game_id=game_id)
+    if rget('ai', game_id=game_id) == 'White':
+        board = Board.of_game_id(game_id)
+        history = History.of_game_id(game_id)
+        if (ret := board.ai_move(history, lookup_handicap(game_id, Color.WHITE))):
+                make_move(game_id, ret[0], board, history, ret[1])
     return {'success': True, 'gameId': game_id, 'color': playerColor.value}
 
 @app.route("/public_games", methods=['GET'])
@@ -382,7 +387,7 @@ def move_inner():
     game_id = request.json.get('gameId')
     ignore_other_player_check = request.json.get('ignoreOtherPlayerCheck')
     promotion = make_promotion_arg(request.json.get('promotion'))
-    if rget('other_player', game_id=game_id) and not ignore_other_player_check:
+    if rget('other_player', game_id=game_id) and not ignore_other_player_check and not rget('ai', game_id=game_id):
         return {'success': False, 'error': 'Other player has not joined'}
     start = Square(request.json.get('start').upper())
     stop = Square(request.json.get('stop').upper())
@@ -396,8 +401,7 @@ def move_inner():
         ret = make_move(game_id, move, board, history, extra)
         whose_turn = whose_turn.other()
         if ('winner' not in ret) and rget('ai', game_id=game_id) == whose_turn.value:
-            # TO DO: If they're playing against an AI, make the AI move
-            if (move := board.ai_move(history, lookup_handicap(game_id, whose_turn))[0]):
+            if (move, extra, error := board.ai_move(history, lookup_handicap(game_id, whose_turn))):
                 make_move(game_id, move, board, history, extra)
         return {**ret, **times(game_id, whose_turn)}
     else:
@@ -412,17 +416,17 @@ def error_handler(e):
 
 @app.route("/move", methods=['POST'])
 def move():
-    #try:
+    try:
         return move_inner()
-    #except Exception as e:
-    #   return error_handler(e)
+    except Exception as e:
+       return error_handler(e)
 
     
 def legal_moves_inner():
     game_id = request.args.get('gameId')
     ignore_other_player_check = request.args.get('ignoreOtherPlayerCheck')
     ignore_other_player_check = ignore_other_player_check and ignore_other_player_check.lower() == 'true'
-    if rget('other_player', game_id=game_id) and not ignore_other_player_check:
+    if rget('other_player', game_id=game_id) and not ignore_other_player_check and not rget('ai', game_id=game_id):
         return {'success': False, 'error': 'Other player has not joined'}
     start = Square(request.args.get('start').upper())
     board = Board.of_game_id(game_id)
