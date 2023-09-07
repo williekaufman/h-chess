@@ -566,7 +566,7 @@ class Board():
         # This sets all the values that only change on a move
         self.make_cache(history, move)
         return move, extra, None
-    
+
     # WIP
     # This should be called after a player moves when they are playing against an AI
     # The function queries stockfish for the best move(s), picks the best legal one, and makes it
@@ -579,27 +579,14 @@ class Board():
         f = lambda board, square: king_pos.value in board.legal_moves(square, history, whose_turn, handicap)
         if (x := self.is_attacked(self.cache.kings[whose_turn.other()], whose_turn, history, filter=f)):
             return self.move(x, king_pos, whose_turn, handicap, history, promote_to=Piece.KNIGHT)
-        # TO DO: Initialize stockfish and set the position correctly -- this is broken right now
         stockfish = Stockfish()
         stockfish.set_depth(8)
         fen_str = self.to_fen(history)
         if stockfish.is_fen_valid(fen_str):
             stockfish.set_fen_position(fen_str) 
         else:
-            stockfish.set_depth(5)
-            potential_moves = [] 
-            for square in Square:
-                potential_moves.extend([(square, Square(x)) for x in self.legal_moves(square, history, whose_turn, handicap)])
-            potential_moves = [evaluate_move(self, move, history.copy(), stockfish) for move in potential_moves]
-            potential_moves = [move for move in potential_moves if move]
-            stockfish.set_depth(8)
-            assert potential_moves
-            potential_moves.sort(key=lambda x: x[1], reverse=(whose_turn==Color.WHITE))
-            best_move = potential_moves[0][0]
-            return self.move(best_move.start, best_move.stop, whose_turn, handicap, history)
-            # Shouldn't be reachable
-            assert False
-
+            return make_move_in_weird_case(self, history, whose_turn, handicap, stockfish)
+        
         # This function should only be called when it's the AI's turn
         assert rget('ai', game_id=game_id) == whose_turn.value
 
@@ -623,8 +610,9 @@ class Board():
                 j += 5
             # If we can't look deeper b/c we ran out of stockfish moves, then stockfish has no legal moves
             else:
-                # shouldn't be reachable
-                assert False
+                # This is reachable currently if the AI is in check and it would have a legal move to get out of check in 
+                # regular chess, but its stopped by the handicap
+                return make_move_in_weird_case(self, history, whose_turn, handicap, stockfish)
 
     def legal_moves(self, start, history, whose_turn, handicap=None, promote_to=Piece.QUEEN):
         assert type(start) == Square
@@ -770,5 +758,24 @@ def evaluate_move(board, move, history, stockfish):
         evaluation = stockfish.get_evaluation()
         n = 10000 if 'cp' in evaluation else 1
         return move, evaluation['value']/n
-    return None
+    return move, None
 
+
+def make_move_in_weird_case(board, history, whose_turn, handicap, stockfish):
+    stockfish.set_depth(5)
+    potential_moves = []
+    for square in Square:
+        potential_moves.extend([(square, Square(x)) for x in board.legal_moves(
+            square, history, whose_turn, handicap)])
+    potential_moves = [evaluate_move(
+        board, move, history.copy(), stockfish) for move in potential_moves]
+    # No moves it can evaluate, probably someone's in checkmate
+    if not [move for move in potential_moves if move[1]]:
+        best_move = random.choice(potential_moves)[0]
+        return board.move(best_move.start, best_move.stop, whose_turn, handicap, history)
+    potential_moves = [move for move in potential_moves if move[1]]
+    stockfish.set_depth(8)
+    potential_moves.sort(
+        key=lambda x: x[1], reverse=(whose_turn == Color.WHITE))
+    best_move = potential_moves[0][0]
+    return board.move(best_move.start, best_move.stop, whose_turn, handicap, history)
