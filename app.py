@@ -373,7 +373,7 @@ def make_move(game_id, move, board, history, extra):
     if winner:
         rset('winner', winner.value, game_id=game_id)
         ret['winner'] = winner.value
-    
+
     # This tells the frontend to pull down the new state
     socketio.emit('update', { 'color': whose_turn.value }, room=game_id)
     return ret
@@ -396,6 +396,7 @@ def move_inner():
         ret = make_move(game_id, move, board, history, extra)
         whose_turn = whose_turn.other()
         if ('winner' not in ret) and rget('ai', game_id=game_id) == whose_turn.value:
+            # TO DO: If they're playing against an AI, make the AI move
             if (move := board.ai_move(history, lookup_handicap(game_id, whose_turn))[0]):
                 make_move(game_id, move, board, history, extra)
         return {**ret, **times(game_id, whose_turn)}
