@@ -752,6 +752,8 @@ def evaluate_move(board, move, history, stockfish):
     board, move = try_move(board, move[0], move[1], history, return_move=True)
     history.add(move)
     fen_str = board.to_fen(history)
+    # For some reason this is way more performant than 
+    # stockfish.is_fen_valid
     try:
         stockfish.set_fen_position(fen_str)
         evaluation = stockfish.get_evaluation()
