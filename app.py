@@ -416,10 +416,13 @@ def error_handler(e):
 
 @app.route("/move", methods=['POST'])
 def move():
-    try:
+    if not LOCAL:
+        try:
+            return move_inner()
+        except Exception as e:
+            return error_handler(e)
+    else:
         return move_inner()
-    except Exception as e:
-       return error_handler(e)
 
     
 def legal_moves_inner():
