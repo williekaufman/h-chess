@@ -460,7 +460,7 @@ class Board():
         empty_count = 0
 
         for i, char in enumerate(s):
-            if char == ' ':  # assuming empty square is represented by a dot
+            if char == ' ':
                 empty_count += 1
             else:
                 if empty_count:
@@ -494,7 +494,6 @@ class Board():
 
         return ' '.join(ret)
 
-        
 
     def capture(self, start, stop, history):
         return self.capture_outer(start, stop, history)[0]
@@ -753,12 +752,13 @@ def evaluate_move(board, move, history, stockfish):
     board, move = try_move(board, move[0], move[1], history, return_move=True)
     history.add(move)
     fen_str = board.to_fen(history)
-    if stockfish.is_fen_valid(fen_str):
+    try:
         stockfish.set_fen_position(fen_str)
         evaluation = stockfish.get_evaluation()
         n = 10000 if evaluation['type'] == 'cp' else 1
         return move, evaluation['value']/n
-    return move, None
+    except:
+        return move, None
 
 
 def make_move_in_weird_case(board, history, whose_turn, handicap, stockfish):
