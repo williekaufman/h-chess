@@ -756,7 +756,7 @@ def evaluate_move(board, move, history, stockfish):
     if stockfish.is_fen_valid(fen_str):
         stockfish.set_fen_position(fen_str)
         evaluation = stockfish.get_evaluation()
-        n = 10000 if 'cp' in evaluation else 1
+        n = 10000 if evaluation['type'] == 'cp' else 1
         return move, evaluation['value']/n
     return move, None
 
