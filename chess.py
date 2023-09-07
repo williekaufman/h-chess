@@ -560,10 +560,7 @@ class Board():
             self.set(stop, ColoredPiece(piece.color, Piece(promotion)))
             extra.append(
                 (stop.value, f'{piece.color.value.lower()}{promotion}'))
-        # TODO -- check = 't' if the king is in check at the end of the move
-        # self.in_check[Color.WHITE] = self.calculate_check apking = self.loc(ColoredPiece(whose_turn, Piece.KING))
-        # napking = self.loc(ColoredPiece(whose_turn), Piece.KING)
-        check = 'f'
+        move.check = self.is_attacked(self.cache.kings[whose_turn.other()], whose_turn, history)
         # This sets all the values that only change on a move
         self.make_cache(history, move)
         return move, extra, None

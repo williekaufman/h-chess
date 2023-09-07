@@ -204,12 +204,10 @@ def conscientious_objectors(start, stop, inputs):
     board, history = inputs.board, inputs.history
     return not (board.get(start).piece == Piece.PAWN and board.capture(start, stop, history))
 
-
 def outflanked(start, stop, inputs):
     board, history = inputs.board, inputs.history
-    stop_piece = board.get(stop)
     return not ((stop.file() == File.A or stop.file() == File.H) and
-                stop_piece and stop_piece.color != history.whose_turn())
+                board.capture(start, stop, history))
 
 
 def no_shuffling(start, stop, inputs):
@@ -960,6 +958,58 @@ def velociraptor(start, stop, inputs):
         return captured_piece.piece in [move.piece.piece for move in opponent_moves[-3:]]
     return True
 
+def ides_of_mate(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    p = history.pieces_captured(history.whose_turn().other())
+    points_captured = sum([x.points() * p[x] for x in p])
+    if history.last_move() and history.last_move().capture:
+        try_opt(
+                history.whose_turn(),
+                board.game_id,
+                lambda : whiteboard(f'Your opponent has captured {str(points_captured)} points', history.whose_turn(), board.game_id),
+            )
+    return  points_captured < 15
+
+
+def heavy_delays(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    piece = board.get(start).piece
+    turn_number = len(history.player_moves(history.whose_turn())) + 1
+    if turn_number <= 10:
+        try_opt(
+                history.whose_turn(),
+                board.game_id,
+                lambda : whiteboard(f'Move {str(turn_number)}', history.whose_turn(), board.game_id),
+            )
+    return piece not in [Piece.ROOK, Piece.QUEEN] or turn_number >= 10
+
+def underpromoter(start, stop, inputs):
+    is_pawn = inputs.board.get(start).piece == Piece.PAWN
+    is_back_rank = stop.rank() == Rank.home(inputs.history.whose_turn().other())
+    return not is_pawn or not is_back_rank or inputs.promote_to == Piece.KNIGHT
+
+def rook_rift(start, stop, inputs):
+    return not inputs.board.cache.rooks_have_connected[inputs.history.whose_turn()]
+
+def passive_play(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    turn_number = len(history.player_moves(history.whose_turn())) + 1
+    if turn_number <= 10:
+        try_opt(
+                history.whose_turn(),
+                board.game_id,
+                lambda : whiteboard(f'Move {str(turn_number)}', history.whose_turn(), board.game_id),
+            )
+    return not board.capture(start, stop, history) or turn_number >= 10
+
+def mate_in_one(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    captured_piece = board.capture(start, stop, history)
+    was_check = len(history.history) >= 2 and history.history[-2].check
+    print(was_check)
+    return len(history.history) < 2 or (not history.history[-2].check) or (captured_piece and captured_piece.piece == Piece.KING)
+
+
 # Comment so I can search for the bottom of the handicaps
 
 
@@ -1063,6 +1113,12 @@ tested_handicaps = {
     "Disguised queen: Your queen is secretly either a bishop or a rook. Once you move it like one, you can't move it like the other": (queen_disguise, 2),
     "Noble steed: Your non-Knight pieces can only move if they're next to one of your knights": (noble_steed, 8),
     "Velociraptor: You can only capture a piece if your opponent has moved a piece of that type in the last 3 moves": (velociraptor, 4),
+    "Ides of Mate: If your opponent captures 15 points worth of pieces, you lose": (ides_of_mate, 3),
+    "Heavy delays: You can't move heavies (rooks and queens) until move 10": (heavy_delays, 3),
+    "Underpromoter: You can only promote pawns to knights": (underpromoter, 2),
+    "Rook rift: If you connect your rooks, you lose": (rook_rift, 2),
+    "Passive play: You cannot capture until move 10": (passive_play, 2),
+    "Mate in 1: If you check the opponent, you must take their king next move or lose the game": (mate_in_one, 3),
 }
 
 white_only_handicaps = {}
@@ -1146,8 +1202,8 @@ def get_handicaps(config):
     if not LOCAL:
         return [pick_handicap(config[color], color) for color in Color]
     else:
-        return [pick_handicap(config[color], color) for color in Color]
-        # return descriptions[octomom], descriptions[no_handicap]
+        # return [pick_handicap(config[color], color) for color in Color]
+        return descriptions[mate_in_one], descriptions[no_handicap]
 
 def lookup_handicap(game_id, color):
     assert color in Color
