@@ -4,7 +4,7 @@ from redis_utils import rget, rset
 from enum import Enum
 from color import Color, Result
 from squares import Square, Rank, File
-from helpers import toast, whiteboard, try_move
+from helpers import toast, whiteboard, try_move, stockfish_deep, stockfish_shallow
 from collections import Counter
 import json
 import math
@@ -579,7 +579,7 @@ class Board():
         if (x := self.is_attacked(self.cache.kings[whose_turn.other()], whose_turn, history, filter=f)):
             return self.move(x, king_pos, whose_turn, handicap, history, promote_to=Piece.KNIGHT)
         stockfish = Stockfish()
-        stockfish.set_depth(8)
+        stockfish_deep(stockfish)
         fen_str = self.to_fen(history)
         if stockfish.is_fen_valid(fen_str):
             stockfish.set_fen_position(fen_str) 
@@ -764,7 +764,7 @@ def evaluate_move(board, move, history, stockfish):
 
 
 def make_move_in_weird_case(board, history, whose_turn, handicap, stockfish):
-    stockfish.set_depth(5)
+    stockfish_shallow(stockfish)
     potential_moves = []
     for square in Square:
         potential_moves.extend([(square, Square(x)) for x in board.legal_moves(
@@ -776,7 +776,7 @@ def make_move_in_weird_case(board, history, whose_turn, handicap, stockfish):
         best_move = random.choice(potential_moves)[0]
         return board.move(best_move.start, best_move.stop, whose_turn, handicap, history)
     potential_moves = [move for move in potential_moves if move[1]]
-    stockfish.set_depth(8)
+    stockfish_deep(stockfish)
     potential_moves.sort(
         key=lambda x: x[1], reverse=(whose_turn == Color.WHITE))
     best_move = potential_moves[0][0]

@@ -2,7 +2,11 @@ from sockets import socketio
 from redis_utils import rget, rset
 import datetime
 
+def stockfish_deep(stockfish):
+    stockfish.set_depth(12)
 
+def stockfish_shallow(stockfish):
+    stockfish.set_depth(6)
 
 def try_move(board, start, stop, history, promote_to=None, return_move=False):
     new_board = board.copy()

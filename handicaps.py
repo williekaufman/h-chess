@@ -1037,7 +1037,6 @@ tested_handicaps = {
     "Outcast: You can't move into the middle two ranks and files": (outcast, 7),
     "Final Countdown: At the end of move 10, you lose the game": (final_countdown, 8),
     "Lead by example: You can't move a non-pawn, non-king piece to a rank ahead of your king": (lead_by_example, 8),
-    "Knight errant: You can only move knights and pieces adjacent to knights": (knight_errant, 7),
     "Slippery: You can't move a piece less far than it could move": (slippery, 6),
     "Monkey see: You can't capture with pieces that your opponent hasn't captured with yet": (monkey_see, 7),
     "Rook buddies: You can't move your rooks until you've connected them": (rook_buddies, 3),
