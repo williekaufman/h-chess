@@ -97,10 +97,12 @@ class Move():
 
 def get_castling_rights(history):
     ret = {'K': True, 'Q': True, 'k': True, 'q': True}
-    d = {'a1': 'Q', 'h1': 'K', 'a8': 'q', 'h8': 'k'}
+    d = {'A1': 'Q', 'H1': 'K', 'A8': 'q', 'H8': 'k'}
     for move in history.history:
         if move.start.value in d:
             ret[d[move.start.value]] = False
+        if move.stop.value in d:
+            ret[d[move.stop.value]] = False 
         elif move.piece.piece == Piece.KING:
             if move.piece.color == Color.WHITE:
                 ret['K'] = False
@@ -600,7 +602,6 @@ class Board():
                     # We've found a legal stockfish move
                     return self.move(
                         start, stop, whose_turn, handicap, history, promotion)
-                    
             # We didn't find a legal stockfish move, so we look deeper 
             if moves:
                 i += 5
