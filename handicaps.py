@@ -1009,6 +1009,22 @@ def mate_in_one(start, stop, inputs):
     print(was_check)
     return len(history.history) < 2 or (not history.history[-2].check) or (captured_piece and captured_piece.piece == Piece.KING)
 
+def light_artillery(start, stop, inputs):
+    color = inputs.history.whose_turn()
+    return inputs.board.get(start).piece not in [Piece.ROOK, Piece.QUEEN] or stop.rank().less_adv_than(Rank.Fifth if color == Color.WHITE else Rank.Fourth, color) 
+
+def grim_knights(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    captured_piece = board.capture(start, stop, history)
+    return not captured_piece or [square for square in board.loc(ColoredPiece(history.whose_turn(), Piece.KNIGHT)) if square.file() in [File.A, File.H]]
+    
+def triple_play(start, stop, inputs):
+    board, history = inputs.board, inputs.history
+    captured_piece = board.capture(start, stop, history)
+    return (not captured_piece) or (captured_piece.piece != Piece.KING) or len([square for square in board.loc(ColoredPiece(history.whose_turn(), Piece.BISHOP))]) > 2
+
+def endgame_evasion(start, stop, inputs):
+    return len([s for s in Square if inputs.board.get(s)]) >= 10
 
 # Comment so I can search for the bottom of the handicaps
 
@@ -1119,6 +1135,10 @@ tested_handicaps = {
     "Rook rift: If you connect your rooks, you lose": (rook_rift, 2),
     "Passive play: You cannot capture until move 10": (passive_play, 2),
     "Mate in 1: If you check the opponent, you must take their king next move or lose the game": (mate_in_one, 3),
+    "Light artillery: You heavies cannot move onto your opponent's side of the board": (light_artillery, 5), 
+    "Grim Knights: You can only capture if you have a knight on the rim (A or H file)": (grim_knights, 5),
+    "Triple play: You can't take their king unless you have 3 bishops": (triple_play, 5),
+    "Endgame evasion: If there are fewer than 10 pieces on the board, you lose": (endgame_evasion, 3),
 }
 
 white_only_handicaps = {}
@@ -1203,7 +1223,7 @@ def get_handicaps(config):
         return [pick_handicap(config[color], color) for color in Color]
     else:
         # return [pick_handicap(config[color], color) for color in Color]
-        return descriptions[mate_in_one], descriptions[no_handicap]
+        return descriptions[endgame_evasion], descriptions[no_handicap]
 
 def lookup_handicap(game_id, color):
     assert color in Color
