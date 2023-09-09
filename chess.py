@@ -591,6 +591,12 @@ class Board():
         i = 0
         j = 5
         while(True):
+            print(stockfish.get_board_visual())
+            print(stockfish.is_fen_valid(stockfish.get_fen_position()))
+            print(stockfish.get_best_move())
+            for k in range(5):
+                print(k+1)
+                print(stockfish.get_top_moves(k+1))
             # These are formatted like 'e2e4' 
             moves = [(m['Move'][:2].upper(), m['Move'][2:4].upper()) for m in stockfish.get_top_moves(j)[i:]]
             for (start, stop) in moves:

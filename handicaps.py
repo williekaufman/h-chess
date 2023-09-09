@@ -1222,8 +1222,8 @@ def get_handicaps(config):
     if not LOCAL:
         return [pick_handicap(config[color], color) for color in Color]
     else:
-        # return [pick_handicap(config[color], color) for color in Color]
-        return descriptions[endgame_evasion], descriptions[no_handicap]
+        return [pick_handicap(config[color], color) for color in Color]
+        # return descriptions[endgame_evasion], descriptions[no_handicap]
 
 def lookup_handicap(game_id, color):
     assert color in Color
