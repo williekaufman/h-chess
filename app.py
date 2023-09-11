@@ -9,12 +9,12 @@ from settings import LOCAL
 from secrets import compare_digest, token_hex
 from chess import Color, Piece, Result, Board, History, starting_board
 from squares import Square
-from handicaps import handicaps, lookup_handicap, get_handicaps, tested_handicaps, test_all_handicaps, Difficulty, get_handicap_elo, set_handicap_elo, instantiate_handicap_elos
+from handicaps import get_handicap_games_played, handicaps, lookup_handicap, get_handicaps, tested_handicaps, test_all_handicaps, Difficulty, get_handicap_elo, set_handicap_elo, instantiate_handicap_elos
 import time
 import random
 import json
 from sockets import app, socketio
-from helpers import toast, whiteboard, opt_key
+from helpers import int_with_default, toast, whiteboard, opt_key
 import signal
 import sys
 
@@ -88,22 +88,34 @@ def update_elos(handicaps, players, result):
         result = 0.5
     white_player_elo = get_player_elo(players[Color.WHITE])
     black_player_elo = get_player_elo(players[Color.BLACK])
+    white_player_games_played = get_player_games_played(players[Color.WHITE])
+    black_player_games_played = get_player_games_played(players[Color.BLACK])
     white_handicap_elo = get_handicap_elo(handicaps[Color.WHITE])
     black_handicap_elo = get_handicap_elo(handicaps[Color.BLACK])
+    white_handicap_games_played = get_handicap_games_played(handicaps[Color.WHITE])
+    black_handicap_games_played = get_handicap_games_played(handicaps[Color.BLACK])
     white_elo = white_player_elo + white_handicap_elo
     black_elo = black_player_elo + black_handicap_elo
+    white_player_provisional_multiplier = max(1, 20 - white_player_games_played)
+    black_player_provisional_multiplier = max(1, 20 - black_player_games_played)
+    white_handicap_provisional_multiplier = max(1, 20 - white_handicap_games_played)
+    black_handicap_provisional_multiplier = max(1, 20 - black_handicap_games_played)
     expected = 1 / (1 + 10 ** ((black_elo - white_elo) / 400))
     adjustment = 32 * (result - expected)
-    set_handicap_elo(handicaps[Color.WHITE], white_handicap_elo + adjustment)
-    set_handicap_elo(handicaps[Color.BLACK], black_handicap_elo - adjustment)
-    set_player_elo(players[Color.WHITE], white_player_elo + adjustment)
-    set_player_elo(players[Color.BLACK], black_player_elo - adjustment)
+    set_handicap_elo(handicaps[Color.WHITE], white_handicap_elo + adjustment * white_player_provisional_multiplier)
+    set_handicap_elo(handicaps[Color.BLACK], black_handicap_elo - adjustment * black_player_provisional_multiplier)
+    set_player_elo(players[Color.WHITE], white_player_elo + adjustment * white_handicap_provisional_multiplier)
+    set_player_elo(players[Color.BLACK], black_player_elo - adjustment * black_handicap_provisional_multiplier)
 
 def get_player_elo(username):
     try:
         return float(rget(username, game_id='player_elos'))
-    except:
+    except Exception:
         return 1200
+    
+def get_player_games_played(username):
+    raw_games_played = rget(username, game_id='player_games_played')
+    return int_with_default(raw_games_played, 0)
 
 def set_player_elo(username, elo):
     rset(username, elo, game_id='player_elos')
