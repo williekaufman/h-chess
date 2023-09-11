@@ -9,7 +9,7 @@ from settings import LOCAL
 from secrets import compare_digest, token_hex
 from chess import Color, Piece, Result, Board, History, starting_board
 from squares import Square
-from handicaps import handicaps, lookup_handicap, get_handicaps, tested_handicaps, test_all_handicaps, Difficulty
+from handicaps import handicaps, lookup_handicap, get_handicaps, tested_handicaps, test_all_handicaps, Difficulty, get_handicap_elo, set_handicap_elo, instantiate_handicap_elos
 import time
 import random
 import json
@@ -20,8 +20,6 @@ import sys
 
 
 CORS(app)
-
-
 
 def new_game_id():
     return token_hex(16)
@@ -49,8 +47,6 @@ def update_time(whose_turn, game_id):
             return whose_turn.other()
     elif whose_turn == Color.BLACK:
         rset('last_move', now, game_id=game_id)
-
-
 
 def times(game_id, whose_turn):
     last_move = rget('last_move', game_id=game_id)
@@ -84,6 +80,48 @@ def times(game_id, whose_turn):
         'blackTime': blackTime,
         'ticking': bool(last_move),
     }
+
+def update_elos(handicaps, players, result):
+    if result == Result.WHITE_WINS:
+        result = 1
+    elif result == Result.BLACK_WINS:
+        result = 0
+    else:
+        result = 0.5
+    white_player_elo = get_player_elo(players[Color.WHITE])
+    black_player_elo = get_player_elo(players[Color.BLACK])
+    white_handicap_elo = get_handicap_elo(handicaps[Color.WHITE])
+    black_handicap_elo = get_handicap_elo(handicaps[Color.BLACK])
+    white_elo = white_player_elo + white_handicap_elo
+    black_elo = black_player_elo + black_handicap_elo
+    expected = 1 / (1 + 10 ** ((black_elo - white_elo) / 400))
+    adjustment = 32 * (result - expected)
+    set_handicap_elo(handicaps[Color.WHITE], white_handicap_elo + adjustment)
+    set_handicap_elo(handicaps[Color.BLACK], black_handicap_elo - adjustment)
+    set_player_elo(players[Color.WHITE], white_player_elo + adjustment)
+    set_player_elo(players[Color.BLACK], black_player_elo - adjustment)
+
+def get_player_elo(username):
+    try:
+        return float(rget(username, game_id='player_elos'))
+    except:
+        return 1200
+
+def set_player_elo(username, elo):
+    rset(username, elo, game_id='player_elos')
+
+def set_winner(game_id, result):
+    handicaps = {color: rget(f'{color.value}_handicap', game_id=game_id) for color in Color}
+    players = {color: rget(f'{color.value}_username', game_id=game_id) for color in Color}
+    if players[Color.WHITE] and players[Color.BLACK]:
+        update_elos(handicaps, players, result)
+    rset('winner', result.value, game_id=game_id)
+
+def get_winner(game_id):
+    try:
+        return Result(rget('winner', game_id=game_id))
+    except:
+        return None
 
 def make_promotion_arg(promotion):
     try:
@@ -197,7 +235,7 @@ def new_game():
         logon(username)
         rset(last_game_key(username), game_id, game_id=None)
         rset(last_color_key(username), playerColor.value, game_id=None)
-        rset('username', username, game_id=game_id)
+        rset(f'{playerColor.value}_username', username, game_id=game_id)
         if request.json.get('public'):
             rset('public', 'True', game_id=game_id)
     if (timeControl := float_arg(request.json.get('timeControl'))):
@@ -271,6 +309,7 @@ def join_game():
         logon(username)
         rset(last_game_key(username), game_id, game_id=None)
         rset(last_color_key(username), color, game_id=None)
+        rset(f'{color}_username', username, game_id=game_id)
     set_other_player and toast(f"{username or 'anonymous player'} joined!", game_id=game_id)
     if winner:
         return {'success': True, 'board': board.to_dict(), 'winner': winner, 'color': color}
@@ -328,8 +367,23 @@ def get_both_handicaps():
 
 @app.route("/all_handicaps", methods=['GET'])
 def get_all_handicaps():
-    return {'success': True, 'handicaps': [k for k in tested_handicaps.keys()]}
+    ret = [k for k in tested_handicaps.keys()]
+    if request.args.get('includeElos'):
+        ret = {k: get_handicap_elo(k) for k in ret}
+    return {'success': True, 'handicaps': ret}
 
+@app.route("/elo", methods=['GET'])
+def get_elo():
+    username = request.args.get('username')
+    if not username:
+        return {'success': False, 'error': 'No username provided'}
+    return {'success': True, 'elo': get_player_elo(username)}
+
+@app.route("/elo/all", methods=['GET'])
+def get_all_elos():
+    keys = [k.decode('utf-8').split(':')[1] for k in redis.keys('*player_elos')]
+    elos = {k: get_player_elo(k) for k in keys}
+    return {'success': True, 'elos': elos}
 
 @app.route("/board", methods=['GET'])
 def get_board():
@@ -376,9 +430,8 @@ def make_move(game_id, move, board, history, extra):
     winner = winner_on_time or board.winner(whose_turn, history, handicap)
     ret = {'success': True, 'extra': extra, 'whoseTurn': whose_turn.value}
     if winner:
-        rset('winner', winner.value, game_id=game_id)
+        set_winner(game_id, Result(winner))
         ret['winner'] = winner.value
-
     # This tells the frontend to pull down the new state
     socketio.emit('update', { 'color': whose_turn.value }, room=game_id)
     return ret
@@ -501,7 +554,7 @@ def accept_draw():
         return {'success': False, 'error': 'Draw offer not live - expires when either player makes a move'}
     if rget('winner', game_id=game_id):
         return {'success': False, 'error': 'Game already over'}
-    rset('winner', Result.AGREEMENT.value, game_id=game_id)
+    set_winner(game_id, Result.AGREEMENT)
     socketio.emit('update', {'color': 'both'}, room=game_id)
     return {'success': True}
 
@@ -517,7 +570,7 @@ def resign():
         return {'success': False, 'error': 'No game id or color provided'}
     if rget('winner', game_id=game_id):
         return {'success': False, 'error': 'Game already over'}
-    rset('winner', color.other().value, game_id=game_id)
+    set_winner(game_id, Result(color.other().value))
     whiteboard(f'{color.value} resigned', color.other(), game_id=game_id)
     socketio.emit('update', {'color': 'both'}, room=game_id)
     return { 'success': True }
@@ -594,6 +647,7 @@ def run_sweep():
         time.sleep(1800)
 
 if __name__ == '__main__':
+    instantiate_handicap_elos()
     try:
         test_all_handicaps()
     except Exception as e:

@@ -1006,8 +1006,7 @@ def mate_in_one(start, stop, inputs):
     board, history = inputs.board, inputs.history
     captured_piece = board.capture(start, stop, history)
     was_check = len(history.history) >= 2 and history.history[-2].check
-    print(was_check)
-    return len(history.history) < 2 or (not history.history[-2].check) or (captured_piece and captured_piece.piece == Piece.KING)
+    return (not was_check) or (captured_piece and captured_piece.piece == Piece.KING)
 
 def light_artillery(start, stop, inputs):
     color = inputs.history.whose_turn()
@@ -1017,7 +1016,7 @@ def grim_knights(start, stop, inputs):
     board, history = inputs.board, inputs.history
     captured_piece = board.capture(start, stop, history)
     return not captured_piece or [square for square in board.loc(ColoredPiece(history.whose_turn(), Piece.KNIGHT)) if square.file() in [File.A, File.H]]
-    
+
 def triple_play(start, stop, inputs):
     board, history = inputs.board, inputs.history
     captured_piece = board.capture(start, stop, history)
@@ -1027,7 +1026,6 @@ def endgame_evasion(start, stop, inputs):
     return len([s for s in Square if inputs.board.get(s)]) >= 10
 
 # Comment so I can search for the bottom of the handicaps
-
 
 # number is how bad the handicap is, 1-10
 tested_handicaps = {
@@ -1216,6 +1214,21 @@ def test_all_handicaps():
             s1, inputs.history, Color.WHITE)))
         v[0](s1, s2, inputs)
 
+def instantiate_handicap_elos():
+    for handicap in handicaps.keys():
+        if not get_handicap_elo(handicap):
+            set_handicap_elo(handicap, 1200)
+
+def get_handicap_elo(handicap):
+    key = handicap.split(':')[0] if ':' in handicap else handicap
+    try:
+        return float(rget(key, game_id='handicap_elos'))
+    except:
+        return None
+
+def set_handicap_elo(handicap, elo):
+    key = handicap.split(':')[0] if ':' in handicap else handicap
+    rset(key, str(elo), game_id='handicap_elos') 
 
 def get_handicaps(config):
     # So I can't forget to undo anything weird
@@ -1223,7 +1236,7 @@ def get_handicaps(config):
         return [pick_handicap(config[color], color) for color in Color]
     else:
         return [pick_handicap(config[color], color) for color in Color]
-        # return descriptions[endgame_evasion], descriptions[no_handicap]
+        # return descriptions[mate_in_one], descriptions[no_handicap]
 
 def lookup_handicap(game_id, color):
     assert color in Color
