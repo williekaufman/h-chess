@@ -96,10 +96,10 @@ def update_elos(handicaps, players, result):
     black_handicap_games_played = get_handicap_games_played(handicaps[Color.BLACK])
     white_elo = white_player_elo + white_handicap_elo
     black_elo = black_player_elo + black_handicap_elo
-    white_player_provisional_multiplier = max(1, 20 - white_player_games_played / 2)
-    black_player_provisional_multiplier = max(1, 20 - black_player_games_played / 2)
-    white_handicap_provisional_multiplier = max(1, 20 - white_handicap_games_played / 2)
-    black_handicap_provisional_multiplier = max(1, 20 - black_handicap_games_played / 2)
+    white_player_provisional_multiplier = max(1, 10 - white_player_games_played / 4)
+    black_player_provisional_multiplier = max(1, 10 - black_player_games_played / 4)
+    white_handicap_provisional_multiplier = max(1, 10 - white_handicap_games_played / 4)
+    black_handicap_provisional_multiplier = max(1, 10 - black_handicap_games_played / 4)
     expected = 1 / (1 + 10 ** ((black_elo - white_elo) / 400))
     adjustment = 32 * (result - expected)
     set_handicap_elo(handicaps[Color.WHITE], white_handicap_elo + adjustment * white_player_provisional_multiplier)
