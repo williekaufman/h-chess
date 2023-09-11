@@ -1234,7 +1234,7 @@ def get_handicap_games_played(handicap):
 
 def increment_handicap_games_played(handicap):
     key = handicap.split(':')[0] if ':' in handicap else handicap
-    rset(key, get_handicap_games_played(handicap) + 1, game_id='handicap_elos')
+    rset(f'{key}_games_played', get_handicap_games_played(handicap) + 1, game_id='handicap_elos')
 
 
 def set_handicap_elo(handicap, elo):
