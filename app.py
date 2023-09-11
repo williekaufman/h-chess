@@ -9,7 +9,7 @@ from settings import LOCAL
 from secrets import compare_digest, token_hex
 from chess import Color, Piece, Result, Board, History, starting_board
 from squares import Square
-from handicaps import get_handicap_games_played, handicaps, lookup_handicap, get_handicaps, tested_handicaps, test_all_handicaps, Difficulty, get_handicap_elo, set_handicap_elo, instantiate_handicap_elos
+from handicaps import get_handicap_games_played, handicaps, increment_handicap_games_played, lookup_handicap, get_handicaps, tested_handicaps, test_all_handicaps, Difficulty, get_handicap_elo, set_handicap_elo, instantiate_handicap_elos
 import time
 import random
 import json
@@ -106,12 +106,20 @@ def update_elos(handicaps, players, result):
     set_handicap_elo(handicaps[Color.BLACK], black_handicap_elo - adjustment * black_player_provisional_multiplier)
     set_player_elo(players[Color.WHITE], white_player_elo + adjustment * white_handicap_provisional_multiplier)
     set_player_elo(players[Color.BLACK], black_player_elo - adjustment * black_handicap_provisional_multiplier)
+    increment_played_games_played(players[Color.WHITE])
+    increment_played_games_played(players[Color.BLACK])
+    increment_handicap_games_played(handicaps[Color.WHITE])
+    increment_handicap_games_played(handicaps[Color.BLACK])
 
 def get_player_elo(username):
     try:
         return float(rget(username, game_id='player_elos'))
     except Exception:
         return 1200
+    
+def increment_played_games_played(username):
+    rset(username, get_player_games_played(username) + 1, game_id='player_games_played')
+    
     
 def get_player_games_played(username):
     raw_games_played = rget(username, game_id='player_games_played')

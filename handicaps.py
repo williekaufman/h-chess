@@ -2,7 +2,7 @@ from redis_utils import rset, rget
 from squares import Square, Rank, File
 from chess import Color, Piece, ColoredPiece, HandicapInputs, starting_board, empty_board, History, CaptureType, queen_moved_like
 from settings import LOCAL
-from helpers import toast, whiteboard, try_move, get_adjacent_squares, get_orthogonally_adjacent_squares, get_diagonally_adjacent_squares, two_letter_words, try_opt, whiteboardify_pieces 
+from helpers import int_with_default, toast, whiteboard, try_move, get_adjacent_squares, get_orthogonally_adjacent_squares, get_diagonally_adjacent_squares, two_letter_words, try_opt, whiteboardify_pieces 
 from enum import Enum
 from collections import defaultdict, Counter
 import random
@@ -1226,16 +1226,15 @@ def get_handicap_elo(handicap):
     except Exception:
         return None
 
-def int_with_default(s, default):
-    try:
-        return int(s)
-    except Exception:
-        return default
-
 def get_handicap_games_played(handicap):
     key = handicap.split(':')[0] if ':' in handicap else handicap
     raw_games_played = rget(f'{key}_games_played', game_id='handicap_elos')
     return int_with_default(raw_games_played, 0)
+
+
+def increment_handicap_games_played(handicap):
+    key = handicap.split(':')[0] if ':' in handicap else handicap
+    rset(key, get_handicap_games_played(handicap) + 1, game_id='handicap_elos')
 
 
 def set_handicap_elo(handicap, elo):
