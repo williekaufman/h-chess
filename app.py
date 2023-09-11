@@ -213,6 +213,8 @@ def rejoin():
     color = rget(last_color_key(username), game_id=None)
     if not game_id or not color:
         return {'success': False, 'error': 'No game to rejoin'}
+    if get_winner(game_id):
+        return {'success': False, 'error': 'Game is over'}
     return {'success': True, 'gameId': game_id, 'color': color}
 
 def float_arg(arg, default=0):
