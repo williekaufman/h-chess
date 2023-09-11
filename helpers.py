@@ -81,6 +81,13 @@ def try_opt(color, game_id, f):
         rset(opt_key(color), '', game_id=game_id)
 
 
+def int_with_default(s, default):
+    try:
+        return int(s)
+    except Exception:
+        return default
+
+
 two_letter_words = [
     'aa', 'ab', 'ad', 'ae', 'ag', 'ah', 'ai', 'al', 'am', 'an', 'ar', 'as',
     'at', 'aw', 'ax', 'ay', 'ba', 'be', 'bi', 'bo', 'by', 'da', 'de', 'do',

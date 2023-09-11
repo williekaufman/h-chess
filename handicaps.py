@@ -1223,8 +1223,20 @@ def get_handicap_elo(handicap):
     key = handicap.split(':')[0] if ':' in handicap else handicap
     try:
         return float(rget(key, game_id='handicap_elos'))
-    except:
+    except Exception:
         return None
+
+def int_with_default(s, default):
+    try:
+        return int(s)
+    except Exception:
+        return default
+
+def get_handicap_games_played(handicap):
+    key = handicap.split(':')[0] if ':' in handicap else handicap
+    raw_games_played = rget(f'{key}_games_played', game_id='handicap_elos')
+    return int_with_default(raw_games_played, 0)
+
 
 def set_handicap_elo(handicap, elo):
     key = handicap.split(':')[0] if ':' in handicap else handicap
