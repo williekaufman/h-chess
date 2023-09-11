@@ -430,7 +430,7 @@ def make_move(game_id, move, board, history, extra):
     winner = winner_on_time or board.winner(whose_turn, history, handicap)
     ret = {'success': True, 'extra': extra, 'whoseTurn': whose_turn.value}
     if winner:
-        set_winner(game_id, Result(winner))
+        set_winner(game_id, Result(winner.value))
         ret['winner'] = winner.value
     # This tells the frontend to pull down the new state
     socketio.emit('update', { 'color': whose_turn.value }, room=game_id)
