@@ -71,6 +71,7 @@ incrementSeconds = document.getElementById('incrementSeconds');
 holdingPiece = false;
 
 joinGameButton = document.getElementById('joinGameButton');
+spectateGameButton = document.getElementById('spectateGameButton');
 joinGameModal = document.getElementById('joinGameModal')
 joinGameModalOverlay = document.getElementById('joinGameModalOverlay');
 
@@ -92,6 +93,7 @@ mostRecentFrom = null;
 mostRecentTo = null;
 
 handicapInfo = document.getElementById('handicapInfo');
+otherHandicapInfo = document.getElementById('otherHandicapInfo');
 
 whoseTurn = null;
 whoseTurnElement = document.getElementById('whoseTurn');
@@ -150,7 +152,7 @@ socket.on('message', (data) => {
 });
 
 socket.on('update', (data) => {
-    if (data['color'] === 'both' || data['color'] === color) {
+    if (data['color'] === 'both' || data['color'] === color || spectating) {
         updateState();
     }
 });
@@ -162,7 +164,7 @@ socket.on('whiteboard', (data) => {
 })
 
 socket.on('draw_offer', (data) => {
-    if (data['color'] == color) {
+    if (data['color'] == color && !spectating) {
         showToast('Your opponent offered a draw', 10);
         opponentOfferedDraw();
     }  
@@ -366,6 +368,7 @@ function processGameOver(result) {
     gameIsOver = true;
     gameResultToastElement.classList.remove('win', 'loss', 'draw');
     gameResultToastElement.style.display = 'inline-block';
+    showOpponentsHandicapButton.textContent = 'Show opponent\'s handicap';
     showOpponentsHandicapButton.style.display = 'inline-block';
     result_string = result === 'White' ? 'White wins' : result === 'Black' ? 'Black wins' : result;
     result_class = result === color ? 'win' : (result === 'Black' || result == 'White') ? 'loss' : 'draw'; 
@@ -727,9 +730,9 @@ function getBothHandicaps() {
     fetchWrapper(URL + 'both_handicaps', { 'gameId': gameId }, 'GET')
         .then((response) => response.json())
         .then((data) => {
-            handicapInfo.textContent = ''
-            handicapInfo.textContent += `White: ${data['White']}\n`;
-            handicapInfo.textContent += `Black: ${data['Black']}`;
+            handicapInfo.textContent = data['White']
+            otherHandicapInfo.style.color = 'black';
+            otherHandicapInfo.textContent = data['Black']
         });
 }
 
@@ -771,7 +774,7 @@ function invite(friend) {
 }
 
 // The logic in here and loadGame should probably be more factored out
-function watchGame(game = null, color = 'White', showBothHandicaps = true) {
+function watchGame(game = null, color = 'White') {
     game = game || gameIdInput.value;
     gameIdInput.value = '';
     if (!game) {
@@ -780,8 +783,13 @@ function watchGame(game = null, color = 'White', showBothHandicaps = true) {
     }
     closeModals();
     gameResultToastElement.style.display = 'none';
-    showOpponentsHandicapButton.style.display = 'none';
-    fetchWrapper(URL + 'watch_game', { 'gameId': game }, 'GET')
+    showOpponentsHandicapButton.textContent = 'Show other player\'s handicap';
+    showOpponentsHandicapButton.style.display = 'inline-block';
+    d = { 'gameId': game }
+    if (username) {
+        d['username'] = username;
+    }    
+    fetchWrapper(URL + 'watch_game', d, 'GET')
         .then((response) => response.json())
         .then((data) => {
             if (!data['success']) {
@@ -797,7 +805,7 @@ function watchGame(game = null, color = 'White', showBothHandicaps = true) {
             } else {
                 board.position(data['board']);
                 setWhoseTurn(data['whoseTurn']);
-                showBothHandicaps ? getBothHandicaps() : getHandicap();
+                getHandicap();
                 gameIdInput.value = '';
                 showToast('Game loaded', 3);
                 mostRecentMove = data['mostRecentMove'];
@@ -991,6 +999,10 @@ openJoinDialogButton.addEventListener('click', () => {
 
 joinGameButton.addEventListener('click', () => {
     loadGame();
+});
+
+spectateGameButton.addEventListener('click', () => {
+    watchGame();
 });
 
 resignButton.addEventListener('click', () => {

@@ -68,13 +68,11 @@ def times(game_id, whose_turn):
         if whose_turn == Color.WHITE:
             whiteTime -= time_since_last_move
             if whiteTime < 0:
-                rget('winner', game_id=game_id) or rset(
-                    'winner', 'Black', game_id=game_id)
+                set_winner(game_id, Result.BLACK_WINS)
         else:
             blackTime -= time_since_last_move
             if blackTime < 0:
-                rget('winner', game_id=game_id) or rset(
-                    'winner', 'White', game_id=game_id)
+                set_winner(game_id, Result.WHITE_WINS)
     return {
         'whiteTime': whiteTime,
         'blackTime': blackTime,
@@ -111,6 +109,8 @@ def set_player_elo(username, elo):
     rset(username, elo, game_id='player_elos')
 
 def set_winner(game_id, result):
+    if get_winner(game_id):
+        return
     handicaps = {color: rget(f'{color.value}_handicap', game_id=game_id) for color in Color}
     players = {color: rget(f'{color.value}_username', game_id=game_id) for color in Color}
     if players[Color.WHITE] and players[Color.BLACK]:
@@ -301,7 +301,6 @@ def join_game():
     if not color:
         color = rget('other_player', game_id=game_id)
         set_other_player = True
-    last_move = rget('last_move', game_id=game_id)
     if not board:
         return {'success': False, 'error': 'Invalid game id'}
     if not color:
@@ -331,13 +330,14 @@ def join_game():
 @app.route("/watch_game", methods=['GET'])
 def watch_game():
     game_id = request.args.get('gameId')
+    username = request.args.get('username')
     board = Board.of_game_id(game_id)
-    winner = rget('winner', game_id=game_id)
-    last_move = rget('last_move', game_id=game_id)
+    winner = get_winner(game_id)
     if not board:
         return {'success': False, 'error': 'Invalid game id'}
     if winner:
         return {'success': True, 'board': board.to_dict(), 'winner': winner}
+    toast(f"{username or 'anonymous player'} is spectating!", game_id=game_id)
     return {
         'success': True,
         'board': board.to_dict(),
@@ -391,7 +391,7 @@ def get_all_elos():
 def get_board():
     game_id = request.args.get('gameId')
     board = Board.of_game_id(game_id)
-    winner = rget('winner', game_id=game_id)
+    winner = get_winner(game_id)
     whose_turn = Color.whose_turn(game_id)
     if not board:
         return {'success': False, 'error': 'Invalid game id'}
@@ -554,7 +554,7 @@ def accept_draw():
         return {'success': False, 'error': 'No game id or color provided'}
     if rget('draw', game_id=game_id) != color.other().value:
         return {'success': False, 'error': 'Draw offer not live - expires when either player makes a move'}
-    if rget('winner', game_id=game_id):
+    if get_winner(game_id):
         return {'success': False, 'error': 'Game already over'}
     set_winner(game_id, Result.AGREEMENT)
     socketio.emit('update', {'color': 'both'}, room=game_id)
@@ -570,7 +570,7 @@ def resign():
         return {'success': False, 'error': 'Invalid color'}
     if not game_id or not color:
         return {'success': False, 'error': 'No game id or color provided'}
-    if rget('winner', game_id=game_id):
+    if get_winner(game_id):
         return {'success': False, 'error': 'Game already over'}
     set_winner(game_id, Result(color.other().value))
     whiteboard(f'{color.value} resigned', color.other(), game_id=game_id)

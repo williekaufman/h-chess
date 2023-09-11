@@ -86,6 +86,8 @@
 </div>
 <div class="chess">
     <span class="handicap-info" id="handicapInfo" style="margin-bottom: 15px"> </span>
+    <!-- For when you're spectating -->
+    <span class="handicap-info" id="otherHandicapInfo" style="margin-bottom: 15px"> </span>
     <div class="color-info" id="opponentInfo" style="margin-top: 5px">
         <div class="name" id="opponentName"></div> <!-- currently unused -->
         <div class="time" id="opponentTime">No time controls</div>
@@ -165,7 +167,8 @@
         <div class="label-container">
             <div class="grid-container" style="grid-template-columns: repeat(1, 1fr)">
                 <div> <input type="text" class="game-id-box" id="gameIdInput" placeholder="game id" size="30"> </div>
-                <button id="joinGameButton" class="create-game-button">Join Game</button>
+                <button id="joinGameButton" class="create-game-button">Join</button>
+                <button id="spectateGameButton" class="create-game-button">Spectate</button>
             </div>
         </div>
     </div>
