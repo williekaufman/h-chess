@@ -295,7 +295,7 @@ def get_friends_list():
 def join_game():
     game_id = request.args.get('gameId')
     board = Board.of_game_id(game_id)
-    winner = rget('winner', game_id=game_id)
+    winner = get_winner(game_id)
     set_other_player = False
     color = request.args.get('color') 
     if not color:
@@ -313,7 +313,7 @@ def join_game():
         rset(f'{color}_username', username, game_id=game_id)
     set_other_player and toast(f"{username or 'anonymous player'} joined!", game_id=game_id)
     if winner:
-        return {'success': True, 'board': board.to_dict(), 'winner': winner, 'color': color}
+        return {'success': True, 'board': board.to_dict(), 'winner': winner.value, 'color': color}
     set_other_player and rset('other_player', '', game_id=game_id)
     return {
         'success': True, 
@@ -336,7 +336,7 @@ def watch_game():
     if not board:
         return {'success': False, 'error': 'Invalid game id'}
     if winner:
-        return {'success': True, 'board': board.to_dict(), 'winner': winner}
+        return {'success': True, 'board': board.to_dict(), 'winner': winner.value}
     toast(f"{username or 'anonymous player'} is spectating!", game_id=game_id)
     return {
         'success': True,
@@ -396,7 +396,7 @@ def get_board():
     if not board:
         return {'success': False, 'error': 'Invalid game id'}
     if winner:
-        return {'success': True, 'board': board.to_dict(), 'winner': winner}
+        return {'success': True, 'board': board.to_dict(), 'winner': winner.value}
     return {
         'success': True, 
         'board': board.to_dict(), 
