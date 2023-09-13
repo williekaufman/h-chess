@@ -476,8 +476,8 @@ def move_inner():
         ret = make_move(game_id, move, board, history, extra)
         whose_turn = whose_turn.other()
         if ('winner' not in ret) and rget('ai', game_id=game_id) == whose_turn.value:
-            if (move, extra, error := board.ai_move(history, lookup_handicap(game_id, whose_turn))):
-                make_move(game_id, move, board, history, extra)
+            if (ai_ret := board.ai_move(history, lookup_handicap(game_id, whose_turn))):
+                make_move(game_id, ai_ret[0], board, history, ai_ret[1])
         return {**ret, **times(game_id, whose_turn)}
     else:
         return {'success': False, 'error': error }
