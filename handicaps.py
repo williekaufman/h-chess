@@ -1224,7 +1224,7 @@ def get_handicap_elo(handicap):
     try:
         return float(rget(key, game_id='handicap_elos'))
     except Exception:
-        return None
+        return 1200
 
 def get_handicap_games_played(handicap):
     key = handicap.split(':')[0] if ':' in handicap else handicap
