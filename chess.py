@@ -512,7 +512,6 @@ class Board():
         if piece.color != whose_turn:
             return None, None, 'wrong color'
         captured_piece, capture_type = self.capture_outer(start, stop, history)
-        # TODO: implement check
         check = 'f'
         castle = 'f'
         if piece.piece == Piece.KING and abs(start.to_coordinates()[1] - stop.to_coordinates()[1]) == 2:
@@ -581,6 +580,10 @@ class Board():
         if stockfish.is_fen_valid(fen_str):
             stockfish.set_fen_position(fen_str) 
         else:
+            print("fen invalid")
+            print("fen_str: " + fen_str)
+            print(stockfish.get_fen_position())
+            print(stockfish.get_board_visual())
             return make_move_in_weird_case(self, history, whose_turn, handicap, stockfish)
         
         # This function should only be called when it's the AI's turn
@@ -591,14 +594,10 @@ class Board():
         i = 0
         j = 5
         while(True):
-            print(stockfish.get_board_visual())
-            print(stockfish.is_fen_valid(stockfish.get_fen_position()))
-            print(stockfish.get_best_move())
-            for k in range(5):
-                print(k+1)
-                print(stockfish.get_top_moves(k+1))
             # These are formatted like 'e2e4' 
             moves = [(m['Move'][:2].upper(), m['Move'][2:4].upper()) for m in stockfish.get_top_moves(j)[i:]]
+            print("top moves")
+            print(moves)
             for (start, stop) in moves:
                 start, stop = Square(start), Square(stop)
                 if stop.value in self.legal_moves(start, history, whose_turn, handicap):
@@ -767,6 +766,7 @@ def evaluate_move(board, move, history, stockfish):
 
 
 def make_move_in_weird_case(board, history, whose_turn, handicap, stockfish):
+    print("Making move in weird case")
     stockfish_shallow(stockfish)
     potential_moves = []
     for square in Square:

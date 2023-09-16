@@ -1122,7 +1122,7 @@ tested_handicaps = {
     "Femme Fatale: Only your queen can take their king": (femme_fatale, 3),
     "H-phile: You can't move to the h file": (h_file_phobe, 3),
     "The number of the beast: You can't move onto the sixth rank": (number_of_the_beast, 3),
-    "Respectful: Can't give check": (respectful, 4),
+    "Respectful: Can't give check": (respectful, 3),
     "Checkers: You can only capture forward": (checkers, 4),
     "Disguised queen: Your queen is secretly either a bishop or a rook. Once you move it like one, you can't move it like the other": (queen_disguise, 2),
     "Noble steed: Your non-Knight pieces can only move if they're next to one of your knights": (noble_steed, 8),
@@ -1224,7 +1224,7 @@ def get_handicap_elo(handicap):
     try:
         return float(rget(key, game_id='handicap_elos'))
     except Exception:
-        return None
+        return 1200
 
 def get_handicap_games_played(handicap):
     key = handicap.split(':')[0] if ':' in handicap else handicap
