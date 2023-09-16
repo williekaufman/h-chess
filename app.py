@@ -118,7 +118,7 @@ def get_player_elo(username):
         return 1200
     
 def increment_played_games_played(username):
-    rset(username, get_player_games_played(username) + 1, game_id='player_games_played')
+    rset(username, get_player_games_played(username) + 1, game_id='player_games_played', ex=None)
     
     
 def get_player_games_played(username):
@@ -126,7 +126,7 @@ def get_player_games_played(username):
     return int_with_default(raw_games_played, 0)
 
 def set_player_elo(username, elo):
-    rset(username, elo, game_id='player_elos')
+    rset(username, elo, game_id='player_elos', ex=None)
 
 def set_winner(game_id, result):
     if get_winner(game_id):
