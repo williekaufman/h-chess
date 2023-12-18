@@ -435,7 +435,7 @@ def cage_the_king(start, stop, inputs):
 
 
 def inside_the_lines(start, stop, inputs):
-    return not stop.file() in [File.A, File.H]
+    return not stop.file() in [File.A, File.H] and not stop.rank() in [Rank.First, Rank.Eighth]
 
 
 def left_for_dead(start, stop, inputs):
